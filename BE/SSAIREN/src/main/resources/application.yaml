@@ -1,1 +1,59 @@
-spring.application.name=SSAIREN
+spring:
+  application:
+    name: SSAIREN
+
+# Actuator 헬스체크 및 모니터링 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        # 모든 엔드포인트를 노출 (프로덕션에서는 필요한 것만 선택적으로 노출)
+        include: health,info,metrics,prometheus,env,beans,conditions,configprops,mappings
+      base-path: /actuator
+  endpoint:
+    health:
+      # 상세한 헬스 정보 표시
+      show-details: always
+      show-components: always
+      # 프로브 엔드포인트 활성화 (Kubernetes 등에서 사용)
+      probes:
+        enabled: true
+  health:
+    # 각종 헬스 인디케이터 설정
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+    # 디스크 공간 체크
+    diskspace:
+      enabled: true
+      threshold: 10MB
+  # 메트릭 설정
+  metrics:
+    enable:
+      jvm: true
+      system: true
+      tomcat: true
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+  # 애플리케이션 정보 설정
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+
+# 애플리케이션 정보
+info:
+  app:
+    name: SSAIREN
+    description: SSAFY 13기 A205팀 프로젝트
+    version: 0.0.1-SNAPSHOT
+    encoding: UTF-8
+    java:
+      version: 21
