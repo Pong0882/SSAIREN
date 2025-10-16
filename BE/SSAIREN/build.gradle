@@ -1,0 +1,55 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.6'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.myocean'
+version = '0.0.1-SNAPSHOT'
+description = 'SSAIREN'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // JPA와 Hibernate를 사용한 데이터베이스 연동 (현재 주석 처리)
+    // implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Spring MVC를 사용한 웹 애플리케이션 개발
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Swagger/OpenAPI 문서 자동 생성 및 UI 제공
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.1'
+
+    // Lombok - 보일러플레이트 코드 자동 생성 (@Getter, @Setter 등)
+    compileOnly 'org.projectlombok:lombok'
+
+    // Spring Boot DevTools - 자동 재시작 및 라이브 리로드 지원
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // Lombok 애노테이션 프로세서
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Spring Boot 테스트 지원 (JUnit 5, Mockito 등 포함)
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // JUnit Platform 런처
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
