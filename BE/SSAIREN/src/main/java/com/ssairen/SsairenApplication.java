@@ -1,4 +1,4 @@
-package com.myocean.ssairen;
+package com.ssairen;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

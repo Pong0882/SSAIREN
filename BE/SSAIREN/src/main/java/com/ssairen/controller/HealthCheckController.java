@@ -1,4 +1,4 @@
-package com.myocean.ssairen.controller;
+package com.ssairen.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
