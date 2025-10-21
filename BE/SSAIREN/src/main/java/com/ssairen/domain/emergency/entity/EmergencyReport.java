@@ -5,8 +5,6 @@ import com.ssairen.domain.firestation.entity.Paramedic;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "emergency_reports")
 @Getter
@@ -27,6 +25,7 @@ public class EmergencyReport {
     @JoinColumn(name = "fire_states_id", nullable = false)
     private FireState fireState;
 
-    @Column(name = "date", nullable = false)
-    private LocalDateTime date;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dispatches_id", nullable = false)
+    private Dispatch dispatch;
 }
