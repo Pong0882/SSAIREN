@@ -1,0 +1,152 @@
+
+1.0!ssafy-ai-codereview1_a205-ssairenJavaFrontend"1760923390089*java2.B±
+D
+?src/main/java/com/ssairen/controller/HealthCheckController.java2
+	
+type3
+	
+MAIN4
+
+package6
+
+com.ssairen.controller7
+1
+,com.ssairen.controller.HealthCheckController9
+
+class10
+
+access11
+
+public12
+
+simple-name13
+
+HealthCheckController14
+
+RestController16
+
+unknown17
+
+annotated by18
+,
+&Recovered#typeBindingLRestController;020
+
+
+uses21
+P
+Jcom.ssairen.controller.HealthCheckController#healthCheck()LResponseEntity;23
+
+method24
+
+healthCheck25
+
+ResponseEntity27
+
+returns28
+
+
+GetMapping30
+(
+"Recovered#typeBindingLGetMapping;032
+I
+Ccom.ssairen.controller.HealthCheckController#home()LResponseEntity;34
+
+
+home35J
+
+1
+12
+
+
+3
+4Z
+
+5	
+576jß
+;
+86
+8910 *
+1 (#:5B
+
+
+11
+12
+
+
+13
+14
+
+26
+262717
+
+29
+293017
+
+19
+192017
+A
+22;
+222324 *
+1
+ 
+(28:5B
+
+
+11
+12
+
+
+13
+25
+
+15
+151617
+A
+33;
+333424 *
+1 (28:5B
+
+
+11
+12
+
+
+13
+35
+
+31
+313217rå
+
+81518*
+1 (
+
+81921*
+1 (
+
+222628*
+1 (
+
+222918*
+1
+ 
+(
+
+223121*
+1
+ 
+(
+
+222621*
+1 (
+
+332628*
+1 (
+
+332918*
+1 (
+
+333121*
+1 (
+
+332621*
+1 (

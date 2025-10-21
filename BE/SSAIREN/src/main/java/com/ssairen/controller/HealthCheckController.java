@@ -17,3 +17,4 @@ public class HealthCheckController {
         return ResponseEntity.ok("Hello World");
     }
 }
+

@@ -25,8 +25,17 @@ repositories {
 }
 
 dependencies {
-    // JPA와 Hibernate를 사용한 데이터베이스 연동 (현재 주석 처리)
-    // implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // JPA와 Hibernate를 사용한 데이터베이스 연동
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // PostgreSQL JDBC 드라이버
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Hypersistence Utils - JSONB 타입 지원
+    implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.9.0'
+
+    // .env 파일 지원
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 
     // Spring MVC를 사용한 웹 애플리케이션 개발
     implementation 'org.springframework.boot:spring-boot-starter-web'
