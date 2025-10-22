@@ -1,4 +1,4 @@
-package com.ssairen.common.validator;
+package com.ssairen.global.validator;
 
 /**
  * Validation 그룹 인터페이스

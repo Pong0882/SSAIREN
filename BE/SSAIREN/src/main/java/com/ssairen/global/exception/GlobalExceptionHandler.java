@@ -1,8 +1,8 @@
-package com.ssairen.common.exception;
+package com.ssairen.global.exception;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import com.ssairen.common.dto.ApiResponse;
-import com.ssairen.common.dto.ErrorResponse;
+import com.ssairen.global.dto.ApiResponse;
+import com.ssairen.global.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

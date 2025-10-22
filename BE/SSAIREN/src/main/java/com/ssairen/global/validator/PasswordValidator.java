@@ -1,4 +1,4 @@
-package com.ssairen.common.validator;
+package com.ssairen.global.validator;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

@@ -1,4 +1,4 @@
-package com.ssairen.common.dto;
+package com.ssairen.global.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

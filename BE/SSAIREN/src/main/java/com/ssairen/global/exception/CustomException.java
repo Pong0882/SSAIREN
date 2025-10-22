@@ -1,4 +1,4 @@
-package com.ssairen.common.exception;
+package com.ssairen.global.exception;
 
 import lombok.Getter;
 

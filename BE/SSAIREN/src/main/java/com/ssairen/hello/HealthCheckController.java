@@ -1,4 +1,4 @@
-package com.ssairen.controller;
+package com.ssairen.hello;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
