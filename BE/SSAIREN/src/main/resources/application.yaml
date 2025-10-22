@@ -19,6 +19,14 @@ spring:
         format_sql: true
         show_sql: true
     show-sql: true
+    defer-datasource-initialization: true
+
+  # SQL 초기화 설정
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+      encoding: UTF-8
 
 # Actuator 헬스체크 및 모니터링 설정
 management:
