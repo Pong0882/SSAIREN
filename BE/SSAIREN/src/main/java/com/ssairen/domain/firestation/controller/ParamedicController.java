@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/paramedics")
 @RequiredArgsConstructor
-public class ParamedicController {
+public class ParamedicController implements ParamedicApi {
 
     private final ParamedicService paramedicService;
 
@@ -30,5 +30,14 @@ public class ParamedicController {
         return ResponseEntity.ok(
                 ApiResponse.success(response, "로그인에 성공했습니다.")
         );
+    }
+
+    /**
+     * 구급대원 정보 조회 (형식 참고용 예시)
+     */
+    @Override
+    @GetMapping("/all")
+    public ResponseEntity<? extends ApiResponse> getAllParamedics() {
+        return null;
     }
 }
