@@ -81,7 +81,7 @@ public final class MethodSignatureUtils {
      */
     private static boolean isExcluded(final Annotation[] annotations) {
         return Arrays.stream(annotations).anyMatch(a ->
-                a.annotationType() == ExcludeFromLogging.class || a.annotationType() == AuthenticationPrincipal.class
+                a.annotationType() == ExcludeFromLogging.class
         );
     }
 
