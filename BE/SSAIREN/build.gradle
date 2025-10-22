@@ -58,6 +58,10 @@ dependencies {
     // Lombok 애노테이션 프로세서
     annotationProcessor 'org.projectlombok:lombok'
 
+    // MapStruct
+    implementation 'org.mapstruct:mapstruct:1.5.3.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.3.Final'
+
     // Spring Boot 테스트 지원 (JUnit 5, Mockito 등 포함)
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
