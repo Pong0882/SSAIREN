@@ -83,3 +83,13 @@ info:
     encoding: UTF-8
     java:
       version: 21
+
+# ===================================================================
+# 로깅 설정 (Logging Configuration)
+# ===================================================================
+logging:
+  level:
+    # 전역 로깅 레벨 설정
+    root: WARN
+    # SSAIREN 애플리케이션 로그를 TRACE 레벨로 설정 (Service, Repository 로그 출력)
+    com.ssairen: TRACE
