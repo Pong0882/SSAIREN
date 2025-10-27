@@ -28,8 +28,9 @@ pipeline {
                 dir("${BACKEND_DIR}") {
                     withCredentials([file(credentialsId: 'backend-env-file', variable: 'ENV_FILE')]) {
                         sh '''
-                            cp $ENV_FILE .env
-                            echo ".env 파일 복사 완료"
+                            rm -f .env
+                            cat $ENV_FILE > .env
+                            echo ".env 파일 생성 완료"
                             ls -la .env
                         '''
                     }
