@@ -20,6 +20,23 @@ pipeline {
             }
         }
 
+        stage('Setup Environment') {
+            steps {
+                echo '======================================'
+                echo 'Setting up Environment Variables'
+                echo '======================================'
+                dir("${BACKEND_DIR}") {
+                    withCredentials([file(credentialsId: 'backend-env-file', variable: 'ENV_FILE')]) {
+                        sh '''
+                            cp $ENV_FILE .env
+                            echo ".env 파일 복사 완료"
+                            ls -la .env
+                        '''
+                    }
+                }
+            }
+        }
+
         stage('Environment Check') {
             steps {
                 echo '======================================'
