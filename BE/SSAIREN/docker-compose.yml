@@ -25,10 +25,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ssairen-backend
+    container_name: backend
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    # 포트 노출 제거 (nginx를 통해서만 접근)
+    # ports:
+    #   - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
@@ -40,6 +41,7 @@ services:
         condition: service_healthy
     networks:
       - ssairen-network
+      - ssairen-net
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health/liveness || exit 1"]
       interval: 30s
@@ -54,3 +56,5 @@ volumes:
 networks:
   ssairen-network:
     driver: bridge
+  ssairen-net:
+    external: true

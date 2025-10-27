@@ -85,6 +85,17 @@ info:
       version: 21
 
 # ===================================================================
+# Swagger/OpenAPI 설정 (API Documentation)
+# ===================================================================
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+# ===================================================================
 # 로깅 설정 (Logging Configuration)
 # ===================================================================
 logging:
