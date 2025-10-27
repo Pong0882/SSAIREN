@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         BACKEND_DIR = 'BE/SSAIREN'
-        DOCKER_COMPOSE = 'sudo docker compose'
+        DOCKER_COMPOSE = 'docker-compose'
         CONTAINER_NAME = 'backend'
     }
 
@@ -33,7 +33,7 @@ pipeline {
                         echo "Docker 버전:"
                         docker --version
                         echo "Docker Compose 버전:"
-                        docker compose version
+                        docker-compose --version
                     '''
                 }
             }
@@ -105,7 +105,7 @@ pipeline {
                     while (retryCount < maxRetries && !healthCheckPassed) {
                         try {
                             def result = sh(
-                                script: 'sudo docker exec ${CONTAINER_NAME} wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health/liveness',
+                                script: 'docker exec ${CONTAINER_NAME} wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health/liveness',
                                 returnStatus: true
                             )
 
@@ -142,15 +142,15 @@ pipeline {
                 echo '======================================'
                 sh '''
                     echo "실행 중인 컨테이너:"
-                    sudo docker ps | grep backend
+                    docker ps | grep backend
 
                     echo ""
                     echo "컨테이너 로그 (최근 20줄):"
-                    sudo docker logs ${CONTAINER_NAME} --tail 20
+                    docker logs ${CONTAINER_NAME} --tail 20
 
                     echo ""
                     echo "네트워크 확인:"
-                    sudo docker network inspect ssairen-net | grep -A 5 backend || echo "ssairen-net 네트워크에 backend 없음"
+                    docker network inspect ssairen-net | grep -A 5 backend || echo "ssairen-net 네트워크에 backend 없음"
                 '''
             }
         }
@@ -170,11 +170,11 @@ pipeline {
             echo '======================================'
             sh '''
                 echo "Backend 컨테이너 로그:"
-                sudo docker logs ${CONTAINER_NAME} --tail 100 || echo "컨테이너 로그를 가져올 수 없습니다."
+                docker logs ${CONTAINER_NAME} --tail 100 || echo "컨테이너 로그를 가져올 수 없습니다."
 
                 echo ""
                 echo "실행 중인 컨테이너:"
-                sudo docker ps -a | grep backend || echo "backend 컨테이너를 찾을 수 없습니다."
+                docker ps -a | grep backend || echo "backend 컨테이너를 찾을 수 없습니다."
             '''
         }
         always {
