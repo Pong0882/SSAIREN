@@ -2,6 +2,32 @@ spring:
   application:
     name: SSAIREN
 
+  # 데이터소스 설정
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        show_sql: true
+    show-sql: true
+    defer-datasource-initialization: true
+
+  # SQL 초기화 설정
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+      encoding: UTF-8
+
 # Actuator 헬스체크 및 모니터링 설정
 management:
   endpoints:
@@ -57,3 +83,13 @@ info:
     encoding: UTF-8
     java:
       version: 21
+
+# ===================================================================
+# 로깅 설정 (Logging Configuration)
+# ===================================================================
+logging:
+  level:
+    # 전역 로깅 레벨 설정
+    root: WARN
+    # SSAIREN 애플리케이션 로그를 TRACE 레벨로 설정 (Service, Repository 로그 출력)
+    com.ssairen: TRACE

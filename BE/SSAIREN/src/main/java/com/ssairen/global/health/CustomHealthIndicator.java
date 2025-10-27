@@ -1,4 +1,4 @@
-package com.ssairen.health;
+package com.ssairen.global.health;
 
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
