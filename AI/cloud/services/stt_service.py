@@ -33,7 +33,8 @@ def transcribe_audio_stream(audio_file_path: str, language: str = "en"):
         params = {
             "file": audio_file,
             "model": "gpt-4o-transcribe-diarize",
-            "stream": True
+            "stream": True,
+            "chunking_strategy": "auto"  # 화자 분리 모델 필수 파라미터
         }
         
         if language:
