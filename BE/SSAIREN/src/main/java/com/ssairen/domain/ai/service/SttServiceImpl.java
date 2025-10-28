@@ -69,49 +69,55 @@ public class SttServiceImpl implements SttService {
             for (String chunk : responseFlux.toIterable()) {
                 log.debug("STT 청크 수신: {}", chunk);
 
-                // "data: " 접두사 제거
-                if (chunk.startsWith("data: ")) {
-                    String jsonStr = chunk.substring(6).trim();
+                // "data: " 접두사 제거 (있으면)
+                String jsonStr = chunk.trim();
+                if (jsonStr.startsWith("data: ")) {
+                    jsonStr = jsonStr.substring(6).trim();
+                }
 
-                    try {
-                        JsonNode jsonNode = objectMapper.readTree(jsonStr);
-                        String type = jsonNode.has("type") ? jsonNode.get("type").asText() : "";
+                // 빈 문자열이면 스킵
+                if (jsonStr.isEmpty()) {
+                    continue;
+                }
 
-                        if ("transcript.text.segment".equals(type)) {
-                            // 세그먼트 파싱
-                            TranscriptSegment segment = TranscriptSegment.builder()
-                                    .id(jsonNode.has("id") ? jsonNode.get("id").asText() : null)
-                                    .speaker(jsonNode.has("speaker") ? jsonNode.get("speaker").asText() : null)
-                                    .start(jsonNode.has("start") ? jsonNode.get("start").asDouble() : null)
-                                    .end(jsonNode.has("end") ? jsonNode.get("end").asDouble() : null)
-                                    .text(jsonNode.has("text") ? jsonNode.get("text").asText() : "")
+                try {
+                    JsonNode jsonNode = objectMapper.readTree(jsonStr);
+                    String type = jsonNode.has("type") ? jsonNode.get("type").asText() : "";
+
+                    if ("transcript.text.segment".equals(type)) {
+                        // 세그먼트 파싱
+                        TranscriptSegment segment = TranscriptSegment.builder()
+                                .id(jsonNode.has("id") ? jsonNode.get("id").asText() : null)
+                                .speaker(jsonNode.has("speaker") ? jsonNode.get("speaker").asText() : null)
+                                .start(jsonNode.has("start") ? jsonNode.get("start").asDouble() : null)
+                                .end(jsonNode.has("end") ? jsonNode.get("end").asDouble() : null)
+                                .text(jsonNode.has("text") ? jsonNode.get("text").asText() : "")
+                                .build();
+                        segments.add(segment);
+
+                    } else if ("transcript.text.done".equals(type)) {
+                        // 최종 결과 파싱
+                        finalText = jsonNode.has("text") ? jsonNode.get("text").asText() : "";
+
+                        // 토큰 사용량 파싱
+                        if (jsonNode.has("usage")) {
+                            JsonNode usageNode = jsonNode.get("usage");
+                            JsonNode inputDetails = usageNode.has("input_token_details")
+                                    ? usageNode.get("input_token_details") : null;
+
+                            usage = TokenUsage.builder()
+                                    .inputTokens(usageNode.has("input_tokens") ? usageNode.get("input_tokens").asInt() : null)
+                                    .outputTokens(usageNode.has("output_tokens") ? usageNode.get("output_tokens").asInt() : null)
+                                    .totalTokens(usageNode.has("total_tokens") ? usageNode.get("total_tokens").asInt() : null)
+                                    .audioTokens(inputDetails != null && inputDetails.has("audio_tokens")
+                                            ? inputDetails.get("audio_tokens").asInt() : null)
+                                    .textTokens(inputDetails != null && inputDetails.has("text_tokens")
+                                            ? inputDetails.get("text_tokens").asInt() : null)
                                     .build();
-                            segments.add(segment);
-
-                        } else if ("transcript.text.done".equals(type)) {
-                            // 최종 결과 파싱
-                            finalText = jsonNode.has("text") ? jsonNode.get("text").asText() : "";
-
-                            // 토큰 사용량 파싱
-                            if (jsonNode.has("usage")) {
-                                JsonNode usageNode = jsonNode.get("usage");
-                                JsonNode inputDetails = usageNode.has("input_token_details")
-                                        ? usageNode.get("input_token_details") : null;
-
-                                usage = TokenUsage.builder()
-                                        .inputTokens(usageNode.has("input_tokens") ? usageNode.get("input_tokens").asInt() : null)
-                                        .outputTokens(usageNode.has("output_tokens") ? usageNode.get("output_tokens").asInt() : null)
-                                        .totalTokens(usageNode.has("total_tokens") ? usageNode.get("total_tokens").asInt() : null)
-                                        .audioTokens(inputDetails != null && inputDetails.has("audio_tokens")
-                                                ? inputDetails.get("audio_tokens").asInt() : null)
-                                        .textTokens(inputDetails != null && inputDetails.has("text_tokens")
-                                                ? inputDetails.get("text_tokens").asInt() : null)
-                                        .build();
-                            }
                         }
-                    } catch (Exception e) {
-                        log.warn("JSON 파싱 실패 (무시): {}", jsonStr, e);
                     }
+                } catch (Exception e) {
+                    log.warn("JSON 파싱 실패 (무시): {}", jsonStr, e);
                 }
             }
 
