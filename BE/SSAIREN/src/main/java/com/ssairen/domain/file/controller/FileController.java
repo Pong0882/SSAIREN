@@ -30,14 +30,15 @@ public class FileController {
     private final MinioService minioService;
 
     /**
-     * 파일 업로드
-     * - 주로 오디오 파일 업로드에 사용 (STT 처리용)
-     * - MultipartFile 형식으로 파일을 받아 MinIO에 저장
+     * 오디오 파일 업로드
+     * - STT 처리용 오디오 파일 업로드
+     * - 지원 형식: wav, mp3, m4a, aac, flac
+     * - 최대 크기: 50MB
      */
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/upload-audio", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
-            summary = "파일 업로드",
-            description = "파일을 MinIO 객체 스토리지에 업로드합니다. 주로 오디오 파일 업로드에 사용됩니다."
+            summary = "오디오 파일 업로드",
+            description = "오디오 파일을 MinIO 객체 스토리지에 업로드합니다. STT 처리에 사용됩니다."
     )
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -47,32 +48,72 @@ public class FileController {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
-                    description = "잘못된 요청 (빈 파일, 지원하지 않는 형식 등)"
+                    description = "잘못된 요청 (빈 파일, 지원하지 않는 형식, 크기 초과 등)"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "500",
                     description = "파일 업로드 실패"
             )
     })
-    public ResponseEntity<ApiResponse<FileUploadResponse>> uploadFile(
-            @Parameter(description = "업로드할 파일", required = true)
+    public ResponseEntity<ApiResponse<FileUploadResponse>> uploadAudioFile(
+            @Parameter(description = "업로드할 오디오 파일", required = true)
             @RequestParam("file") MultipartFile file
     ) {
-        log.info("파일 업로드 요청 - 파일명: {}, 크기: {} bytes",
+        log.info("오디오 파일 업로드 요청 - 파일명: {}, 크기: {} bytes",
                 file.getOriginalFilename(), file.getSize());
 
-        FileUploadResponse response = minioService.uploadFile(file);
+        FileUploadResponse response = minioService.uploadAudioFile(file);
 
         return ResponseEntity.ok(
-                ApiResponse.success(response, "파일이 성공적으로 업로드되었습니다.")
+                ApiResponse.success(response, "오디오 파일이 성공적으로 업로드되었습니다.")
+        );
+    }
+
+    /**
+     * 영상 파일 업로드
+     * - 영상 파일 업로드 및 저장
+     * - 지원 형식: mp4, avi, mov, mkv, wmv, flv, webm
+     * - 최대 크기: 500MB
+     */
+    @PostMapping(value = "/upload-video", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "영상 파일 업로드",
+            description = "영상 파일을 MinIO 객체 스토리지에 업로드합니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "파일 업로드 성공",
+                    content = @Content(schema = @Schema(implementation = FileUploadResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (빈 파일, 지원하지 않는 형식, 크기 초과 등)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "파일 업로드 실패"
+            )
+    })
+    public ResponseEntity<ApiResponse<FileUploadResponse>> uploadVideoFile(
+            @Parameter(description = "업로드할 영상 파일", required = true)
+            @RequestParam("file") MultipartFile file
+    ) {
+        log.info("영상 파일 업로드 요청 - 파일명: {}, 크기: {} bytes",
+                file.getOriginalFilename(), file.getSize());
+
+        FileUploadResponse response = minioService.uploadVideoFile(file);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(response, "영상 파일이 성공적으로 업로드되었습니다.")
         );
     }
 
     /**
      * 파일 삭제
-     * - 파일명을 받아 MinIO에서 삭제
+     * - 파일명과 버킷명을 받아 MinIO에서 삭제
      */
-    @DeleteMapping("/{fileName}")
+    @DeleteMapping("/{bucketName}/{fileName}")
     @Operation(
             summary = "파일 삭제",
             description = "MinIO에 저장된 파일을 삭제합니다."
@@ -92,12 +133,14 @@ public class FileController {
             )
     })
     public ResponseEntity<ApiResponse<Void>> deleteFile(
+            @Parameter(description = "버킷 이름 (audio-files 또는 video-files)", required = true)
+            @PathVariable String bucketName,
             @Parameter(description = "삭제할 파일명 (UUID 형식)", required = true)
             @PathVariable String fileName
     ) {
-        log.info("파일 삭제 요청 - 파일명: {}", fileName);
+        log.info("파일 삭제 요청 - 버킷: {}, 파일명: {}", bucketName, fileName);
 
-        minioService.deleteFile(fileName);
+        minioService.deleteFile(fileName, bucketName);
 
         return ResponseEntity.ok(
                 ApiResponse.success(null, "파일이 성공적으로 삭제되었습니다.")
@@ -106,10 +149,10 @@ public class FileController {
 
     /**
      * 파일 URL 조회
-     * - 파일명을 받아 접근 가능한 URL 반환
+     * - 파일명과 버킷명을 받아 접근 가능한 URL 반환
      * - 7일간 유효한 Presigned URL
      */
-    @GetMapping("/{fileName}/url")
+    @GetMapping("/{bucketName}/{fileName}/url")
     @Operation(
             summary = "파일 URL 조회",
             description = "파일에 접근할 수 있는 임시 URL을 생성합니다 (7일간 유효)."
@@ -125,12 +168,14 @@ public class FileController {
             )
     })
     public ResponseEntity<ApiResponse<String>> getFileUrl(
+            @Parameter(description = "버킷 이름 (audio-files 또는 video-files)", required = true)
+            @PathVariable String bucketName,
             @Parameter(description = "조회할 파일명 (UUID 형식)", required = true)
             @PathVariable String fileName
     ) {
-        log.info("파일 URL 조회 요청 - 파일명: {}", fileName);
+        log.info("파일 URL 조회 요청 - 버킷: {}, 파일명: {}", bucketName, fileName);
 
-        String fileUrl = minioService.getFileUrl(fileName);
+        String fileUrl = minioService.getFileUrl(fileName, bucketName);
 
         return ResponseEntity.ok(
                 ApiResponse.success(fileUrl, "파일 URL을 조회했습니다.")

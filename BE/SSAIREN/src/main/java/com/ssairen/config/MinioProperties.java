@@ -34,4 +34,19 @@ public class MinioProperties {
      * 기본 버킷 이름 (예: audio-files)
      */
     private String bucketName;
+
+    /**
+     * 영상 파일 버킷 이름 (예: video-files)
+     */
+    private String videoBucketName;
+
+    /**
+     * 오디오 파일 최대 크기 (MB)
+     */
+    private int maxAudioFileSize = 50;
+
+    /**
+     * 영상 파일 최대 크기 (MB)
+     */
+    private int maxVideoFileSize = 500;
 }

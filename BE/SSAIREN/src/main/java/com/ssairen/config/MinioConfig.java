@@ -38,25 +38,13 @@ public class MinioConfig {
                     .credentials(minioProperties.getAccessKey(), minioProperties.getSecretKey())
                     .build();
 
-            // 버킷 존재 여부 확인 및 생성
-            String bucketName = minioProperties.getBucketName();
-            boolean bucketExists = client.bucketExists(
-                    BucketExistsArgs.builder()
-                            .bucket(bucketName)
-                            .build()
-            );
+            // 오디오 버킷 존재 여부 확인 및 생성
+            String audioBucketName = minioProperties.getBucketName();
+            ensureBucketExists(client, audioBucketName);
 
-            if (!bucketExists) {
-                log.info("버킷 '{}' 이 존재하지 않아 새로 생성합니다.", bucketName);
-                client.makeBucket(
-                        MakeBucketArgs.builder()
-                                .bucket(bucketName)
-                                .build()
-                );
-                log.info("버킷 '{}' 생성 완료", bucketName);
-            } else {
-                log.info("버킷 '{}' 이 이미 존재합니다.", bucketName);
-            }
+            // 영상 버킷 존재 여부 확인 및 생성
+            String videoBucketName = minioProperties.getVideoBucketName();
+            ensureBucketExists(client, videoBucketName);
 
             log.info("MinIO 클라이언트 초기화 완료");
             return client;
@@ -64,6 +52,29 @@ public class MinioConfig {
         } catch (Exception e) {
             log.error("MinIO 클라이언트 초기화 실패: {}", e.getMessage(), e);
             throw new RuntimeException("MinIO 클라이언트 초기화에 실패했습니다.", e);
+        }
+    }
+
+    /**
+     * 버킷 존재 여부 확인 및 생성
+     */
+    private void ensureBucketExists(MinioClient client, String bucketName) throws Exception {
+        boolean bucketExists = client.bucketExists(
+                BucketExistsArgs.builder()
+                        .bucket(bucketName)
+                        .build()
+        );
+
+        if (!bucketExists) {
+            log.info("버킷 '{}' 이 존재하지 않아 새로 생성합니다.", bucketName);
+            client.makeBucket(
+                    MakeBucketArgs.builder()
+                            .bucket(bucketName)
+                            .build()
+            );
+            log.info("버킷 '{}' 생성 완료", bucketName);
+        } else {
+            log.info("버킷 '{}' 이 이미 존재합니다.", bucketName);
         }
     }
 }

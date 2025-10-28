@@ -99,7 +99,9 @@ public enum ErrorCode {
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_UPLOAD_FAILED", "파일 업로드에 실패했습니다."),
     FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_DELETE_FAILED", "파일 삭제에 실패했습니다."),
     FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "FILE_NOT_FOUND", "파일을 찾을 수 없습니다."),
-    EMPTY_FILE(HttpStatus.BAD_REQUEST, "EMPTY_FILE", "빈 파일은 업로드할 수 없습니다.");
+    EMPTY_FILE(HttpStatus.BAD_REQUEST, "EMPTY_FILE", "빈 파일은 업로드할 수 없습니다."),
+    INVALID_VIDEO_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_VIDEO_FORMAT", "지원하지 않는 영상 형식입니다."),
+    VIDEO_FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "VIDEO_FILE_TOO_LARGE", "영상 파일 크기가 너무 큽니다.");
 
     private final HttpStatus status;
     private final String code;
