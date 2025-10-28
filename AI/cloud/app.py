@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers.stt_router import router as stt_router
+from .routers.stt_router import router as stt_router
 
 app = FastAPI(title='CLOUD AI', description = "클라우드 AI를 기반으로 한 서비스를 제공하는 서버")
 

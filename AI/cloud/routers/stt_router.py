@@ -2,7 +2,7 @@ import os
 import tempfile
 from fastapi import APIRouter, UploadFile, File
 
-from services.stt_service import transcribe_audio
+from ..services.stt_service import transcribe_audio
 
 router = APIRouter(prefix="/stt", tags=["stt"])
 
