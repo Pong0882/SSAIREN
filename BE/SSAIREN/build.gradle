@@ -49,6 +49,9 @@ dependencies {
     // MinIO Client - S3 호환 객체 스토리지
     implementation 'io.minio:minio:8.5.7'
 
+    // WebClient - 외부 API 호출용 (AI 서버 통신)
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
     // Swagger/OpenAPI 문서 자동 생성 및 UI 제공
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.1'
 

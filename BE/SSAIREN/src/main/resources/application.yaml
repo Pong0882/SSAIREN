@@ -46,6 +46,12 @@ minio:
   max-audio-file-size: 50
   max-video-file-size: 500
 
+# AI 서버 설정
+ai:
+  server:
+    base-url: ${AI_SERVER_BASE_URL:https://ai.ssairen.site}
+    timeout: 300  # 초 (5분)
+
 # Actuator 헬스체크 및 모니터링 설정
 management:
   endpoints:
