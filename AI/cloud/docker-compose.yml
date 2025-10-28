@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     container_name: ai-cloud
     restart: unless-stopped
+    env_file:
+      - ./config/.env
     environment:
       - TZ=Asia/Seoul
     networks:
