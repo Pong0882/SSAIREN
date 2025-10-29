@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.ssairen.domain.firestation.entity.Paramedic;
 import com.ssairen.domain.firestation.enums.ParamedicRank;
 import com.ssairen.domain.firestation.enums.ParamedicStatus;
+import com.ssairen.global.annotation.ExcludeFromLogging;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
@@ -15,11 +16,13 @@ public record ParamedicLoginResponse(
         @Schema(description = "액세스 토큰 (추후 JWT 구현 예정)", example = "null", nullable = true)
         @com.fasterxml.jackson.annotation.JsonProperty("access_token")
         @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS)
+        @ExcludeFromLogging
         String accessToken,
 
         @Schema(description = "리프레시 토큰 (추후 JWT 구현 예정)", example = "null", nullable = true)
         @com.fasterxml.jackson.annotation.JsonProperty("refresh_token")
         @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS)
+        @ExcludeFromLogging
         String refreshToken,
 
         @Schema(description = "구급대원 정보")
