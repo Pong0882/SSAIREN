@@ -14,14 +14,12 @@ public class HospitalRequestMessage {
 
     private Integer hospitalSelectionId;
     private Long emergencyReportId;
-    private String message;
     private PatientInfoDto patientInfo;
 
     public static HospitalRequestMessage of(Integer hospitalSelectionId, Long emergencyReportId, PatientInfoDto patientInfo) {
         return HospitalRequestMessage.builder()
                 .hospitalSelectionId(hospitalSelectionId)
                 .emergencyReportId(emergencyReportId)
-                .message("요청")
                 .patientInfo(patientInfo)
                 .build();
     }

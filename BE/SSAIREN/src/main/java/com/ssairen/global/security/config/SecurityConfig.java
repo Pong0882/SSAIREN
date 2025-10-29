@@ -46,6 +46,9 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
 
+                        // WebSocket 엔드포인트 허용
+                        .requestMatchers("/ws/**").permitAll()
+
                         // 구급대원 전용 엔드포인트
                         .requestMatchers("/api/paramedics/**").hasRole("PARAMEDIC")
 
