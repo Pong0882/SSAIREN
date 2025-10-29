@@ -1,13 +1,18 @@
 package com.ssairen.global.security.dto;
 
+import com.ssairen.global.annotation.ExcludeFromLogging;
 import com.ssairen.global.security.enums.UserType;
 
 /**
  * 토큰 응답 DTO
  */
 public record TokenResponse(
+        @ExcludeFromLogging
         String accessToken,
+
+        @ExcludeFromLogging
         String refreshToken,
+
         String tokenType,
         UserType userType,
         Integer userId,

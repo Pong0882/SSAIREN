@@ -1,6 +1,6 @@
 package com.ssairen.domain.firestation.dto;
 
-import com.ssairen.global.annotation.Sensitive;
+import com.ssairen.global.annotation.ExcludeFromLogging;
 import com.ssairen.global.validator.ValidPassword;
 import com.ssairen.global.validator.ValidStudentNumber;
 import jakarta.validation.constraints.NotBlank;
@@ -17,7 +17,7 @@ public record ParamedicLoginRequest(
 
         @NotBlank(message = "비밀번호는 필수 입력 항목입니다.")
         @ValidPassword
-        @Sensitive
+        @ExcludeFromLogging
         String password
 ) {
 }

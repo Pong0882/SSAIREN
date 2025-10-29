@@ -1,6 +1,7 @@
 package com.ssairen.global.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.ssairen.global.annotation.ExcludeFromLogging;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,6 +30,7 @@ public class ErrorResponse {
     public static class FieldError {
         private String field;
         private String message;
+        @ExcludeFromLogging
         private Object rejectedValue;
     }
 

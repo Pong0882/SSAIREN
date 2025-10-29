@@ -1,6 +1,6 @@
 package com.ssairen.domain.firestation.dto;
 
-import com.ssairen.global.annotation.Sensitive;
+import com.ssairen.global.annotation.ExcludeFromLogging;
 import com.ssairen.global.validator.ValidPassword;
 import com.ssairen.global.validator.ValidStudentNumber;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,7 +22,7 @@ public record ParamedicRegisterRequest(
         @Schema(description = "비밀번호", example = "Password123!", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank(message = "비밀번호는 필수 입력 항목입니다.")
         @ValidPassword
-        @Sensitive
+        @ExcludeFromLogging
         String password,
 
         @Schema(description = "이름", example = "김철수", requiredMode = Schema.RequiredMode.REQUIRED)

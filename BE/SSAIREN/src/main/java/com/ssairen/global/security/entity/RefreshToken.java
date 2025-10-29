@@ -1,6 +1,7 @@
 package com.ssairen.global.security.entity;
 
 import com.ssairen.domain.common.entity.BaseEntity;
+import com.ssairen.global.annotation.ExcludeFromLogging;
 import com.ssairen.global.security.enums.UserType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,6 +23,7 @@ public class RefreshToken extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ExcludeFromLogging
     @Column(name = "token", nullable = false, unique = true, length = 500)
     private String token;
 

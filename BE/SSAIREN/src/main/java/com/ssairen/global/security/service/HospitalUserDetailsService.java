@@ -23,27 +23,21 @@ public class HospitalUserDetailsService implements UserDetailsService {
     private final HospitalRepository hospitalRepository;
 
     /**
-     * 병원 ID로 병원 조회
+     * 병원 이름으로 병원 조회
      *
-     * @param hospitalId 병원 ID (문자열)
+     * @param name 병원 이름
      * @return CustomUserPrincipal
      * @throws UsernameNotFoundException 병원을 찾을 수 없는 경우
      */
     @Override
-    public UserDetails loadUserByUsername(String hospitalId) throws UsernameNotFoundException {
-        log.debug("Loading hospital by id: {}", hospitalId);
+    public UserDetails loadUserByUsername(String name) throws UsernameNotFoundException {
+        log.debug("Loading hospital by name: {}", name);
 
-        try {
-            Integer id = Integer.parseInt(hospitalId);
-            Hospital hospital = hospitalRepository.findById(id)
-                    .orElseThrow(() -> new CustomException(ErrorCode.HOSPITAL_NOT_FOUND,
-                            String.format("ID '%s'에 해당하는 병원을 찾을 수 없습니다", hospitalId)));
+        Hospital hospital = hospitalRepository.findByName(name)
+                .orElseThrow(() -> new CustomException(ErrorCode.HOSPITAL_NOT_FOUND,
+                        String.format("이름 '%s'에 해당하는 병원을 찾을 수 없습니다", name)));
 
-            return CustomUserPrincipal.from(hospital);
-        } catch (NumberFormatException e) {
-            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE,
-                    String.format("유효하지 않은 병원 ID 형식입니다: %s", hospitalId));
-        }
+        return CustomUserPrincipal.from(hospital);
     }
 
     /**

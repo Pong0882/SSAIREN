@@ -1,6 +1,7 @@
 package com.ssairen.domain.hospital.entity;
 
 import com.ssairen.domain.common.entity.BaseEntity;
+import com.ssairen.global.annotation.ExcludeFromLogging;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,6 +26,7 @@ public class Hospital extends BaseEntity {
     @Column(name = "official_name", nullable = false, length = 100)
     private String officialName;
 
+    @ExcludeFromLogging
     @Column(name = "password", nullable = false, length = 100)
     private String password;
 }
