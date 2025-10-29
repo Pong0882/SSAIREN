@@ -24,7 +24,7 @@ spring:
   # SQL 초기화 설정
   sql:
     init:
-      mode: always
+      mode: never  # 서버 재시작 시 중복 데이터 삽입 방지
       data-locations: classpath:data.sql
       encoding: UTF-8
 

@@ -22,7 +22,7 @@ public class Paramedic extends BaseEntity {
     @JoinColumn(name = "fire_state_id", nullable = false)
     private FireState fireState;
 
-    @Column(name = "student_number", nullable = false, length = 20)
+    @Column(name = "student_number", nullable = false, unique = true, length = 20)
     private String studentNumber;
 
     @Column(name = "password", nullable = false, length = 100)
