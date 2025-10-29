@@ -2,6 +2,13 @@
 -- 테스트 데이터 초기화 스크립트
 -- JPA가 테이블을 자동 생성한 후 실행됩니다.
 -- =============================================
+-- 1. 기존 데이터 삭제
+TRUNCATE TABLE paramedics CASCADE;
+TRUNCATE TABLE fire_states CASCADE;
+
+-- 2. 시퀀스 초기화
+ALTER SEQUENCE paramedics_id_seq RESTART WITH 1;
+ALTER SEQUENCE fire_states_id_seq RESTART WITH 1;
 
 -- 1. 소방서 데이터 삽입 (서울시 25개 소방서)
 INSERT INTO fire_states (name) VALUES
