@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
  */
 @Getter
 @RequiredArgsConstructor
-public enum ErrorCode {
+public enum
+
+ErrorCode {
 
     // ============================================
     // Common Errors (1000번대)

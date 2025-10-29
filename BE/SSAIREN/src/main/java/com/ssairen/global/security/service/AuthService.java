@@ -1,7 +1,10 @@
 package com.ssairen.global.security.service;
 
+import com.ssairen.domain.firestation.entity.Paramedic;
+import com.ssairen.domain.firestation.repository.ParamedicRepository;
 import com.ssairen.global.exception.CustomException;
 import com.ssairen.global.exception.ErrorCode;
+import com.ssairen.global.security.converter.TokenResponseConverter;
 import com.ssairen.global.security.dto.CustomUserPrincipal;
 import com.ssairen.global.security.dto.LoginRequest;
 import com.ssairen.global.security.dto.TokenResponse;
@@ -27,6 +30,8 @@ public class AuthService {
 
     private final ParamedicUserDetailsService paramedicUserDetailsService;
     private final HospitalUserDetailsService hospitalUserDetailsService;
+    private final ParamedicRepository paramedicRepository;
+    private final TokenResponseConverter tokenResponseConverter;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
@@ -71,7 +76,20 @@ public class AuthService {
         log.info("Login successful: userType={}, userId={}, username={}",
                 principal.getUserType(), principal.getId(), principal.getUsername());
 
-        return new TokenResponse(
+        // 5. 구급대원인 경우 상세 정보 포함
+        if (principal.getUserType() == UserType.PARAMEDIC) {
+            Paramedic paramedic = paramedicRepository.findById(principal.getId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.PARAMEDIC_NOT_FOUND));
+
+            return tokenResponseConverter.toTokenResponseWithParamedic(
+                    accessToken,
+                    refreshToken,
+                    paramedic
+            );
+        }
+
+        // 6. 그 외 사용자는 기본 정보만 반환
+        return tokenResponseConverter.toTokenResponse(
                 accessToken,
                 refreshToken,
                 principal.getUserType(),
@@ -111,7 +129,20 @@ public class AuthService {
 
         log.info("Token refreshed successfully: userType={}, userId={}", userType, userId);
 
-        return new TokenResponse(
+        // 5. 구급대원인 경우 상세 정보 포함
+        if (principal.getUserType() == UserType.PARAMEDIC) {
+            Paramedic paramedic = paramedicRepository.findById(principal.getId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.PARAMEDIC_NOT_FOUND));
+
+            return tokenResponseConverter.toTokenResponseWithParamedic(
+                    newAccessToken,
+                    refreshTokenStr,  // RefreshToken은 그대로 유지
+                    paramedic
+            );
+        }
+
+        // 6. 그 외 사용자는 기본 정보만 반환
+        return tokenResponseConverter.toTokenResponse(
                 newAccessToken,
                 refreshTokenStr,  // RefreshToken은 그대로 유지
                 principal.getUserType(),

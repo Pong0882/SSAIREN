@@ -34,6 +34,7 @@ public class ParamedicServiceImpl implements ParamedicService {
     private final ParamedicRepository paramedicRepository;
     private final FireStateRepository fireStateRepository;
     private final ParamedicMapper paramedicMapper;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     /**
      * 구급대원 회원가입
@@ -62,7 +63,7 @@ public class ParamedicServiceImpl implements ParamedicService {
         // 4. Paramedic 엔티티 생성 및 저장
         Paramedic paramedic = Paramedic.builder()
                 .studentNumber(request.studentNumber())
-                .password(request.password())  // 평문 저장 (추후 암호화 예정)
+                .password(passwordEncoder.encode(request.password()))  // BCrypt 암호화
                 .name(request.name())
                 .rank(rank)
                 .status(ParamedicStatus.ACTIVE)  // 기본값: ACTIVE
@@ -88,8 +89,8 @@ public class ParamedicServiceImpl implements ParamedicService {
         Paramedic paramedic = paramedicRepository.findByStudentNumber(request.studentNumber())
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
 
-        // 비밀번호 검증 (평문 비교 - 추후 암호화 추가 예정)
-        if (!paramedic.getPassword().equals(request.password())) {
+        // 비밀번호 검증 (BCrypt 비교)
+        if (!passwordEncoder.matches(request.password(), paramedic.getPassword())) {
             throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
 
