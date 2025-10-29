@@ -26,6 +26,9 @@ public class Hospital extends BaseEntity {
     @Column(name = "official_name", nullable = false, length = 100)
     private String officialName;
 
+    @Column(name = "official_name", nullable = false, length = 100)
+    private String officialName;
+
     @ExcludeFromLogging
     @Column(name = "password", nullable = false, length = 100)
     private String password;
