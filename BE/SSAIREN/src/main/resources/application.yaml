@@ -12,7 +12,7 @@ spring:
   # JPA 설정
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update  # 테이블 구조만 업데이트 (데이터 유지)
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -51,6 +51,12 @@ ai:
   server:
     base-url: ${AI_SERVER_BASE_URL:https://ai.ssairen.site}
     timeout: 300  # 초 (5분)
+
+# JWT 인증 설정
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}      # 15분 (기본값)
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000} # 7일 (기본값)
 
 # Actuator 헬스체크 및 모니터링 설정
 management:
