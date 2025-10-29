@@ -3,6 +3,8 @@ package com.ssairen.domain.firestation.controller;
 import com.ssairen.domain.firestation.dto.ParamedicInfo;
 import com.ssairen.domain.firestation.dto.ParamedicLoginRequest;
 import com.ssairen.domain.firestation.dto.ParamedicLoginResponse;
+import com.ssairen.domain.firestation.dto.ParamedicRegisterRequest;
+import com.ssairen.domain.firestation.dto.ParamedicRegisterResponse;
 import com.ssairen.domain.firestation.service.ParamedicService;
 import com.ssairen.global.dto.ApiResponse;
 import jakarta.validation.Valid;
@@ -20,6 +22,19 @@ import org.springframework.web.bind.annotation.*;
 public class ParamedicController implements ParamedicApi {
 
     private final ParamedicService paramedicService;
+
+    /**
+     * 구급대원 회원가입
+     */
+    @Override
+    @PostMapping
+    public ResponseEntity<ApiResponse<ParamedicRegisterResponse>> register(
+            @Valid @RequestBody ParamedicRegisterRequest request
+    ) {
+        ParamedicRegisterResponse response = paramedicService.register(request);
+        return ResponseEntity.status(201)
+                .body(ApiResponse.success(response, "회원가입이 완료되었습니다."));
+    }
 
     /**
      * 구급대원 로그인
