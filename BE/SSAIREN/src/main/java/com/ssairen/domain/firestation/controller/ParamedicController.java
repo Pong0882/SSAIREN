@@ -24,6 +24,7 @@ public class ParamedicController implements ParamedicApi {
     /**
      * 구급대원 로그인
      */
+    @Override
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<ParamedicLoginResponse>> login(
             @Valid @RequestBody ParamedicLoginRequest request
@@ -35,7 +36,7 @@ public class ParamedicController implements ParamedicApi {
     }
 
     /**
-     * 급대원 정보 조회 (형식 참고용 예시)
+     * 전체 구급대원 조회
      */
     @Override
     @GetMapping("/all")

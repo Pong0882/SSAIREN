@@ -23,6 +23,10 @@ public class OpenApiConfig {
                         .description("SSAFY 13기 A205팀 프로젝트 API 문서"))
                 .servers(List.of(
                         new Server()
+                                .url("http://localhost:8080")
+                                .description("Local Server"),
+                        
+                        new Server()
                                 .url("https://be.ssairen.site")
                                 .description("Production Server (HTTPS)")
                 ));
