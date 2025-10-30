@@ -1,15 +1,21 @@
 package com.ssairen.domain.emergency.service;
 
-import com.ssairen.domain.emergency.dto.DispatchCreateRequest;
-import com.ssairen.domain.emergency.dto.DispatchCreateResponse;
+import com.ssairen.domain.emergency.dto.*;
 import com.ssairen.domain.emergency.entity.Dispatch;
 import com.ssairen.domain.emergency.mapper.DispatchMapper;
 import com.ssairen.domain.emergency.repository.DispatchRepository;
 import com.ssairen.domain.emergency.validation.DispatchValidator;
+import com.ssairen.domain.firestation.entity.FireState;
+import com.ssairen.domain.firestation.repository.FireStateRepository;
+import com.ssairen.global.exception.CustomException;
+import com.ssairen.global.exception.ErrorCode;
+import com.ssairen.global.utils.CursorUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -20,6 +26,7 @@ public class DispatchServiceImpl implements DispatchService {
     private static final String LOG_PREFIX = "[DispatchService] ";
 
     private final DispatchRepository dispatchRepository;
+    private final FireStateRepository fireStateRepository;
     private final DispatchMapper dispatchMapper;
     private final DispatchValidator dispatchValidator;
 
@@ -32,19 +39,66 @@ public class DispatchServiceImpl implements DispatchService {
     @Override
     @Transactional
     public DispatchCreateResponse createDispatch(DispatchCreateRequest request) {
-        // 1. 추가 검증 수행
-//        dispatchValidator.validateCreateRequest(request);
+        dispatchValidator.validateFireStateExists(request.fireStateId());
 
-        // 2. DTO -> Entity 변환
-        Dispatch dispatch = dispatchMapper.toEntity(request);
+        FireState fireState = fireStateRepository.findById(request.fireStateId())
+                .orElseThrow(() -> new CustomException(ErrorCode.FIRE_STATE_NOT_FOUND));
 
-        // 3. 엔티티 저장
+        Dispatch dispatch = dispatchMapper.toEntity(request, fireState);
+
         Dispatch savedDispatch = dispatchRepository.save(dispatch);
 
-        log.info(LOG_PREFIX + "출동 지령 생성 완료 - ID: {}, 재난분류: {}, 주소: {}",
-                savedDispatch.getId(), savedDispatch.getDisasterType(), savedDispatch.getLocationAddress());
+        log.info(LOG_PREFIX + "출동 지령 생성 완료 - ID: {}, 소방서: {}, 재난분류: {}, 주소: {}",
+                savedDispatch.getId(), fireState.getName(), savedDispatch.getDisasterType(), savedDispatch.getLocationAddress());
 
-        // 4. Entity -> 응답 DTO 변환 및 반환
         return dispatchMapper.toResponse(savedDispatch);
+    }
+
+    /**
+     * 소방서 전체 출동 목록 조회
+     *
+     * @param fireStateId 소방서 ID
+     * @param request     조회 조건 (커서, 페이지 크기)
+     * @return 출동 목록 응답 DTO
+     */
+    @Override
+    public DispatchListResponse getDispatchList(Integer fireStateId, DispatchListQueryRequest request) {
+        dispatchValidator.validateFireStateExists(fireStateId);
+
+        // 커서 디코딩
+        Long cursorId = CursorUtils.decodeCursor(request.cursor());
+
+        // 데이터 조회 (limit + 1개 조회하여 다음 페이지 존재 여부 확인)
+        List<Dispatch> dispatches = dispatchRepository.findByFireStateIdWithFilters(
+                fireStateId,
+                cursorId,
+                request.limit() + 1
+        );
+
+        // 다음 페이지 존재 여부 확인 및 실제 반환할 데이터 추출
+        boolean hasMore = dispatches.size() > request.limit();
+        List<Dispatch> actualDispatches = hasMore
+                ? dispatches.subList(0, request.limit())
+                : dispatches;
+
+        // 다음 커서 생성
+        String nextCursor = null;
+        if (hasMore && !actualDispatches.isEmpty()) {
+            Long lastId = actualDispatches.get(actualDispatches.size() - 1).getId();
+            nextCursor = CursorUtils.encodeCursor(lastId);
+        }
+
+        // FireState 조회
+        FireState fireState = fireStateRepository.findById(fireStateId)
+                .orElseThrow(() -> new CustomException(ErrorCode.FIRE_STATE_NOT_FOUND));
+
+        log.info(LOG_PREFIX + "출동 목록 조회 완료 - 소방서: {}, 조회 건수: {}, 다음 페이지 존재: {}",
+                fireState.getName(), actualDispatches.size(), hasMore);
+
+        return new DispatchListResponse(
+                dispatchMapper.toFireStateResponse(fireState),
+                dispatchMapper.toResponseList(actualDispatches),
+                new PaginationResponse(nextCursor, hasMore)
+        );
     }
 }
