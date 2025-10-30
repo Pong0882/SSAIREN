@@ -14,6 +14,8 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -176,6 +178,40 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(ApiResponse.error(errorResponse, HttpStatus.METHOD_NOT_ALLOWED.value()));
+    }
+
+    /**
+     * Spring Security AuthenticationException 처리 (인증 실패)
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(AuthenticationException e) {
+        log.warn("Authentication failed: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+                ErrorCode.UNAUTHORIZED.getCode(),
+                ErrorCode.UNAUTHORIZED.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(errorResponse, HttpStatus.UNAUTHORIZED.value()));
+    }
+
+    /**
+     * Spring Security AccessDeniedException 처리 (권한 부족)
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException e) {
+        log.warn("Access denied: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+                ErrorCode.ACCESS_DENIED.getCode(),
+                ErrorCode.ACCESS_DENIED.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(errorResponse, HttpStatus.FORBIDDEN.value()));
     }
 
     /**
