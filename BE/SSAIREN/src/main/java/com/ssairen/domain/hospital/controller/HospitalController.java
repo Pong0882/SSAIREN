@@ -1,9 +1,6 @@
 package com.ssairen.domain.hospital.controller;
 
-import com.ssairen.domain.hospital.dto.HospitalResponseDto;
-import com.ssairen.domain.hospital.dto.HospitalResponseRequest;
-import com.ssairen.domain.hospital.dto.HospitalSelectionRequest;
-import com.ssairen.domain.hospital.dto.HospitalSelectionResponse;
+import com.ssairen.domain.hospital.dto.*;
 import com.ssairen.domain.hospital.service.HospitalService;
 import com.ssairen.global.dto.ApiResponse;
 import com.ssairen.global.security.dto.CustomUserPrincipal;
@@ -13,20 +10,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * 병원 Controller
+ * 병원 이송 요청 생성, 응답, 조회 기능 제공
  */
 @RestController
-@RequestMapping("/api/hospital-selection")
+@RequestMapping("/api")
 @RequiredArgsConstructor
-public class HospitalController {
+public class HospitalController implements HospitalApi {
 
     private final HospitalService hospitalService;
 
-    /**
-     * 병원 이송 요청 생성
-     */
-    @PostMapping("/request")
+    @Override
+    @PostMapping("/hospital-selection/request")
     public ResponseEntity<ApiResponse<HospitalSelectionResponse>> createHospitalSelectionRequest(
             @Valid @RequestBody HospitalSelectionRequest request
     ) {
@@ -36,15 +34,8 @@ public class HospitalController {
         );
     }
 
-    /**
-     * 병원 이송 요청에 응답
-     *
-     * @param hospitalSelectionId 병원 선택 ID
-     * @param request 병원 응답 요청 (status: ACCEPTED, REJECTED, CALLREQUEST)
-     * @param principal 현재 로그인한 병원 정보
-     * @return 병원 응답 결과
-     */
-    @PatchMapping("/{hospitalSelectionId}")
+    @Override
+    @PatchMapping("/hospital-selection/{hospitalSelectionId}")
     public ResponseEntity<ApiResponse<HospitalResponseDto>> respondToRequest(
             @PathVariable Integer hospitalSelectionId,
             @Valid @RequestBody HospitalResponseRequest request,
@@ -64,5 +55,37 @@ public class HospitalController {
         };
 
         return ResponseEntity.ok(ApiResponse.success(response, message));
+    }
+
+    @Override
+    @GetMapping("/hospitals/{hospitalId}/requests/pending")
+    public ResponseEntity<ApiResponse<List<HospitalRequestMessage>>> getPendingRequests(
+            @PathVariable Integer hospitalId,
+            @AuthenticationPrincipal CustomUserPrincipal principal
+    ) {
+        List<HospitalRequestMessage> requests = hospitalService.getPendingRequests(
+                hospitalId,
+                principal.getId()
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(requests, "PENDING 상태인 요청 목록을 조회했습니다.")
+        );
+    }
+
+    @Override
+    @GetMapping("/hospitals/{hospitalId}/patients")
+    public ResponseEntity<ApiResponse<List<AcceptedPatientDto>>> getAcceptedPatients(
+            @PathVariable Integer hospitalId,
+            @AuthenticationPrincipal CustomUserPrincipal principal
+    ) {
+        List<AcceptedPatientDto> patients = hospitalService.getAcceptedPatients(
+                hospitalId,
+                principal.getId()
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(patients, "수용한 환자 목록을 조회했습니다.")
+        );
     }
 }

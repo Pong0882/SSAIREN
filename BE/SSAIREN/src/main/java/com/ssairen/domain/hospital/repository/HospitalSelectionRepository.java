@@ -47,4 +47,30 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
      * EmergencyReport ID로 모든 HospitalSelection 조회
      */
     List<HospitalSelection> findByEmergencyReportId(Long emergencyReportId);
+
+    /**
+     * 특정 병원의 PENDING 상태인 요청 목록 조회 (EmergencyReport Fetch Join)
+     */
+    @Query("SELECT hs FROM HospitalSelection hs " +
+            "JOIN FETCH hs.emergencyReport " +
+            "WHERE hs.hospital.id = :hospitalId " +
+            "AND hs.status = :status " +
+            "ORDER BY hs.createdAt DESC")
+    List<HospitalSelection> findByHospitalIdAndStatus(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("status") HospitalSelectionStatus status
+    );
+
+    /**
+     * 특정 병원이 수용한 환자 목록 조회 (ACCEPTED, ARRIVED 상태)
+     * EmergencyReport Fetch Join
+     */
+    @Query("SELECT hs FROM HospitalSelection hs " +
+            "JOIN FETCH hs.emergencyReport " +
+            "WHERE hs.hospital.id = :hospitalId " +
+            "AND hs.status IN ('ACCEPTED', 'ARRIVED') " +
+            "ORDER BY hs.responseAt DESC")
+    List<HospitalSelection> findAcceptedPatientsByHospitalId(
+            @Param("hospitalId") Integer hospitalId
+    );
 }

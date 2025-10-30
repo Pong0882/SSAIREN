@@ -181,4 +181,124 @@ public class HospitalService {
         // 7. 응답 생성
         return HospitalResponseDto.from(savedSelection);
     }
+
+    /**
+     * 병원의 PENDING 상태인 요청 목록 조회
+     *
+     * @param hospitalId 병원 ID
+     * @param currentHospitalId 현재 로그인한 병원 ID
+     * @return PENDING 상태인 요청 목록
+     */
+    @Transactional(readOnly = true)
+    public List<HospitalRequestMessage> getPendingRequests(Integer hospitalId, Integer currentHospitalId) {
+        log.info(LOG_PREFIX + "PENDING 요청 목록 조회 시작 - 병원 ID: {}", hospitalId);
+
+        // 1. 권한 검증: 본인의 요청만 조회 가능
+        if (!hospitalId.equals(currentHospitalId)) {
+            log.warn(LOG_PREFIX + "권한 없는 요청 목록 조회 시도 - 요청 병원 ID: {}, 현재 병원 ID: {}",
+                    hospitalId, currentHospitalId);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        // 2. 병원 존재 여부 확인
+        if (!hospitalRepository.existsById(hospitalId)) {
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND);
+        }
+
+        // 3. PENDING 상태인 HospitalSelection 목록 조회
+        List<HospitalSelection> pendingSelections = hospitalSelectionRepository
+                .findByHospitalIdAndStatus(hospitalId, HospitalSelectionStatus.PENDING);
+
+        log.info(LOG_PREFIX + "PENDING 요청 조회 완료 - 병원 ID: {}, 요청 수: {}",
+                hospitalId, pendingSelections.size());
+
+        // 4. 각 selection에 대해 환자 정보 조회 및 DTO 변환
+        List<HospitalRequestMessage> requestMessages = new ArrayList<>();
+        for (HospitalSelection selection : pendingSelections) {
+            Long emergencyReportId = selection.getEmergencyReport().getId();
+
+            // 환자 정보 조회
+            Optional<PatientInfo> patientInfoOptional = patientInfoRepository
+                    .findByEmergencyReportId_Id(emergencyReportId);
+
+            PatientInfoDto patientInfoDto = patientInfoOptional
+                    .map(PatientInfoDto::from)
+                    .orElse(null);
+
+            // HospitalRequestMessage 생성
+            HospitalRequestMessage message = HospitalRequestMessage.of(
+                    selection.getId(),
+                    emergencyReportId,
+                    patientInfoDto
+            );
+
+            requestMessages.add(message);
+
+            log.debug(LOG_PREFIX + "요청 메시지 생성 - 선택 ID: {}, 구급일지 ID: {}, 환자 정보 포함: {}",
+                    selection.getId(), emergencyReportId, (patientInfoDto != null));
+        }
+
+        log.info(LOG_PREFIX + "PENDING 요청 목록 조회 완료 - 병원 ID: {}, 반환 개수: {}",
+                hospitalId, requestMessages.size());
+
+        return requestMessages;
+    }
+
+    /**
+     * 병원이 수용한 환자 목록 조회 (ACCEPTED, ARRIVED 상태)
+     *
+     * @param hospitalId 병원 ID
+     * @param currentHospitalId 현재 로그인한 병원 ID
+     * @return 수용한 환자 목록
+     */
+    @Transactional(readOnly = true)
+    public List<AcceptedPatientDto> getAcceptedPatients(Integer hospitalId, Integer currentHospitalId) {
+        log.info(LOG_PREFIX + "수용한 환자 목록 조회 시작 - 병원 ID: {}", hospitalId);
+
+        // 1. 권한 검증: 본인의 환자만 조회 가능
+        if (!hospitalId.equals(currentHospitalId)) {
+            log.warn(LOG_PREFIX + "권한 없는 환자 목록 조회 시도 - 요청 병원 ID: {}, 현재 병원 ID: {}",
+                    hospitalId, currentHospitalId);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        // 2. 병원 존재 여부 확인
+        if (!hospitalRepository.existsById(hospitalId)) {
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND);
+        }
+
+        // 3. ACCEPTED, ARRIVED 상태인 HospitalSelection 목록 조회
+        List<HospitalSelection> acceptedSelections = hospitalSelectionRepository
+                .findAcceptedPatientsByHospitalId(hospitalId);
+
+        log.info(LOG_PREFIX + "수용한 환자 조회 완료 - 병원 ID: {}, 환자 수: {}",
+                hospitalId, acceptedSelections.size());
+
+        // 4. 각 selection에 대해 환자 정보 조회 및 DTO 변환
+        List<AcceptedPatientDto> acceptedPatients = new ArrayList<>();
+        for (HospitalSelection selection : acceptedSelections) {
+            Long emergencyReportId = selection.getEmergencyReport().getId();
+
+            // 환자 정보 조회
+            Optional<PatientInfo> patientInfoOptional = patientInfoRepository
+                    .findByEmergencyReportId_Id(emergencyReportId);
+
+            if (patientInfoOptional.isPresent()) {
+                PatientInfo patientInfo = patientInfoOptional.get();
+                AcceptedPatientDto dto = AcceptedPatientDto.from(selection, patientInfo);
+                acceptedPatients.add(dto);
+
+                log.debug(LOG_PREFIX + "환자 정보 추가 - 선택 ID: {}, 구급일지 ID: {}, 상태: {}",
+                        selection.getId(), emergencyReportId, selection.getStatus());
+            } else {
+                log.warn(LOG_PREFIX + "환자 정보 없음 - 선택 ID: {}, 구급일지 ID: {}",
+                        selection.getId(), emergencyReportId);
+            }
+        }
+
+        log.info(LOG_PREFIX + "수용한 환자 목록 조회 완료 - 병원 ID: {}, 반환 개수: {}",
+                hospitalId, acceptedPatients.size());
+
+        return acceptedPatients;
+    }
 }

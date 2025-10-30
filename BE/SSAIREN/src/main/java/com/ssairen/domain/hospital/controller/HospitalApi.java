@@ -1,0 +1,167 @@
+package com.ssairen.domain.hospital.controller;
+
+import com.ssairen.config.swagger.annotation.ApiInternalServerError;
+import com.ssairen.config.swagger.annotation.ApiUnauthorizedError;
+import com.ssairen.domain.hospital.dto.*;
+import com.ssairen.global.dto.ApiResponse;
+import com.ssairen.global.security.dto.CustomUserPrincipal;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.List;
+
+/**
+ * 병원 API 스펙 정의
+ * Swagger 문서화를 위한 인터페이스
+ */
+@Tag(name = "Hospital", description = "병원 이송 요청 관리 API")
+public interface HospitalApi {
+
+    /**
+     * 병원 이송 요청 생성
+     * - 구급대원이 여러 병원에 동시에 환자 이송 요청을 보냄
+     * - 각 병원에 웹소켓으로 실시간 알림 전송
+     */
+    @Operation(
+            summary = "병원 이송 요청 생성",
+            description = "구급대원이 여러 병원에 환자 이송 요청을 전송합니다. 각 병원에 웹소켓으로 실시간 알림이 전송됩니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "요청 전송 성공",
+                    content = @Content(schema = @Schema(implementation = HospitalSelectionResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (구급일지 없음, 병원 정보 오류 등)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "구급일지 또는 병원을 찾을 수 없음"
+            )
+    })
+    @ApiInternalServerError
+    ResponseEntity<ApiResponse<HospitalSelectionResponse>> createHospitalSelectionRequest(
+            @Parameter(description = "병원 이송 요청 정보 (구급일지 ID, 병원 이름 목록)", required = true)
+            @Valid @RequestBody HospitalSelectionRequest request
+    );
+
+    /**
+     * 병원 이송 요청에 응답
+     * - 병원이 환자 수용 요청에 대해 응답 (수용/거절/전화요망)
+     * - ACCEPTED 시 같은 구급일지의 다른 병원 요청은 자동으로 COMPLETED 처리
+     */
+    @Operation(
+            summary = "병원 이송 요청에 응답",
+            description = "병원이 환자 수용 요청에 대해 응답합니다. 수용(ACCEPTED), 거절(REJECTED), 전화요망(CALLREQUEST) 중 하나를 선택할 수 있습니다. " +
+                    "병원이 수용(ACCEPTED)하면 같은 구급일지의 다른 병원 요청은 자동으로 완료(COMPLETED) 처리됩니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "응답 처리 성공",
+                    content = @Content(schema = @Schema(implementation = HospitalResponseDto.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "이미 처리된 요청"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "권한 없음 (다른 병원의 요청에 응답 시도)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "병원 선택 요청을 찾을 수 없음"
+            )
+    })
+    @ApiUnauthorizedError
+    @ApiInternalServerError
+    ResponseEntity<ApiResponse<HospitalResponseDto>> respondToRequest(
+            @Parameter(description = "병원 선택 ID", required = true, example = "48")
+            @PathVariable Integer hospitalSelectionId,
+            @Parameter(description = "병원 응답 정보 (status: ACCEPTED, REJECTED, CALLREQUEST)", required = true)
+            @Valid @RequestBody HospitalResponseRequest request,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CustomUserPrincipal principal
+    );
+
+    /**
+     * 병원의 PENDING 상태인 요청 목록 조회
+     * - 병원이 아직 응답하지 않은 환자 이송 요청 목록 조회
+     * - 각 요청에는 환자 정보(PatientInfo) 포함
+     */
+    @Operation(
+            summary = "병원의 PENDING 요청 목록 조회",
+            description = "병원이 아직 응답하지 않은(PENDING) 환자 이송 요청 목록을 조회합니다. " +
+                    "각 요청에는 환자의 바이탈 사인, 나이, 성별 등의 정보가 포함됩니다. " +
+                    "웹소켓 연결이 끊겼거나 화면을 새로고침할 때 사용합니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = HospitalRequestMessage.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "권한 없음 (다른 병원의 요청 목록 조회 시도)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "병원을 찾을 수 없음"
+            )
+    })
+    @ApiUnauthorizedError
+    @ApiInternalServerError
+    ResponseEntity<ApiResponse<List<HospitalRequestMessage>>> getPendingRequests(
+            @Parameter(description = "병원 ID", required = true, example = "5")
+            @PathVariable Integer hospitalId,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CustomUserPrincipal principal
+    );
+
+    /**
+     * 병원이 수용한 환자 목록 조회
+     * - ACCEPTED (내원 대기중) 또는 ARRIVED (내원 완료) 상태의 환자 목록
+     * - 각 환자의 기본 정보와 내원 상태 포함
+     */
+    @Operation(
+            summary = "병원이 수용한 환자 목록 조회",
+            description = "병원이 수용(ACCEPTED)하거나 내원 완료(ARRIVED)된 환자 목록을 조회합니다. " +
+                    "각 환자의 성별, 나이, 주호소, 의식상태 등의 정보와 함께 내원 상태를 확인할 수 있습니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = AcceptedPatientDto.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "권한 없음 (다른 병원의 환자 목록 조회 시도)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "병원을 찾을 수 없음"
+            )
+    })
+    @ApiUnauthorizedError
+    @ApiInternalServerError
+    ResponseEntity<ApiResponse<List<AcceptedPatientDto>>> getAcceptedPatients(
+            @Parameter(description = "병원 ID", required = true, example = "5")
+            @PathVariable Integer hospitalId,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CustomUserPrincipal principal
+    );
+}
