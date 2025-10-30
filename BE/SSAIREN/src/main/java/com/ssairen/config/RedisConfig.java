@@ -8,6 +8,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.util.StringUtils;
 
 /**
  * Redis 설정
@@ -34,8 +35,8 @@ public class RedisConfig {
         config.setHostName(host);
         config.setPort(port);
 
-        // 패스워드가 설정된 경우에만 적용
-        if (password != null && !password.isEmpty()) {
+        // 패스워드가 설정된 경우에만 적용 (null, 빈 문자열, 공백 체크)
+        if (StringUtils.hasText(password)) {
             config.setPassword(password);
         }
 
