@@ -417,4 +417,51 @@ public class HospitalService {
         // 6. DTO 변환 및 반환
         return PatientInfoDto.from(updatedPatientInfo);
     }
+
+    /**
+     * 환자 내원 완료 처리
+     *
+     * @param hospitalId 병원 ID
+     * @param emergencyReportId 구급일지 ID
+     * @param currentHospitalId 현재 로그인한 병원 ID
+     */
+    @Transactional
+    public void markPatientAsArrived(
+            Integer hospitalId,
+            Long emergencyReportId,
+            Integer currentHospitalId
+    ) {
+        log.info(LOG_PREFIX + "환자 내원 완료 처리 시작 - 병원 ID: {}, 구급일지 ID: {}",
+                hospitalId, emergencyReportId);
+
+        // 1. 권한 검증: 본인 병원만 처리 가능
+        if (!hospitalId.equals(currentHospitalId)) {
+            log.warn(LOG_PREFIX + "권한 없는 내원 완료 처리 시도 - 요청 병원 ID: {}, 현재 병원 ID: {}",
+                    hospitalId, currentHospitalId);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        // 2. 병원이 수용한 환자인지 확인 (ACCEPTED 상태)
+        HospitalSelection selection = hospitalSelectionRepository
+                .findByHospitalIdAndEmergencyReportIdAndStatus(
+                        hospitalId,
+                        emergencyReportId,
+                        HospitalSelectionStatus.ACCEPTED
+                )
+                .orElseThrow(() -> {
+                    log.warn(LOG_PREFIX + "ACCEPTED 상태의 환자를 찾을 수 없음 - 병원 ID: {}, 구급일지 ID: {}",
+                            hospitalId, emergencyReportId);
+                    return new CustomException(ErrorCode.HOSPITAL_SELECTION_NOT_FOUND,
+                            "수용 대기 중인 환자를 찾을 수 없습니다.");
+                });
+
+        // 3. 상태를 ARRIVED로 변경
+        selection.markAsArrived();
+
+        // 4. 저장 (변경 감지로 자동 저장되지만 명시적으로 호출)
+        hospitalSelectionRepository.save(selection);
+
+        log.info(LOG_PREFIX + "환자 내원 완료 처리 완료 - 병원 ID: {}, 구급일지 ID: {}, 선택 ID: {}",
+                hospitalId, emergencyReportId, selection.getId());
+    }
 }

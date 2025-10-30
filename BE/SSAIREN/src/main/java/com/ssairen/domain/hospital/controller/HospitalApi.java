@@ -244,4 +244,39 @@ public interface HospitalApi {
             @Parameter(hidden = true)
             @AuthenticationPrincipal CustomUserPrincipal principal
     );
+
+    /**
+     * 환자 내원 완료 처리
+     * - 수용한 환자(ACCEPTED)가 실제로 병원에 도착했을 때 상태를 내원 완료(ARRIVED)로 변경
+     * - ACCEPTED 상태인 환자만 처리 가능
+     */
+    @Operation(
+            summary = "환자 내원 완료 처리",
+            description = "수용한 환자가 실제로 병원에 도착했을 때 상태를 ARRIVED로 변경합니다. " +
+                    "ACCEPTED(내원 대기) 상태인 환자만 처리 가능합니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "내원 완료 처리 성공"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "권한 없음 (다른 병원의 환자)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "수용 대기 중인 환자를 찾을 수 없음 (ACCEPTED 상태가 아님)"
+            )
+    })
+    @ApiUnauthorizedError
+    @ApiInternalServerError
+    ResponseEntity<ApiResponse<Void>> markPatientAsArrived(
+            @Parameter(description = "병원 ID", required = true, example = "5")
+            @PathVariable Integer hospitalId,
+            @Parameter(description = "구급일지 ID (환자 식별자)", required = true, example = "1")
+            @PathVariable Long emergencyReportId,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CustomUserPrincipal principal
+    );
 }

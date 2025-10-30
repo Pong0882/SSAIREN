@@ -85,4 +85,17 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
             @Param("hospitalId") Integer hospitalId,
             @Param("emergencyReportId") Long emergencyReportId
     );
+
+    /**
+     * 병원 ID, 구급일지 ID, 상태로 HospitalSelection 조회
+     */
+    @Query("SELECT hs FROM HospitalSelection hs " +
+            "WHERE hs.hospital.id = :hospitalId " +
+            "AND hs.emergencyReport.id = :emergencyReportId " +
+            "AND hs.status = :status")
+    Optional<HospitalSelection> findByHospitalIdAndEmergencyReportIdAndStatus(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("emergencyReportId") Long emergencyReportId,
+            @Param("status") HospitalSelectionStatus status
+    );
 }

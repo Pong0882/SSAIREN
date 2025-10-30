@@ -42,4 +42,11 @@ public class HospitalSelection extends BaseEntity {
         this.status = newStatus;
         this.responseAt = LocalDateTime.now();
     }
+
+    /**
+     * 환자 내원 완료 처리
+     */
+    public void markAsArrived() {
+        this.status = HospitalSelectionStatus.ARRIVED;
+    }
 }
