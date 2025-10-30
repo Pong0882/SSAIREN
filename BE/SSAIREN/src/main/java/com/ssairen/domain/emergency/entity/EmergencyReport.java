@@ -4,6 +4,10 @@ import com.ssairen.domain.firestation.entity.FireState;
 import com.ssairen.domain.firestation.entity.Paramedic;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "emergency_reports")
@@ -11,6 +15,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 public class EmergencyReport {
 
     @Id
@@ -28,4 +33,8 @@ public class EmergencyReport {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dispatches_id", nullable = false)
     private Dispatch dispatch;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 }
