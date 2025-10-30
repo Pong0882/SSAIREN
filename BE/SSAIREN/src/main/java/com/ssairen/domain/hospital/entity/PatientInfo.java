@@ -80,4 +80,40 @@ public class PatientInfo extends BaseEntity {
         ALERT, VERBAL, PAIN, UNRESPONSIVE
         // 필요 시 AVPU 외 GCS/기타 체계로 확장 가능
     }
+
+    // ── 업데이트 메서드 ──────────────────────────────────────────────────────
+    /**
+     * 환자 정보 업데이트
+     */
+    public void updatePatientInfo(
+            Gender gender,
+            Integer age,
+            LocalTime recordTime,
+            MentalStatus mentalStatus,
+            String chiefComplaint,
+            Integer hr,
+            String bp,
+            Integer spo2,
+            Integer rr,
+            BigDecimal bt,
+            Boolean hasGuardian,
+            String hx,
+            LocalTime onsetTime,
+            LocalTime lnt
+    ) {
+        this.gender = gender;
+        this.age = age;
+        this.recordTime = recordTime;
+        this.mentalStatus = mentalStatus;
+        this.chiefComplaint = chiefComplaint;
+        this.hr = hr;
+        this.bp = bp;
+        this.spo2 = spo2;
+        this.rr = rr;
+        this.bt = bt;
+        this.hasGuardian = hasGuardian;
+        this.hx = hx;
+        this.onsetTime = onsetTime;
+        this.lnt = lnt;
+    }
 }

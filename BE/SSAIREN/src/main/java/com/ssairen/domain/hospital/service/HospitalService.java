@@ -347,4 +347,74 @@ public class HospitalService {
 
         return PatientInfoDto.from(patientInfo);
     }
+
+    /**
+     * 병원이 수용한 환자의 정보 수정
+     *
+     * @param hospitalId 병원 ID
+     * @param emergencyReportId 구급일지 ID
+     * @param request 환자 정보 수정 요청
+     * @param currentHospitalId 현재 로그인한 병원 ID
+     * @return 수정된 환자 정보
+     */
+    @Transactional
+    public PatientInfoDto updatePatientInfo(
+            Integer hospitalId,
+            Long emergencyReportId,
+            UpdatePatientInfoRequest request,
+            Integer currentHospitalId
+    ) {
+        log.info(LOG_PREFIX + "환자 정보 수정 시작 - 병원 ID: {}, 구급일지 ID: {}",
+                hospitalId, emergencyReportId);
+
+        // 1. 권한 검증: 본인의 환자만 수정 가능
+        if (!hospitalId.equals(currentHospitalId)) {
+            log.warn(LOG_PREFIX + "권한 없는 환자 정보 수정 시도 - 요청 병원 ID: {}, 현재 병원 ID: {}",
+                    hospitalId, currentHospitalId);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        // 2. 병원이 이 환자를 수용했는지 확인 (ACCEPTED 또는 ARRIVED 상태)
+        boolean isAccepted = hospitalSelectionRepository
+                .existsByHospitalIdAndEmergencyReportIdAndAccepted(hospitalId, emergencyReportId);
+
+        if (!isAccepted) {
+            log.warn(LOG_PREFIX + "수용하지 않은 환자 수정 시도 - 병원 ID: {}, 구급일지 ID: {}",
+                    hospitalId, emergencyReportId);
+            throw new CustomException(ErrorCode.ACCESS_DENIED,
+                    "수용한 환자만 정보를 수정할 수 있습니다.");
+        }
+
+        // 3. 환자 정보 조회
+        PatientInfo patientInfo = patientInfoRepository.findById(emergencyReportId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND,
+                        "환자 정보를 찾을 수 없습니다."));
+
+        // 4. 환자 정보 업데이트
+        patientInfo.updatePatientInfo(
+                PatientInfo.Gender.valueOf(request.getGender()),
+                request.getAge(),
+                request.getRecordTime(),
+                PatientInfo.MentalStatus.valueOf(request.getMentalStatus()),
+                request.getChiefComplaint(),
+                request.getHr(),
+                request.getBp(),
+                request.getSpo2(),
+                request.getRr(),
+                request.getBt(),
+                request.getHasGuardian(),
+                request.getHx(),
+                request.getOnsetTime(),
+                request.getLnt()
+        );
+
+        // 5. 저장 (변경 감지로 자동 저장되지만 명시적으로 호출)
+        PatientInfo updatedPatientInfo = patientInfoRepository.save(patientInfo);
+
+        log.info(LOG_PREFIX + "환자 정보 수정 완료 - 병원 ID: {}, 구급일지 ID: {}, 나이: {}, 성별: {}",
+                hospitalId, emergencyReportId, updatedPatientInfo.getAge(), updatedPatientInfo.getGender());
+
+        // 6. DTO 변환 및 반환
+        return PatientInfoDto.from(updatedPatientInfo);
+    }
 }
