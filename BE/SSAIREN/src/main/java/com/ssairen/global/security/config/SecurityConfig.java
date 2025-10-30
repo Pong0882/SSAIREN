@@ -1,5 +1,7 @@
 package com.ssairen.global.security.config;
 
+import com.ssairen.global.security.handler.CustomAccessDeniedHandler;
+import com.ssairen.global.security.handler.CustomAuthenticationEntryPoint;
 import com.ssairen.global.security.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +26,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     /**
      * SecurityFilterChain 설정
@@ -60,6 +64,12 @@ public class SecurityConfig {
 
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
+                )
+
+                // 예외 처리 (GlobalExceptionHandler와 동일한 형식 사용)
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)  // 인증 실패
+                        .accessDeniedHandler(customAccessDeniedHandler)            // 권한 부족
                 )
 
                 // JWT 필터 추가 (UsernamePasswordAuthenticationFilter 이전에 실행)
