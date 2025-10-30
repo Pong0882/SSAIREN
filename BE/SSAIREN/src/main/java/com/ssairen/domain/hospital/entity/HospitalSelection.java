@@ -34,4 +34,12 @@ public class HospitalSelection extends BaseEntity {
 
     @Column(name = "response_at")
     private LocalDateTime responseAt;
+
+    /**
+     * 병원 응답 처리
+     */
+    public void respond(HospitalSelectionStatus newStatus) {
+        this.status = newStatus;
+        this.responseAt = LocalDateTime.now();
+    }
 }

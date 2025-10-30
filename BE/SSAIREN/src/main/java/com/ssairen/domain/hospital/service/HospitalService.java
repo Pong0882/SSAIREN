@@ -2,10 +2,7 @@ package com.ssairen.domain.hospital.service;
 
 import com.ssairen.domain.emergency.entity.EmergencyReport;
 import com.ssairen.domain.emergency.repository.EmergencyReportRepository;
-import com.ssairen.domain.hospital.dto.HospitalRequestMessage;
-import com.ssairen.domain.hospital.dto.HospitalSelectionRequest;
-import com.ssairen.domain.hospital.dto.HospitalSelectionResponse;
-import com.ssairen.domain.hospital.dto.PatientInfoDto;
+import com.ssairen.domain.hospital.dto.*;
 import com.ssairen.domain.hospital.entity.Hospital;
 import com.ssairen.domain.hospital.entity.HospitalSelection;
 import com.ssairen.domain.hospital.entity.PatientInfo;
@@ -21,6 +18,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -116,5 +114,71 @@ public class HospitalService {
 
         // 6. 응답 생성
         return HospitalSelectionResponse.from(request.getEmergencyReportId(), selections);
+    }
+
+    /**
+     * 병원 이송 요청에 응답
+     *
+     * @param hospitalSelectionId 병원 선택 ID
+     * @param request 병원 응답 요청 정보 (status)
+     * @param currentHospitalId 현재 로그인한 병원 ID
+     * @return 병원 응답 결과
+     */
+    @Transactional
+    public HospitalResponseDto respondToRequest(
+            Integer hospitalSelectionId,
+            HospitalResponseRequest request,
+            Integer currentHospitalId
+    ) {
+        log.info(LOG_PREFIX + "병원 응답 처리 시작 - 선택 ID: {}, 상태: {}, 병원 ID: {}",
+                hospitalSelectionId, request.getStatus(), currentHospitalId);
+
+        // 1. HospitalSelection 조회 (Hospital, EmergencyReport Fetch Join)
+        HospitalSelection selection = hospitalSelectionRepository
+                .findByIdWithHospitalAndEmergencyReport(hospitalSelectionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.HOSPITAL_SELECTION_NOT_FOUND));
+
+        // 2. 권한 검증: 현재 로그인한 병원이 해당 요청의 대상 병원인지 확인
+        if (!selection.getHospital().getId().equals(currentHospitalId)) {
+            log.warn(LOG_PREFIX + "권한 없는 응답 시도 - 요청 병원 ID: {}, 현재 병원 ID: {}",
+                    selection.getHospital().getId(), currentHospitalId);
+            throw new CustomException(ErrorCode.UNAUTHORIZED_HOSPITAL_RESPONSE);
+        }
+
+        // 3. 이미 처리된 요청인지 확인
+        if (selection.getStatus() != HospitalSelectionStatus.PENDING) {
+            log.warn(LOG_PREFIX + "이미 처리된 요청 - 선택 ID: {}, 현재 상태: {}",
+                    hospitalSelectionId, selection.getStatus());
+            throw new CustomException(ErrorCode.HOSPITAL_SELECTION_ALREADY_PROCESSED);
+        }
+
+        // 4. 상태 변경 및 응답 시간 설정
+        selection.respond(request.getStatus());
+
+        log.info(LOG_PREFIX + "상태 변경 완료 - 선택 ID: {}, 새로운 상태: {}",
+                hospitalSelectionId, request.getStatus());
+
+        // 5. ACCEPTED 상태인 경우, 같은 EmergencyReport의 다른 HospitalSelection들을 COMPLETED로 변경
+        if (request.getStatus() == HospitalSelectionStatus.ACCEPTED) {
+            Long emergencyReportId = selection.getEmergencyReport().getId();
+            int updatedCount = hospitalSelectionRepository.updateOtherSelectionsToCompleted(
+                    emergencyReportId,
+                    hospitalSelectionId,
+                    HospitalSelectionStatus.COMPLETED,
+                    LocalDateTime.now()
+            );
+
+            log.info(LOG_PREFIX + "다른 병원 요청 완료 처리 - 구급일지 ID: {}, 완료 처리된 요청 수: {}",
+                    emergencyReportId, updatedCount);
+        }
+
+        // 6. 저장
+        HospitalSelection savedSelection = hospitalSelectionRepository.save(selection);
+
+        log.info(LOG_PREFIX + "병원 응답 처리 완료 - 선택 ID: {}, 상태: {}, 응답 시간: {}",
+                savedSelection.getId(), savedSelection.getStatus(), savedSelection.getResponseAt());
+
+        // 7. 응답 생성
+        return HospitalResponseDto.from(savedSelection);
     }
 }
