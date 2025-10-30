@@ -78,8 +78,19 @@ public class RefreshTokenService {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
-        Integer userId = Integer.parseInt(parts[0]);
-        UserType userType = UserType.valueOf(parts[1]);
+        // 파싱 중 예외 처리
+        Integer userId;
+        UserType userType;
+        try {
+            userId = Integer.parseInt(parts[0]);
+            userType = UserType.valueOf(parts[1]);
+        } catch (NumberFormatException e) {
+            log.error("Invalid userId format in Redis: {}", parts[0]);
+            throw new CustomException(ErrorCode.INVALID_TOKEN, "Redis에 저장된 userId 형식이 올바르지 않습니다");
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid userType in Redis: {}", parts[1]);
+            throw new CustomException(ErrorCode.INVALID_TOKEN, "Redis에 저장된 userType이 올바르지 않습니다");
+        }
 
         log.debug("Refresh token found in Redis: userId={}, userType={}", userId, userType);
         return new RefreshTokenInfo(userId, userType);
