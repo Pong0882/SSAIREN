@@ -158,13 +158,4 @@ public class RefreshTokenService {
 
         log.info("Refresh token deleted successfully from Redis");
     }
-
-    /**
-     * 만료된 RefreshToken 정리 (스케줄러에서 호출)
-     * Redis는 TTL로 자동 만료되므로 이 메서드는 더 이상 필요하지 않음
-     * 기존 코드 호환성을 위해 남겨둠 (no-op)
-     */
-    public void deleteExpiredTokens() {
-        log.debug("Redis TTL handles token expiration automatically - no manual cleanup needed");
-    }
 }
