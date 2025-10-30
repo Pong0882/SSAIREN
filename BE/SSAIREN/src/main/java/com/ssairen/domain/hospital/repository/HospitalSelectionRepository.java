@@ -1,12 +1,88 @@
 package com.ssairen.domain.hospital.repository;
 
 import com.ssairen.domain.hospital.entity.HospitalSelection;
+import com.ssairen.domain.hospital.enums.HospitalSelectionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * 병원 선택 Repository
  */
 @Repository
 public interface HospitalSelectionRepository extends JpaRepository<HospitalSelection, Integer> {
+
+    /**
+     * ID로 HospitalSelection 조회 (Hospital, EmergencyReport Fetch Join)
+     */
+    @Query("SELECT hs FROM HospitalSelection hs " +
+            "JOIN FETCH hs.hospital " +
+            "JOIN FETCH hs.emergencyReport " +
+            "WHERE hs.id = :id")
+    Optional<HospitalSelection> findByIdWithHospitalAndEmergencyReport(@Param("id") Integer id);
+
+    /**
+     * 같은 EmergencyReport를 가진 다른 HospitalSelection들을 COMPLETED로 업데이트
+     */
+    @Modifying
+    @Query("UPDATE HospitalSelection hs " +
+            "SET hs.status = :status, hs.responseAt = :responseAt " +
+            "WHERE hs.emergencyReport.id = :emergencyReportId " +
+            "AND hs.id != :excludeId " +
+            "AND hs.status = 'PENDING'")
+    int updateOtherSelectionsToCompleted(
+            @Param("emergencyReportId") Long emergencyReportId,
+            @Param("excludeId") Integer excludeId,
+            @Param("status") HospitalSelectionStatus status,
+            @Param("responseAt") LocalDateTime responseAt
+    );
+
+    /**
+     * EmergencyReport ID로 모든 HospitalSelection 조회
+     */
+    List<HospitalSelection> findByEmergencyReportId(Long emergencyReportId);
+
+    /**
+     * 특정 병원의 PENDING 상태인 요청 목록 조회 (EmergencyReport Fetch Join)
+     */
+    @Query("SELECT hs FROM HospitalSelection hs " +
+            "JOIN FETCH hs.emergencyReport " +
+            "WHERE hs.hospital.id = :hospitalId " +
+            "AND hs.status = :status " +
+            "ORDER BY hs.createdAt DESC")
+    List<HospitalSelection> findByHospitalIdAndStatus(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("status") HospitalSelectionStatus status
+    );
+
+    /**
+     * 특정 병원이 수용한 환자 목록 조회 (ACCEPTED, ARRIVED 상태)
+     * EmergencyReport Fetch Join
+     */
+    @Query("SELECT hs FROM HospitalSelection hs " +
+            "JOIN FETCH hs.emergencyReport " +
+            "WHERE hs.hospital.id = :hospitalId " +
+            "AND hs.status IN ('ACCEPTED', 'ARRIVED') " +
+            "ORDER BY hs.responseAt DESC")
+    List<HospitalSelection> findAcceptedPatientsByHospitalId(
+            @Param("hospitalId") Integer hospitalId
+    );
+
+    /**
+     * 병원이 특정 환자를 수용했는지 확인 (ACCEPTED 또는 ARRIVED 상태)
+     */
+    @Query("SELECT COUNT(hs) > 0 FROM HospitalSelection hs " +
+            "WHERE hs.hospital.id = :hospitalId " +
+            "AND hs.emergencyReport.id = :emergencyReportId " +
+            "AND hs.status IN ('ACCEPTED', 'ARRIVED')")
+    boolean existsByHospitalIdAndEmergencyReportIdAndAccepted(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("emergencyReportId") Long emergencyReportId
+    );
 }

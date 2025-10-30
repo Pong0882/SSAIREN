@@ -16,7 +16,7 @@ import java.time.LocalTime;
 @Builder
 public class PatientInfoDto {
 
-    private Long id;
+    private Long emergencyReportId;     // 구급일지 ID (PK)
     private String gender;              // 성별: M/F
     private Integer age;                // 나이
     private LocalTime recordTime;       // 기록 시간
@@ -41,7 +41,7 @@ public class PatientInfoDto {
         }
 
         return PatientInfoDto.builder()
-                .id(patientInfo.getId())
+                .emergencyReportId(patientInfo.getEmergencyReportId())
                 .gender(patientInfo.getGender().name())
                 .age(patientInfo.getAge())
                 .recordTime(patientInfo.getRecordTime())

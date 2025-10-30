@@ -8,12 +8,10 @@ import java.util.Optional;
 
 /**
  * 환자 정보 Repository
+ * emergencyReportId가 PK이므로 findById(emergencyReportId) 사용
  */
 @Repository
 public interface PatientInfoRepository extends JpaRepository<PatientInfo, Long> {
-
-    /**
-     * 구급일지 ID로 환자 정보 조회
-     */
-    Optional<PatientInfo> findByEmergencyReportId_Id(Long emergencyReportId);
+    // emergencyReportId가 PK이므로 기본 findById() 메서드 사용
+    // Optional<PatientInfo> findById(Long emergencyReportId);
 }

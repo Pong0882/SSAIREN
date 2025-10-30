@@ -37,6 +37,9 @@ dependencies {
     // .env 파일 지원
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 
+    // Spring Security - 비밀번호 암호화 (BCrypt)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
     // Spring MVC를 사용한 웹 애플리케이션 개발
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
