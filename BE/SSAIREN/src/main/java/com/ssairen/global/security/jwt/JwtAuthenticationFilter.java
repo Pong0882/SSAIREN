@@ -2,7 +2,6 @@ package com.ssairen.global.security.jwt;
 
 import com.ssairen.global.exception.CustomException;
 import com.ssairen.global.security.dto.CustomUserPrincipal;
-import com.ssairen.global.security.enums.UserType;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -90,40 +89,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 1. JWT 검증 및 파싱
         Claims claims = jwtTokenProvider.parseToken(token);
 
-        // 2. subject 파싱: "PARAMEDIC:123" → ["PARAMEDIC", "123"]
-        String subject = claims.getSubject();
-        String[] parts = subject.split(":");
-        UserType userType = UserType.valueOf(parts[0]);
-        Integer userId = Integer.parseInt(parts[1]);
+        // 2. Claims에서 사용자 정보 추출 (중복 파싱 로직 제거)
+        JwtTokenProvider.UserInfo userInfo = jwtTokenProvider.extractUserInfoFromClaims(claims);
 
-        // 3. Claims에서 추가 정보 추출
-        String username = claims.get("username", String.class);
+        // 3. Claims에서 authorities 추출
         String authoritiesStr = claims.get("authorities", String.class);
-
-        // 4. authorities 문자열을 GrantedAuthority 컬렉션으로 변환
         Collection<? extends GrantedAuthority> authorities = parseAuthorities(authoritiesStr);
 
-        // 5. CustomUserPrincipal 재구성
+        // 4. CustomUserPrincipal 재구성
         CustomUserPrincipal principal = new CustomUserPrincipal(
-                userId,
-                username,
+                userInfo.getUserId(),
+                userInfo.getUsername(),
                 null,  // 비밀번호는 포함하지 않음
-                userType,
+                userInfo.getUserType(),
                 authorities
         );
 
-        // 6. Authentication 객체 생성
+        // 5. Authentication 객체 생성
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 principal,
                 null,
                 authorities
         );
 
-        // 7. SecurityContext에 인증 정보 저장
+        // 6. SecurityContext에 인증 정보 저장
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         log.debug("Successfully authenticated user: userType={}, userId={}, username={}",
-                userType, userId, username);
+                userInfo.getUserType(), userInfo.getUserId(), userInfo.getUsername());
     }
 
     /**

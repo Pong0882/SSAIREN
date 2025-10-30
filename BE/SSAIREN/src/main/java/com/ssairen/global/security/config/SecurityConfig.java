@@ -15,6 +15,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 /**
  * Spring Security 설정
@@ -37,6 +42,9 @@ public class SecurityConfig {
         http
                 // CSRF 비활성화 (JWT 사용하므로 불필요)
                 .csrf(AbstractHttpConfigurer::disable)
+
+                // CORS 설정
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // 세션 사용 안 함 (Stateless)
                 .sessionManagement(session ->
@@ -76,6 +84,42 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /**
+     * CORS 설정
+     * - 로컬 개발 환경: http://localhost:3000
+     * - 배포 환경: https://ssairen.site, https://www.ssairen.site
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        // 허용할 Origin 설정
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",           // 로컬 개발
+                "https://ssairen.site",            // 배포 환경
+                "https://www.ssairen.site"         // 배포 환경 (www 포함)
+        ));
+
+        // 허용할 HTTP 메서드
+        config.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+        ));
+
+        // 허용할 헤더
+        config.setAllowedHeaders(Arrays.asList("*"));
+
+        // 자격증명(쿠키, Authorization 헤더 등) 허용
+        config.setAllowCredentials(true);
+
+        // preflight 요청 캐싱 시간 (1시간)
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
     }
 
     /**

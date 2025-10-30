@@ -53,6 +53,6 @@ public class Dispatch extends BaseEntity {
     private LocalDateTime date;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fire_state_id", nullable = false)
+    @JoinColumn(name = "fire_state_id")
     private FireState fireState;
 }
