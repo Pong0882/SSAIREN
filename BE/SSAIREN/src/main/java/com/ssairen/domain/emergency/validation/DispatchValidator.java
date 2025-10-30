@@ -1,6 +1,10 @@
 package com.ssairen.domain.emergency.validation;
 
 import com.ssairen.domain.emergency.dto.DispatchCreateRequest;
+import com.ssairen.domain.firestation.repository.FireStateRepository;
+import com.ssairen.global.exception.CustomException;
+import com.ssairen.global.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
@@ -8,10 +12,14 @@ import org.springframework.stereotype.Component;
  * DTO의 @Valid로 처리되지 않는 추가 검증 수행
  */
 @Component
+@RequiredArgsConstructor
 public class DispatchValidator {
 
-    public void validateCreateRequest(DispatchCreateRequest request) {
-        // 현재는 @Valid 어노테이션으로 대부분의 검증이 가능하므로
-        // 추가 검증이 필요한 경우에만 여기에 로직 추가
+    private final FireStateRepository fireStateRepository;
+
+    public void validateFireStateExists(Integer fireStateId) {
+        if (!fireStateRepository.existsById(fireStateId)) {
+            throw new CustomException(ErrorCode.FIRE_STATE_NOT_FOUND);
+        }
     }
 }
