@@ -48,6 +48,9 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
+    // Redis - 리프레시 토큰 저장소
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     // Spring Boot Actuator - 프로덕션 레벨 모니터링 및 헬스체크
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 

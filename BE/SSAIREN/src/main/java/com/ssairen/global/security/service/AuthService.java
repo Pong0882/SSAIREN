@@ -5,9 +5,9 @@ import com.ssairen.global.exception.ErrorCode;
 import com.ssairen.global.security.dto.CustomUserPrincipal;
 import com.ssairen.global.security.dto.LoginRequest;
 import com.ssairen.global.security.dto.TokenResponse;
-import com.ssairen.global.security.entity.RefreshToken;
 import com.ssairen.global.security.enums.UserType;
 import com.ssairen.global.security.jwt.JwtTokenProvider;
+import com.ssairen.global.security.service.RefreshTokenService.RefreshTokenInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -90,12 +90,12 @@ public class AuthService {
     public TokenResponse refresh(String refreshTokenStr) {
         log.debug("Token refresh attempt");
 
-        // 1. DB에서 RefreshToken 조회 및 검증
-        RefreshToken refreshToken = refreshTokenService.findByToken(refreshTokenStr);
+        // 1. Redis에서 RefreshToken 조회 및 검증
+        RefreshTokenInfo refreshTokenInfo = refreshTokenService.findByToken(refreshTokenStr);
 
         // 2. RefreshToken에서 사용자 정보 추출
-        Integer userId = refreshToken.getUserId();
-        UserType userType = refreshToken.getUserType();
+        Integer userId = refreshTokenInfo.userId();
+        UserType userType = refreshTokenInfo.userType();
 
         // 3. 사용자 정보 재조회
         UserDetails userDetails = loadUserByTypeAndUserId(userType, userId);

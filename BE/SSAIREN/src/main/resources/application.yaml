@@ -35,6 +35,19 @@ spring:
       max-file-size: 500MB
       max-request-size: 500MB
 
+  # Redis 설정
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 10
+          min-idle: 2
+
 # MinIO 객체 스토리지 설정
 minio:
   endpoint: ${MINIO_ENDPOINT:http://minio:9000}
