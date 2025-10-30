@@ -1,6 +1,7 @@
 package com.ssairen.domain.emergency.entity;
 
 import com.ssairen.domain.common.entity.BaseEntity;
+import com.ssairen.domain.firestation.entity.FireState;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -50,4 +51,8 @@ public class Dispatch extends BaseEntity {
 
     @Column(name = "date")
     private LocalDateTime date;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fire_state_id", nullable = false)
+    private FireState fireState;
 }

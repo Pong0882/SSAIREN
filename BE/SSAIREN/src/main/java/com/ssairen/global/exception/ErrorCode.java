@@ -21,6 +21,7 @@ ErrorCode {
     INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "INVALID_TYPE_VALUE", "잘못된 타입입니다."),
     MISSING_REQUEST_PARAMETER(HttpStatus.BAD_REQUEST, "MISSING_REQUEST_PARAMETER", "필수 파라미터가 누락되었습니다."),
     INVALID_JSON_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_JSON_FORMAT", "JSON 형식이 올바르지 않습니다."),
+    INVALID_CURSOR(HttpStatus.BAD_REQUEST, "INVALID_CURSOR", "유효하지 않은 커서 형식입니다."),
 
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED", "지원하지 않는 HTTP 메소드입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."),
@@ -53,6 +54,7 @@ ErrorCode {
     // ============================================
     FIRE_STATION_NOT_FOUND(HttpStatus.NOT_FOUND, "FIRE_STATION_NOT_FOUND", "소방서를 찾을 수 없습니다."),
     FIRE_STATION_ALREADY_EXISTS(HttpStatus.CONFLICT, "FIRE_STATION_ALREADY_EXISTS", "이미 존재하는 소방서입니다."),
+    FIRE_STATE_NOT_FOUND(HttpStatus.NOT_FOUND, "FIRE_STATE_NOT_FOUND", "존재하지 않는 소방서입니다."),
 
     // ============================================
     // Dispatch (5000번대)
