@@ -33,8 +33,6 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", "유효하지 않은 토큰입니다."),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "접근 권한이 없습니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_NOT_FOUND", "RefreshToken을 찾을 수 없습니다."),
-    REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_EXPIRED", "RefreshToken이 만료되었습니다."),
-    TOKEN_REISSUE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_REISSUE_FAILED", "토큰 재발급에 실패했습니다."),
 
     // ============================================
     // Paramedic (3000번대)
