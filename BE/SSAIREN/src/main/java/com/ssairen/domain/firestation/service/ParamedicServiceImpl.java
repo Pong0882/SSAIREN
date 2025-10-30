@@ -1,8 +1,6 @@
 package com.ssairen.domain.firestation.service;
 
 import com.ssairen.domain.firestation.dto.ParamedicInfo;
-import com.ssairen.domain.firestation.dto.ParamedicLoginRequest;
-import com.ssairen.domain.firestation.dto.ParamedicLoginResponse;
 import com.ssairen.domain.firestation.dto.ParamedicRegisterRequest;
 import com.ssairen.domain.firestation.dto.ParamedicRegisterResponse;
 import com.ssairen.domain.firestation.entity.FireState;
@@ -77,25 +75,6 @@ public class ParamedicServiceImpl implements ParamedicService {
 
         // 5. 응답 DTO 생성
         return ParamedicRegisterResponse.from(savedParamedic);
-    }
-
-    /**
-     * 구급대원 로그인
-     * JWT 없이 학번/비밀번호 검증만 수행
-     */
-    @Override
-    public ParamedicLoginResponse login(ParamedicLoginRequest request) {
-        // 학번으로 구급대원 조회
-        Paramedic paramedic = paramedicRepository.findByStudentNumber(request.studentNumber())
-                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
-
-        // 비밀번호 검증 (BCrypt 비교)
-        if (!passwordEncoder.matches(request.password(), paramedic.getPassword())) {
-            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
-        }
-
-        // 응답 DTO 생성
-        return ParamedicLoginResponse.from(paramedic);
     }
 
     /**

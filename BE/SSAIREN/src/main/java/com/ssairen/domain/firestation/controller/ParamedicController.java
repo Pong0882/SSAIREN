@@ -1,8 +1,6 @@
 package com.ssairen.domain.firestation.controller;
 
 import com.ssairen.domain.firestation.dto.ParamedicInfo;
-import com.ssairen.domain.firestation.dto.ParamedicLoginRequest;
-import com.ssairen.domain.firestation.dto.ParamedicLoginResponse;
 import com.ssairen.domain.firestation.dto.ParamedicRegisterRequest;
 import com.ssairen.domain.firestation.dto.ParamedicRegisterResponse;
 import com.ssairen.domain.firestation.service.ParamedicService;
@@ -34,20 +32,6 @@ public class ParamedicController implements ParamedicApi {
         ParamedicRegisterResponse response = paramedicService.register(request);
         return ResponseEntity.status(201)
                 .body(ApiResponse.success(response, "회원가입이 완료되었습니다."));
-    }
-
-    /**
-     * 구급대원 로그인
-     */
-    @Override
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<ParamedicLoginResponse>> login(
-            @Valid @RequestBody ParamedicLoginRequest request
-    ) {
-        ParamedicLoginResponse response = paramedicService.login(request);
-        return ResponseEntity.ok(
-                ApiResponse.success(response, "로그인에 성공했습니다.")
-        );
     }
 
     /**
