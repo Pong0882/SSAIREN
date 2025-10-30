@@ -164,4 +164,41 @@ public interface HospitalApi {
             @Parameter(hidden = true)
             @AuthenticationPrincipal CustomUserPrincipal principal
     );
+
+    /**
+     * 병원이 수용한 환자의 상세 정보 조회
+     * - 환자의 모든 바이탈 사인, 과거력 등 전체 정보 조회
+     * - 병원이 ACCEPTED 또는 ARRIVED 상태인 환자만 조회 가능
+     */
+    @Operation(
+            summary = "수용한 환자 상세 정보 조회",
+            description = "병원이 수용한 환자의 상세 정보를 조회합니다. " +
+                    "환자의 바이탈 사인(심박수, 혈압, 산소포화도 등), 과거력, 발병 시간 등 모든 정보를 확인할 수 있습니다. " +
+                    "ACCEPTED(내원 대기) 또는 ARRIVED(내원 완료) 상태인 환자만 조회 가능합니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = PatientInfoDto.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "권한 없음 (수용하지 않은 환자 또는 다른 병원의 환자)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "환자 정보를 찾을 수 없음"
+            )
+    })
+    @ApiUnauthorizedError
+    @ApiInternalServerError
+    ResponseEntity<ApiResponse<PatientInfoDto>> getPatientDetail(
+            @Parameter(description = "병원 ID", required = true, example = "5")
+            @PathVariable Integer hospitalId,
+            @Parameter(description = "구급일지 ID (환자 식별자)", required = true, example = "1")
+            @PathVariable Long emergencyReportId,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CustomUserPrincipal principal
+    );
 }

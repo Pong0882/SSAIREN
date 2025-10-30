@@ -88,4 +88,22 @@ public class HospitalController implements HospitalApi {
                 ApiResponse.success(patients, "수용한 환자 목록을 조회했습니다.")
         );
     }
+
+    @Override
+    @GetMapping("/hospitals/{hospitalId}/patients/{emergencyReportId}")
+    public ResponseEntity<ApiResponse<PatientInfoDto>> getPatientDetail(
+            @PathVariable Integer hospitalId,
+            @PathVariable Long emergencyReportId,
+            @AuthenticationPrincipal CustomUserPrincipal principal
+    ) {
+        PatientInfoDto patientInfo = hospitalService.getPatientDetail(
+                hospitalId,
+                emergencyReportId,
+                principal.getId()
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(patientInfo, "환자 상세 정보를 조회했습니다.")
+        );
+    }
 }

@@ -56,12 +56,12 @@ public class HospitalService {
                 .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
 
         // 2. 환자 정보 조회
-        Optional<PatientInfo> patientInfoOptional = patientInfoRepository.findByEmergencyReportId_Id(request.getEmergencyReportId());
+        Optional<PatientInfo> patientInfoOptional = patientInfoRepository.findById(request.getEmergencyReportId());
         PatientInfoDto patientInfoDto = patientInfoOptional.map(PatientInfoDto::from).orElse(null);
 
         if (patientInfoDto != null) {
-            log.info(LOG_PREFIX + "환자 정보 조회 성공 - 환자 ID: {}, 나이: {}, 성별: {}",
-                    patientInfoDto.getId(), patientInfoDto.getAge(), patientInfoDto.getGender());
+            log.info(LOG_PREFIX + "환자 정보 조회 성공 - 구급일지 ID: {}, 나이: {}, 성별: {}",
+                    patientInfoDto.getEmergencyReportId(), patientInfoDto.getAge(), patientInfoDto.getGender());
         } else {
             log.warn(LOG_PREFIX + "환자 정보가 없습니다 - 구급일지 ID: {}", request.getEmergencyReportId());
         }
@@ -219,7 +219,7 @@ public class HospitalService {
 
             // 환자 정보 조회
             Optional<PatientInfo> patientInfoOptional = patientInfoRepository
-                    .findByEmergencyReportId_Id(emergencyReportId);
+                    .findById(emergencyReportId);
 
             PatientInfoDto patientInfoDto = patientInfoOptional
                     .map(PatientInfoDto::from)
@@ -281,7 +281,7 @@ public class HospitalService {
 
             // 환자 정보 조회
             Optional<PatientInfo> patientInfoOptional = patientInfoRepository
-                    .findByEmergencyReportId_Id(emergencyReportId);
+                    .findById(emergencyReportId);
 
             if (patientInfoOptional.isPresent()) {
                 PatientInfo patientInfo = patientInfoOptional.get();
@@ -300,5 +300,51 @@ public class HospitalService {
                 hospitalId, acceptedPatients.size());
 
         return acceptedPatients;
+    }
+
+    /**
+     * 병원이 수용한 환자의 상세 정보 조회
+     *
+     * @param hospitalId 병원 ID
+     * @param emergencyReportId 구급일지 ID
+     * @param currentHospitalId 현재 로그인한 병원 ID
+     * @return 환자 상세 정보
+     */
+    @Transactional(readOnly = true)
+    public PatientInfoDto getPatientDetail(
+            Integer hospitalId,
+            Long emergencyReportId,
+            Integer currentHospitalId
+    ) {
+        log.info(LOG_PREFIX + "환자 상세 정보 조회 시작 - 병원 ID: {}, 구급일지 ID: {}",
+                hospitalId, emergencyReportId);
+
+        // 1. 권한 검증: 본인의 환자만 조회 가능
+        if (!hospitalId.equals(currentHospitalId)) {
+            log.warn(LOG_PREFIX + "권한 없는 환자 상세 조회 시도 - 요청 병원 ID: {}, 현재 병원 ID: {}",
+                    hospitalId, currentHospitalId);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        // 2. 병원이 이 환자를 수용했는지 확인 (ACCEPTED 또는 ARRIVED 상태)
+        boolean isAccepted = hospitalSelectionRepository
+                .existsByHospitalIdAndEmergencyReportIdAndAccepted(hospitalId, emergencyReportId);
+
+        if (!isAccepted) {
+            log.warn(LOG_PREFIX + "수용하지 않은 환자 조회 시도 - 병원 ID: {}, 구급일지 ID: {}",
+                    hospitalId, emergencyReportId);
+            throw new CustomException(ErrorCode.ACCESS_DENIED,
+                    "수용한 환자만 상세 정보를 조회할 수 있습니다.");
+        }
+
+        // 3. 환자 정보 조회
+        PatientInfo patientInfo = patientInfoRepository.findById(emergencyReportId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND,
+                        "환자 정보를 찾을 수 없습니다."));
+
+        log.info(LOG_PREFIX + "환자 상세 정보 조회 완료 - 병원 ID: {}, 구급일지 ID: {}, 나이: {}, 성별: {}",
+                hospitalId, emergencyReportId, patientInfo.getAge(), patientInfo.getGender());
+
+        return PatientInfoDto.from(patientInfo);
     }
 }

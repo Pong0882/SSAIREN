@@ -18,12 +18,13 @@ import java.time.LocalTime;
 public class PatientInfo extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "emergency_report_id")
+    private Long emergencyReportId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "emergency_report_id", nullable = false)
-    private EmergencyReport emergencyReportId;
+    @MapsId
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "emergency_report_id")
+    private EmergencyReport emergencyReport;
 
     // ── 상단 기본 정보 ─────────────────────────────────────────────────────────
     @Enumerated(EnumType.STRING)

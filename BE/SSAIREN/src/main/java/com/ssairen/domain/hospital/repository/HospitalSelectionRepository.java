@@ -73,4 +73,16 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     List<HospitalSelection> findAcceptedPatientsByHospitalId(
             @Param("hospitalId") Integer hospitalId
     );
+
+    /**
+     * 병원이 특정 환자를 수용했는지 확인 (ACCEPTED 또는 ARRIVED 상태)
+     */
+    @Query("SELECT COUNT(hs) > 0 FROM HospitalSelection hs " +
+            "WHERE hs.hospital.id = :hospitalId " +
+            "AND hs.emergencyReport.id = :emergencyReportId " +
+            "AND hs.status IN ('ACCEPTED', 'ARRIVED')")
+    boolean existsByHospitalIdAndEmergencyReportIdAndAccepted(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("emergencyReportId") Long emergencyReportId
+    );
 }
