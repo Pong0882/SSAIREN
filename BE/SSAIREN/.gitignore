@@ -44,3 +44,7 @@ out/
 ### Application Profiles ###
 src/main/resources/application-dev.yaml
 src/main/resources/application-local.yaml
+
+### SonarQube ###
+.scannerwork/
+sonar-project.properties
