@@ -27,27 +27,13 @@ services:
     restart: unless-stopped
     ports:
       - "${REDIS_PORT:-6379}:6379"
-    command: >
-      sh -c "
-      if [ -n \"${REDIS_PASSWORD}\" ]; then
-        redis-server --requirepass ${REDIS_PASSWORD}
-      else
-        redis-server
-      fi
-      "
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: >
-        sh -c "
-        if [ -n \"${REDIS_PASSWORD}\" ]; then
-          redis-cli -a ${REDIS_PASSWORD} ping | grep PONG
-        else
-          redis-cli ping | grep PONG
-        fi
-        "
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
