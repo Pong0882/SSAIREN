@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -38,6 +39,23 @@ public class RefreshTokenService {
      * @param token       RefreshToken 문자열
      */
     public void save(Integer userId, UserType userType, String username, String authorities, String token) {
+        // 파라미터 검증
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("UserId must be positive");
+        }
+        if (userType == null) {
+            throw new IllegalArgumentException("UserType must not be null");
+        }
+        if (!StringUtils.hasText(username)) {
+            throw new IllegalArgumentException("Username must not be empty");
+        }
+        if (!StringUtils.hasText(authorities)) {
+            throw new IllegalArgumentException("Authorities must not be empty");
+        }
+        if (!StringUtils.hasText(token)) {
+            throw new IllegalArgumentException("Token must not be empty");
+        }
+
         log.debug("Saving refresh token for user: userId={}, userType={}, username={}", userId, userType, username);
 
         String userKey = REFRESH_TOKEN_PREFIX + userId + ":" + userType.name();
