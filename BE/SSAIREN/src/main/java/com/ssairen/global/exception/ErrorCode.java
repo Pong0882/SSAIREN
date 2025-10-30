@@ -78,6 +78,7 @@ public enum ErrorCode {
     HOSPITAL_SELECTION_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "HOSPITAL_SELECTION_ALREADY_PROCESSED", "이미 처리된 요청입니다."),
     INVALID_HOSPITAL_SELECTION_STATUS(HttpStatus.BAD_REQUEST, "INVALID_HOSPITAL_SELECTION_STATUS", "유효하지 않은 병원 선택 상태입니다."),
     NO_AVAILABLE_HOSPITALS(HttpStatus.NOT_FOUND, "NO_AVAILABLE_HOSPITALS", "이송 가능한 병원이 없습니다."),
+    UNAUTHORIZED_HOSPITAL_RESPONSE(HttpStatus.FORBIDDEN, "UNAUTHORIZED_HOSPITAL_RESPONSE", "이 요청에 응답할 권한이 없습니다."),
 
     // ============================================
     // Vital Signs (8000번대)
