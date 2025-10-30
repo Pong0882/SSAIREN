@@ -4,7 +4,6 @@ import com.ssairen.domain.emergency.dto.*;
 import com.ssairen.domain.emergency.entity.Dispatch;
 import com.ssairen.domain.emergency.mapper.DispatchMapper;
 import com.ssairen.domain.emergency.repository.DispatchRepository;
-import com.ssairen.domain.emergency.validation.DispatchValidator;
 import com.ssairen.domain.firestation.entity.FireState;
 import com.ssairen.domain.firestation.repository.FireStateRepository;
 import com.ssairen.global.exception.CustomException;
@@ -28,7 +27,6 @@ public class DispatchServiceImpl implements DispatchService {
     private final DispatchRepository dispatchRepository;
     private final FireStateRepository fireStateRepository;
     private final DispatchMapper dispatchMapper;
-    private final DispatchValidator dispatchValidator;
 
     /**
      * 출동 지령 생성
@@ -39,8 +37,7 @@ public class DispatchServiceImpl implements DispatchService {
     @Override
     @Transactional
     public DispatchCreateResponse createDispatch(DispatchCreateRequest request) {
-        dispatchValidator.validateFireStateExists(request.fireStateId());
-
+        // 소방서 존재 여부 확인
         FireState fireState = fireStateRepository.findById(request.fireStateId())
                 .orElseThrow(() -> new CustomException(ErrorCode.FIRE_STATE_NOT_FOUND));
 
@@ -63,7 +60,9 @@ public class DispatchServiceImpl implements DispatchService {
      */
     @Override
     public DispatchListResponse getDispatchList(Integer fireStateId, DispatchListQueryRequest request) {
-        dispatchValidator.validateFireStateExists(fireStateId);
+        // 소방서 존재 여부 확인
+        FireState fireState = fireStateRepository.findById(fireStateId)
+                .orElseThrow(() -> new CustomException(ErrorCode.FIRE_STATE_NOT_FOUND));
 
         // 커서 디코딩
         Long cursorId = CursorUtils.decodeCursor(request.cursor());
@@ -87,10 +86,6 @@ public class DispatchServiceImpl implements DispatchService {
             Long lastId = actualDispatches.get(actualDispatches.size() - 1).getId();
             nextCursor = CursorUtils.encodeCursor(lastId);
         }
-
-        // FireState 조회
-        FireState fireState = fireStateRepository.findById(fireStateId)
-                .orElseThrow(() -> new CustomException(ErrorCode.FIRE_STATE_NOT_FOUND));
 
         log.info(LOG_PREFIX + "출동 목록 조회 완료 - 소방서: {}, 조회 건수: {}, 다음 페이지 존재: {}",
                 fireState.getName(), actualDispatches.size(), hasMore);
