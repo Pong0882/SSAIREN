@@ -45,7 +45,7 @@ public class CustomUserPrincipal implements UserDetails {
     public static CustomUserPrincipal from(Hospital hospital) {
         return new CustomUserPrincipal(
                 hospital.getId(),
-                hospital.getId().toString(),  // username으로 id 사용
+                hospital.getName(),  // username으로 병원명 사용 (로그인 시 입력값과 일치)
                 hospital.getPassword(),
                 UserType.HOSPITAL,
                 List.of(new SimpleGrantedAuthority("ROLE_HOSPITAL"))
