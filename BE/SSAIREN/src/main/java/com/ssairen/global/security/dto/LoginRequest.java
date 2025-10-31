@@ -21,7 +21,7 @@ public record LoginRequest(
         UserType userType,
 
         @Schema(
-                description = "사용자명 (구급대원: 학번, 병원: 병원 ID)",
+                description = "사용자명 (구급대원: 학번, 병원: 병원명)",
                 example = "20240001",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )

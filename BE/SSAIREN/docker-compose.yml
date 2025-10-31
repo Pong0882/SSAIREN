@@ -40,6 +40,19 @@ services:
     networks:
       - ssairen-network
 
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: ssairen-redisinsight
+    restart: unless-stopped
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data:/data
+    networks:
+      - ssairen-network
+    depends_on:
+      - redis
+
   backend:
     build:
       context: .
@@ -84,6 +97,8 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  redisinsight_data:
     driver: local
 
 networks:

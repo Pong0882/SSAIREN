@@ -54,7 +54,8 @@ public class SecurityConfig {
                 // 엔드포인트별 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         // 인증 없이 접근 가능한 엔드포인트
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/auth/logout").authenticated()  // 로그아웃은 인증 필요
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
 
@@ -63,12 +64,15 @@ public class SecurityConfig {
 
                         // 구급대원 전용 엔드포인트
                         .requestMatchers("/api/paramedics/**").hasRole("PARAMEDIC")
+                        .requestMatchers("/api/emergency/**").hasRole("PARAMEDIC")  // 구급일지 관련
+                        .requestMatchers("/api/dispatches/**").hasRole("PARAMEDIC")  // 출동 지령 관련
+
+                        // 병원 선택 요청 관련 (더 구체적인 패턴 먼저)
+                        .requestMatchers("/api/hospital-selection/request").hasRole("PARAMEDIC")  // 요청 생성
+                        .requestMatchers("/api/hospital-selection/**").hasRole("HOSPITAL")  // 요청 응답
 
                         // 병원 전용 엔드포인트
                         .requestMatchers("/api/hospitals/**").hasRole("HOSPITAL")
-
-                        // 구급일지 관련 (구급대원만 접근)
-                        .requestMatchers("/api/emergency/**").hasRole("PARAMEDIC")
 
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()

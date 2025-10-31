@@ -124,10 +124,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      *
      * @param authoritiesStr "ROLE_PARAMEDIC,ROLE_USER" 형태
      * @return GrantedAuthority 컬렉션
+     * @throws CustomException authorities가 없는 경우 (잘못된 토큰)
      */
     private Collection<? extends GrantedAuthority> parseAuthorities(String authoritiesStr) {
         if (!StringUtils.hasText(authoritiesStr)) {
-            return Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
+            log.error("JWT token does not contain authorities claim");
+            throw new CustomException(
+                    com.ssairen.global.exception.ErrorCode.INVALID_TOKEN,
+                    "토큰에 권한 정보가 없습니다"
+            );
         }
 
         return Arrays.stream(authoritiesStr.split(","))

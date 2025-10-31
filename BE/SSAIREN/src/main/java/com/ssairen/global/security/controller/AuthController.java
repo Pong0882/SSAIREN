@@ -104,25 +104,25 @@ public class AuthController {
      * @param principal 현재 인증된 사용자
      * @return 성공 메시지
      */
-//    @Operation(
-//            summary = "로그아웃",
-//            description = "현재 로그인된 사용자를 로그아웃합니다. " +
-//                    "Redis에 저장된 RefreshToken을 삭제하여 토큰 갱신을 불가능하게 만듭니다. " +
-//                    "Authorization 헤더에 유효한 AccessToken이 필요합니다.",
-//            security = @SecurityRequirement(name = "bearer-jwt")
-//    )
-//    @ApiResponses(value = {
-//            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-//                    responseCode = "200",
-//                    description = "로그아웃 성공",
-//                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
-//            ),
-//            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-//                    responseCode = "401",
-//                    description = "인증되지 않음 - AccessToken이 없거나 유효하지 않음",
-//                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
-//            )
-//    })
+    @Operation(
+            summary = "로그아웃",
+            description = "현재 로그인된 사용자를 로그아웃합니다. " +
+                    "Redis에 저장된 RefreshToken을 삭제하여 토큰 갱신을 불가능하게 만듭니다. " +
+                    "Authorization 헤더에 유효한 AccessToken이 필요합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "로그아웃 성공",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증되지 않음 - AccessToken이 없거나 유효하지 않음",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            )
+    })
     @PostMapping("/logout")
     public ApiResponse<Void> logout(@AuthenticationPrincipal CustomUserPrincipal principal) {
         log.info("Logout request: userType={}, userId={}", principal.getUserType(), principal.getId());

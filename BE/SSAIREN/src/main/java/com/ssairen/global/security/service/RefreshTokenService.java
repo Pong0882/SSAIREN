@@ -178,8 +178,14 @@ public class RefreshTokenService {
 
         // 3. 사용자 키도 삭제 (사용자 정보가 존재하는 경우)
         if (userValue != null) {
-            String userKey = REFRESH_TOKEN_PREFIX + userValue;
-            redisTemplate.delete(userKey);
+            // userValue 형식: "userId:userType:username:authorities"
+            String[] parts = userValue.split(":", 4);
+            if (parts.length >= 2) {
+                String userId = parts[0];
+                String userType = parts[1];
+                String userKey = REFRESH_TOKEN_PREFIX + userId + ":" + userType;
+                redisTemplate.delete(userKey);
+            }
         }
 
         log.info("Refresh token deleted successfully from Redis");
