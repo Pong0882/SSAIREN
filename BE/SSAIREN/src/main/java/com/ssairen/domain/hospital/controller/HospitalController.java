@@ -144,4 +144,16 @@ public class HospitalController implements HospitalApi {
                 ApiResponse.success("환자가 내원 완료 처리되었습니다.")
         );
     }
+
+    @Override
+    @GetMapping("/emergency-reports/{emergency_report_id}/hospital-selections")
+    public ResponseEntity<ApiResponse<HospitalSelectionStatusResponse>> getHospitalSelectionStatus(
+            @PathVariable("emergency_report_id") Long emergencyReportId
+    ) {
+        HospitalSelectionStatusResponse response = hospitalService.getHospitalSelectionStatus(emergencyReportId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(response, "병원 선택 상태를 조회했습니다.")
+        );
+    }
 }
