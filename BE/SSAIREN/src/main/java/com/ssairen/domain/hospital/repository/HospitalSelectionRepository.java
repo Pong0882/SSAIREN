@@ -49,6 +49,16 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     List<HospitalSelection> findByEmergencyReportId(Long emergencyReportId);
 
     /**
+     * EmergencyReport ID로 모든 HospitalSelection 조회 (Hospital Fetch Join)
+     * N+1 문제 방지를 위해 Hospital도 함께 조회
+     */
+    @Query("SELECT hs FROM HospitalSelection hs " +
+            "JOIN FETCH hs.hospital " +
+            "WHERE hs.emergencyReport.id = :emergencyReportId " +
+            "ORDER BY hs.createdAt ASC")
+    List<HospitalSelection> findByEmergencyReportIdWithHospital(@Param("emergencyReportId") Long emergencyReportId);
+
+    /**
      * 특정 병원의 PENDING 상태인 요청 목록 조회 (EmergencyReport Fetch Join)
      */
     @Query("SELECT hs FROM HospitalSelection hs " +
