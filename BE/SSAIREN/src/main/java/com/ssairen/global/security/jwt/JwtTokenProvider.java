@@ -133,7 +133,17 @@ public class JwtTokenProvider {
      */
     public UserInfo extractUserInfo(String token) {
         Claims claims = parseToken(token);
+        return extractUserInfoFromClaims(claims);
+    }
 
+    /**
+     * Claims에서 사용자 정보 추출
+     * - JwtAuthenticationFilter에서 parseToken 후 재사용 가능
+     *
+     * @param claims JWT Claims
+     * @return UserInfo
+     */
+    public UserInfo extractUserInfoFromClaims(Claims claims) {
         // subject 파싱: "PARAMEDIC:123" → ["PARAMEDIC", "123"]
         String subject = claims.getSubject();
         String[] parts = subject.split(":");

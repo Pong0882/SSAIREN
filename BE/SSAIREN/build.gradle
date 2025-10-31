@@ -46,10 +46,16 @@ dependencies {
     // Spring Security - 인증 및 권한 관리
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
+    // Validation - Bean Validation (JSR-380) 구현체
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
     // JWT - JSON Web Token 생성 및 검증
     implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+    // Redis - 리프레시 토큰 저장소
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // Spring Boot Actuator - 프로덕션 레벨 모니터링 및 헬스체크
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
