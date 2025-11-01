@@ -1,5 +1,6 @@
 package com.ssairen.domain.emergency.entity;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.ssairen.domain.common.entity.BaseEntity;
 import com.ssairen.domain.emergency.enums.ReportSectionType;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
@@ -29,7 +30,7 @@ public class ReportSection extends BaseEntity {
 
     @Type(JsonBinaryType.class)
     @Column(name = "data", nullable = false, columnDefinition = "jsonb")
-    private String data;
+    private JsonNode data;
 
     @Column(name = "version", nullable = false)
     private Integer version;
