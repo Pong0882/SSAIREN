@@ -10,6 +10,7 @@ public record DispatchInfoResponse(
         String disasterType,
         String locationAddress,
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
-        LocalDateTime date
+        LocalDateTime date,
+        FireStateResponse fireStateInfo
 ) {
 }
