@@ -1,12 +1,14 @@
 package com.ssairen.domain.emergency.mapper;
 
-import com.ssairen.domain.emergency.dto.DispatchInfoResponse;
-import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
-import com.ssairen.domain.emergency.dto.ParamedicInfoResponse;
+import com.ssairen.domain.emergency.dto.*;
 import com.ssairen.domain.emergency.entity.Dispatch;
 import com.ssairen.domain.emergency.entity.EmergencyReport;
+import com.ssairen.domain.firestation.entity.FireState;
 import com.ssairen.domain.firestation.entity.Paramedic;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class EmergencyReportMapper {
@@ -21,13 +23,21 @@ public class EmergencyReportMapper {
         );
     }
 
+    public FireStateResponse toFireStateResponse(FireState fireState) {
+        return new FireStateResponse(
+                fireState.getId(),
+                fireState.getName()
+        );
+    }
+
     public DispatchInfoResponse toDispatchInfoResponse(Dispatch dispatch) {
         return new DispatchInfoResponse(
                 dispatch.getId(),
                 dispatch.getDisasterNumber(),
                 dispatch.getDisasterType(),
                 dispatch.getLocationAddress(),
-                dispatch.getDate()
+                dispatch.getDate(),
+                toFireStateResponse(dispatch.getFireState())
         );
     }
 
@@ -41,5 +51,21 @@ public class EmergencyReportMapper {
                 dispatchInfo,
                 emergencyReport.getCreatedAt()
         );
+    }
+
+    public ParamedicEmergencyReportResponse toParamedicEmergencyReportResponse(EmergencyReport emergencyReport) {
+        ParamedicInfoResponse paramedicInfo = toParamedicInfoResponse(emergencyReport.getParamedic());
+        DispatchInfoResponse dispatchInfo = toDispatchInfoResponse(emergencyReport.getDispatch());
+
+        return new ParamedicEmergencyReportResponse(
+                paramedicInfo,
+                dispatchInfo
+        );
+    }
+
+    public List<ParamedicEmergencyReportResponse> toParamedicEmergencyReportResponseList(List<EmergencyReport> emergencyReports) {
+        return emergencyReports.stream()
+                .map(this::toParamedicEmergencyReportResponse)
+                .collect(Collectors.toList());
     }
 }
