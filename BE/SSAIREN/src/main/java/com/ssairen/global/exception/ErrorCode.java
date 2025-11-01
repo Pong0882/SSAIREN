@@ -69,6 +69,7 @@ ErrorCode {
     EMERGENCY_REPORT_ALREADY_EXISTS(HttpStatus.CONFLICT, "EMERGENCY_REPORT_ALREADY_EXISTS", "해당 출동에 대한 구급일지가 이미 존재합니다."),
     INVALID_REPORT_SECTION_TYPE(HttpStatus.BAD_REQUEST, "INVALID_REPORT_SECTION_TYPE", "유효하지 않은 섹션 타입입니다."),
     REPORT_SECTION_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORT_SECTION_NOT_FOUND", "구급일지 섹션을 찾을 수 없습니다."),
+    REPORT_SECTION_ALREADY_EXISTS(HttpStatus.CONFLICT, "REPORT_SECTION_ALREADY_EXISTS", "해당 구급일지에 이미 동일한 타입의 섹션이 존재합니다."),
     INVALID_JSONB_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_JSONB_FORMAT", "데이터 형식이 올바르지 않습니다."),
 
     // ============================================
