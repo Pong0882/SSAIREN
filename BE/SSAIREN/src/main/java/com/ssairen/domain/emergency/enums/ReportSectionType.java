@@ -1,7 +1,7 @@
 package com.ssairen.domain.emergency.enums;
 
 public enum ReportSectionType {
-    SUMMATION,              // 요약
+//    SUMMATION,              // 요약
     PATIENT_INFO,           // 환자 정보
     DISPATCH,               // 구급 출동
     INCIDENT_TYPE,          // 환자 발생 유형
