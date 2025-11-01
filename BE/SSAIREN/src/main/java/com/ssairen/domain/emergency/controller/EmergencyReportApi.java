@@ -255,4 +255,575 @@ public interface EmergencyReportApi {
             @Parameter(description = "구급대원 ID", required = true, example = "1")
             @PathVariable("paramedicId") @Positive(message = "구급대원 ID는 양의 정수여야 합니다.") Integer paramedicId
     );
+
+    @Operation(
+            summary = "구급일지 섹션 생성",
+            description = "구급일지의 특정 섹션을 생성합니다. 섹션 타입에 맞는 스켈레톤 데이터가 자동으로 생성됩니다."
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "구급일지 섹션 생성 요청",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = com.ssairen.domain.emergency.dto.ReportSectionCreateRequest.class),
+                    examples = {
+                            @ExampleObject(
+                                    name = "환자 정보",
+                                    value = """
+                                            {
+                                                "emergencyReportId": 5,
+                                                "type": "PATIENT_INFO"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "구급 출동",
+                                    value = """
+                                            {
+                                                "emergencyReportId": 5,
+                                                "type": "DISPATCH"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "환자 발생 유형",
+                                    value = """
+                                            {
+                                                "emergencyReportId": 5,
+                                                "type": "INCIDENT_TYPE"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "환자 평가",
+                                    value = """
+                                            {
+                                                "emergencyReportId": 5,
+                                                "type": "PATIENT_ASSESSMENT"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "응급 처치",
+                                    value = """
+                                            {
+                                                "emergencyReportId": 5,
+                                                "type": "EMERGENCY_TREATMENT"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "의료 지도",
+                                    value = """
+                                            {
+                                                "emergencyReportId": 5,
+                                                "type": "MEDICAL_GUIDANCE"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "환자 이송",
+                                    value = """
+                                            {
+                                                "emergencyReportId": 5,
+                                                "type": "PATIENT_TRANSPORT"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "세부 상황표",
+                                    value = """
+                                            {
+                                                "emergencyReportId": 5,
+                                                "type": "DISPATCH_MEMBERS"
+                                            }
+                                            """
+                            )
+                    }
+            )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "구급일지 섹션 생성 성공",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = {
+                            @ExampleObject(
+                                    name = "환자 정보",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 789,
+                                                    "emergencyReportId": 123,
+                                                    "type": "PATIENT_INFO",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "patientInfo": {
+                                                            "reporter": {
+                                                                "phone": null,
+                                                                "reportMethod": null
+                                                            },
+                                                            "patient": {
+                                                                "name": null,
+                                                                "gender": null,
+                                                                "ageYears": null,
+                                                                "birthDate": null,
+                                                                "address": null
+                                                            },
+                                                            "guardian": {
+                                                                "name": null,
+                                                                "relation": null,
+                                                                "phone": null
+                                                            },
+                                                            "incidentLocation": {
+                                                                "text": null
+                                                            },
+                                                            "createdAt": null,
+                                                            "updatedAt": null
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "message": "구급일지 섹션이 저장되었습니다.",
+                                                "timestamp": "2023-11-13T09:25:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "구급 출동",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 790,
+                                                    "emergencyReportId": 123,
+                                                    "type": "DISPATCH",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "dispatch": {
+                                                            "reportDate": null,
+                                                            "reportTime": null,
+                                                            "departureTime": null,
+                                                            "arrivalSceneTime": null,
+                                                            "contactTime": null,
+                                                            "distanceKm": null,
+                                                            "departureSceneTime": null,
+                                                            "arrivalHospitalTime": null,
+                                                            "returnTime": null,
+                                                            "dispatchType": null,
+                                                            "sceneLocation": {
+                                                                "primary": null,
+                                                                "detail": null
+                                                            },
+                                                            "symptoms": {
+                                                                "pain": null,
+                                                                "trauma": null,
+                                                                "otherSymptoms": null
+                                                            },
+                                                            "createdAt": null,
+                                                            "updatedAt": null
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "message": "구급일지 섹션이 저장되었습니다.",
+                                                "timestamp": "2023-11-13T09:25:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "환자 발생 유형",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 791,
+                                                    "emergencyReportId": 123,
+                                                    "type": "INCIDENT_TYPE",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "incidentType": {
+                                                            "category": null,
+                                                            "medicalHistory": {
+                                                                "hasHistory": null,
+                                                                "details": null,
+                                                                "notes": null
+                                                            },
+                                                            "externalCause": {
+                                                                "type": null,
+                                                                "subType": null,
+                                                                "injurySeverity": null
+                                                            },
+                                                            "trauma": {
+                                                                "mainCause": null,
+                                                                "notes": null
+                                                            },
+                                                            "legalSuspicion": {
+                                                                "isSuspected": null,
+                                                                "actions": null,
+                                                                "notes": null
+                                                            },
+                                                            "other": {
+                                                                "category": null,
+                                                                "notes": null
+                                                            },
+                                                            "createdAt": null,
+                                                            "updatedAt": null
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "message": "구급일지 섹션이 저장되었습니다.",
+                                                "timestamp": "2023-11-13T09:25:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "환자 평가",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 792,
+                                                    "emergencyReportId": 123,
+                                                    "type": "PATIENT_ASSESSMENT",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "patientAssessment": {
+                                                            "consciousness": {
+                                                                "first": {
+                                                                    "time": null,
+                                                                    "state": null
+                                                                },
+                                                                "second": {
+                                                                    "time": null,
+                                                                    "state": null
+                                                                }
+                                                            },
+                                                            "pupilReaction": {
+                                                                "left": {
+                                                                    "status": null,
+                                                                    "reaction": null
+                                                                },
+                                                                "right": {
+                                                                    "status": null,
+                                                                    "reaction": null
+                                                                }
+                                                            },
+                                                            "vitalSigns": {
+                                                                "first": {
+                                                                    "time": null,
+                                                                    "bloodPressure": null,
+                                                                    "pulse": null,
+                                                                    "respiration": null,
+                                                                    "temperature": null,
+                                                                    "spo2": null,
+                                                                    "bloodSugar": null
+                                                                },
+                                                                "second": {
+                                                                    "time": null,
+                                                                    "bloodPressure": null,
+                                                                    "pulse": null,
+                                                                    "respiration": null,
+                                                                    "temperature": null,
+                                                                    "spo2": null,
+                                                                    "bloodSugar": null
+                                                                }
+                                                            },
+                                                            "patientLevel": null,
+                                                            "notes": null,
+                                                            "createdAt": null,
+                                                            "updatedAt": null
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "message": "구급일지 섹션이 저장되었습니다.",
+                                                "timestamp": "2023-11-13T09:25:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "응급 처치",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 793,
+                                                    "emergencyReportId": 123,
+                                                    "type": "EMERGENCY_TREATMENT",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "emergencyTreatment": {
+                                                            "airwayManagement": {
+                                                                "methods": null,
+                                                                "notes": null
+                                                            },
+                                                            "oxygenTherapy": {
+                                                                "applied": null,
+                                                                "flowRateLpm": null,
+                                                                "device": null
+                                                            },
+                                                            "cpr": {
+                                                                "performed": null,
+                                                                "type": null,
+                                                                "aed": {
+                                                                    "used": null,
+                                                                    "shock": null,
+                                                                    "monitoring": null
+                                                                }
+                                                            },
+                                                            "bleedingControl": {
+                                                                "methods": null,
+                                                                "notes": null
+                                                            },
+                                                            "woundCare": {
+                                                                "types": null,
+                                                                "notes": null
+                                                            },
+                                                            "delivery": {
+                                                                "performed": null,
+                                                                "time": null,
+                                                                "babyCondition": null
+                                                            },
+                                                            "notes": null,
+                                                            "createdAt": null,
+                                                            "updatedAt": null
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "message": "구급일지 섹션이 저장되었습니다.",
+                                                "timestamp": "2023-11-13T09:25:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "의료 지도",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 794,
+                                                    "emergencyReportId": 123,
+                                                    "type": "MEDICAL_GUIDANCE",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "medicalGuidance": {
+                                                            "contactStatus": null,
+                                                            "requestTime": null,
+                                                            "guidanceAgency": {
+                                                                "type": null,
+                                                                "name": null
+                                                            },
+                                                            "guidanceDoctor": {
+                                                                "name": null
+                                                            },
+                                                            "requestMethod": null,
+                                                            "guidanceContent": {
+                                                                "emergencyTreatment": null,
+                                                                "medication": null,
+                                                                "hospitalRequest": null,
+                                                                "patientEvaluation": null,
+                                                                "cprTransfer": null,
+                                                                "transferInstructions": null
+                                                            },
+                                                            "notes": null,
+                                                            "createdAt": null,
+                                                            "updatedAt": null
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "message": "구급일지 섹션이 저장되었습니다.",
+                                                "timestamp": "2023-11-13T09:25:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "환자 이송",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 795,
+                                                    "emergencyReportId": 123,
+                                                    "type": "PATIENT_TRANSPORT",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "patientTransport": {
+                                                            "firstTransport": {
+                                                                "hospitalName": null,
+                                                                "regionType": null,
+                                                                "arrivalTime": null,
+                                                                "distanceKm": null,
+                                                                "selectedBy": null,
+                                                                "retransportReason": null,
+                                                                "receiver": null
+                                                            },
+                                                            "secondTransport": {
+                                                                "hospitalName": null,
+                                                                "regionType": null,
+                                                                "arrivalTime": null,
+                                                                "distanceKm": null,
+                                                                "selectedBy": null,
+                                                                "retransportReason": null,
+                                                                "receiver": null
+                                                            },
+                                                            "notes": null,
+                                                            "createdAt": null,
+                                                            "updatedAt": null
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "message": "구급일지 섹션이 저장되었습니다.",
+                                                "timestamp": "2023-11-13T09:25:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "세부 상황표",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 796,
+                                                    "emergencyReportId": 123,
+                                                    "type": "DISPATCH_MEMBERS",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "dispatchMembers": {
+                                                            "doctor": {
+                                                                "affiliation": null,
+                                                                "rank": null,
+                                                                "name": null,
+                                                                "signature": null
+                                                            },
+                                                            "paramedic1": {
+                                                                "grade": null,
+                                                                "affiliation": null,
+                                                                "rank": null,
+                                                                "name": null,
+                                                                "signature": null
+                                                            },
+                                                            "paramedic2": {
+                                                                "grade": null,
+                                                                "affiliation": null,
+                                                                "rank": null,
+                                                                "name": null,
+                                                                "signature": null
+                                                            },
+                                                            "driver": {
+                                                                "grade": null,
+                                                                "affiliation": null,
+                                                                "rank": null,
+                                                                "name": null,
+                                                                "signature": null
+                                                            },
+                                                            "other": {
+                                                                "grade": null,
+                                                                "affiliation": null,
+                                                                "rank": null,
+                                                                "name": null,
+                                                                "signature": null
+                                                            },
+                                                            "createdAt": null,
+                                                            "updatedAt": null
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "message": "구급일지 섹션이 저장되었습니다.",
+                                                "timestamp": "2023-11-13T09:25:00Z"
+                                            }
+                                            """
+                            )
+                    }
+            )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "유효성 검증 실패",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "유효성 검증 실패",
+                            value = """
+                                    {
+                                        "success": false,
+                                        "error": {
+                                            "code": "VALIDATION_ERROR",
+                                            "message": "입력 정보가 올바르지 않습니다.",
+                                            "details": [
+                                                {
+                                                    "field": "type",
+                                                    "message": "유효하지 않은 섹션 유형입니다."
+                                                }
+                                            ]
+                                        },
+                                        "status": 400,
+                                        "timestamp": "2023-11-13T09:25:00Z"
+                                    }
+                                    """
+                    )
+            )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404",
+            description = "구급일지를 찾을 수 없음",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "구급일지 없음",
+                            value = """
+                                    {
+                                        "success": false,
+                                        "error": {
+                                            "code": "EMERGENCY_REPORT_NOT_FOUND",
+                                            "message": "존재하지 않는 구급일지입니다."
+                                        },
+                                        "status": 404,
+                                        "timestamp": "2023-11-13T09:25:00Z"
+                                    }
+                                    """
+                    )
+            )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "409",
+            description = "섹션 중복 생성",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "섹션 중복",
+                            value = """
+                                    {
+                                        "success": false,
+                                        "error": {
+                                            "code": "REPORT_SECTION_ALREADY_EXISTS",
+                                            "message": "해당 구급일지에 이미 동일한 타입의 섹션이 존재합니다."
+                                        },
+                                        "status": 409,
+                                        "timestamp": "2023-11-13T09:25:00Z"
+                                    }
+                                    """
+                    )
+            )
+    )
+    @ApiUnauthorizedError
+    @ApiInternalServerError
+    @PostMapping("/report-sections")
+    ResponseEntity<? extends ApiResponse> createReportSection(
+            @Valid @RequestBody com.ssairen.domain.emergency.dto.ReportSectionCreateRequest request
+    );
 }

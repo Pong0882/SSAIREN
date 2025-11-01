@@ -3,7 +3,10 @@ package com.ssairen.domain.emergency.controller;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateRequest;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
 import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
+import com.ssairen.domain.emergency.dto.ReportSectionCreateRequest;
+import com.ssairen.domain.emergency.dto.ReportSectionCreateResponse;
 import com.ssairen.domain.emergency.service.EmergencyReportService;
+import com.ssairen.domain.emergency.service.ReportSectionService;
 import com.ssairen.global.dto.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -21,6 +24,7 @@ import java.util.List;
 public class EmergencyReportController implements EmergencyReportApi {
 
     private final EmergencyReportService emergencyReportService;
+    private final ReportSectionService reportSectionService;
 
     @Override
     @PostMapping
@@ -37,5 +41,13 @@ public class EmergencyReportController implements EmergencyReportApi {
         // TODO: JWT에서 구급대원 ID 추출하여 사용하도록 변경 필요
         List<ParamedicEmergencyReportResponse> response = emergencyReportService.getEmergencyReportsByParamedic(paramedicId);
         return ResponseEntity.ok(ApiResponse.success(response, "구급대원이 작성한 보고서 조회를 완료하였습니다."));
+    }
+
+    @Override
+    @PostMapping("/report-sections")
+    public ResponseEntity<ApiResponse<ReportSectionCreateResponse>> createReportSection(
+            @Valid @RequestBody ReportSectionCreateRequest request) {
+        ReportSectionCreateResponse response = reportSectionService.createReportSection(request);
+        return ResponseEntity.ok(ApiResponse.success(response, "구급일지 섹션이 저장되었습니다."));
     }
 }
