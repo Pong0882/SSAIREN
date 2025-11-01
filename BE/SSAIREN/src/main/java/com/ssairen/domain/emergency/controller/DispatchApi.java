@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Dispatches", description = "출동 지령 관련 API")
@@ -131,7 +133,7 @@ public interface DispatchApi {
     )
     @ApiUnauthorizedError
     @ApiInternalServerError
-    ResponseEntity<? extends ApiResponse> createDispatch(DispatchCreateRequest request);
+    ResponseEntity<? extends ApiResponse> createDispatch(@Valid DispatchCreateRequest request);
 
     @Operation(
             summary = "소방서 전체 출동 목록 조회",
@@ -246,12 +248,14 @@ public interface DispatchApi {
     @ApiInternalServerError
     ResponseEntity<? extends ApiResponse> getDispatchList(
             @Parameter(description = "소방서 ID", required = true, example = "1")
+            @Positive(message = "소방서 ID는 양의 정수여야 합니다.")
             Integer fireStateId,
             @Parameter(description = """
                     조회 조건
                     - cursor: 다음 페이지 커서 (첫 요청 시 생략, 이후 응답의 next_cursor 값 사용)
                     - limit: 페이지당 개수 (기본값: 10, 최소: 1, 최대: 100)
                     """)
+            @Valid
             DispatchListQueryRequest request
     );
 }
