@@ -299,7 +299,7 @@ public interface EmergencyReportApi {
                                     value = """
                                             {
                                                 "emergencyReportId": 5,
-                                                "type": "PATIENT_ASSESSMENT"
+                                                "type": "ASSESSMENT"
                                             }
                                             """
                             ),
@@ -308,7 +308,7 @@ public interface EmergencyReportApi {
                                     value = """
                                             {
                                                 "emergencyReportId": 5,
-                                                "type": "EMERGENCY_TREATMENT"
+                                                "type": "TREATMENT"
                                             }
                                             """
                             ),
@@ -326,7 +326,7 @@ public interface EmergencyReportApi {
                                     value = """
                                             {
                                                 "emergencyReportId": 5,
-                                                "type": "PATIENT_TRANSPORT"
+                                                "type": "TRANSPORT"
                                             }
                                             """
                             ),
@@ -335,7 +335,7 @@ public interface EmergencyReportApi {
                                     value = """
                                             {
                                                 "emergencyReportId": 5,
-                                                "type": "DISPATCH_MEMBERS"
+                                                "type": "DETAIL_REPORT"
                                             }
                                             """
                             )
@@ -490,7 +490,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 792,
                                                     "emergencyReportId": 123,
-                                                    "type": "PATIENT_ASSESSMENT",
+                                                    "type": "ASSESSMENT",
                                                     "data": {
                                                         "schemaVersion": 1,
                                                         "patientAssessment": {
@@ -556,7 +556,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 793,
                                                     "emergencyReportId": 123,
-                                                    "type": "EMERGENCY_TREATMENT",
+                                                    "type": "TREATMENT",
                                                     "data": {
                                                         "schemaVersion": 1,
                                                         "emergencyTreatment": {
@@ -655,7 +655,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 795,
                                                     "emergencyReportId": 123,
-                                                    "type": "PATIENT_TRANSPORT",
+                                                    "type": "TRANSPORT",
                                                     "data": {
                                                         "schemaVersion": 1,
                                                         "patientTransport": {
@@ -698,7 +698,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 796,
                                                     "emergencyReportId": 123,
-                                                    "type": "DISPATCH_MEMBERS",
+                                                    "type": "DETAIL_REPORT",
                                                     "data": {
                                                         "schemaVersion": 1,
                                                         "dispatchMembers": {

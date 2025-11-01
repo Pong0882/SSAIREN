@@ -112,7 +112,7 @@ public class ReportSectionTemplate {
             """;
 
     // 환자 평가
-    private static final String PATIENT_ASSESSMENT_TEMPLATE = """
+    private static final String ASSESSMENT_TEMPLATE = """
             {
                 "schemaVersion": 1,
                 "patientAssessment": {
@@ -165,7 +165,7 @@ public class ReportSectionTemplate {
             """;
 
     // 응급 처치
-    private static final String EMERGENCY_TREATMENT_TEMPLATE = """
+    private static final String TREATMENT_TEMPLATE = """
             {
                 "schemaVersion": 1,
                 "emergencyTreatment": {
@@ -238,7 +238,7 @@ public class ReportSectionTemplate {
             """;
 
     // 환자 이송
-    private static final String PATIENT_TRANSPORT_TEMPLATE = """
+    private static final String TRANSPORT_TEMPLATE = """
             {
                 "schemaVersion": 1,
                 "patientTransport": {
@@ -268,7 +268,7 @@ public class ReportSectionTemplate {
             """;
 
     // 세부 상황표 (출동 대원)
-    private static final String DISPATCH_MEMBERS_TEMPLATE = """
+    private static final String DETAIL_REPORT_TEMPLATE = """
             {
                 "schemaVersion": 1,
                 "dispatchMembers": {
@@ -324,11 +324,11 @@ public class ReportSectionTemplate {
             case PATIENT_INFO -> PATIENT_INFO_TEMPLATE;
             case DISPATCH -> DISPATCH_TEMPLATE;
             case INCIDENT_TYPE -> INCIDENT_TYPE_TEMPLATE;
-            case PATIENT_ASSESSMENT -> PATIENT_ASSESSMENT_TEMPLATE;
-            case EMERGENCY_TREATMENT -> EMERGENCY_TREATMENT_TEMPLATE;
+            case ASSESSMENT -> ASSESSMENT_TEMPLATE;
+            case TREATMENT -> TREATMENT_TEMPLATE;
             case MEDICAL_GUIDANCE -> MEDICAL_GUIDANCE_TEMPLATE;
-            case PATIENT_TRANSPORT -> PATIENT_TRANSPORT_TEMPLATE;
-            case DISPATCH_MEMBERS -> DISPATCH_MEMBERS_TEMPLATE;
+            case TRANSPORT -> TRANSPORT_TEMPLATE;
+            case DETAIL_REPORT -> DETAIL_REPORT_TEMPLATE;
         };
 
         try {
