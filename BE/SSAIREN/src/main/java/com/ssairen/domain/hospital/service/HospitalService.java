@@ -464,4 +464,39 @@ public class HospitalService {
         log.info(LOG_PREFIX + "환자 내원 완료 처리 완료 - 병원 ID: {}, 구급일지 ID: {}, 선택 ID: {}",
                 hospitalId, emergencyReportId, selection.getId());
     }
+
+    /**
+     * 구급일지별 병원 선택 상태 조회 (구급대원용)
+     *
+     * @param emergencyReportId 구급일지 ID
+     * @return 병원 선택 상태 응답 (병원 ID, 이름, 상태 목록)
+     */
+    @Transactional(readOnly = true)
+    public HospitalSelectionStatusResponse getHospitalSelectionStatus(Long emergencyReportId) {
+        log.info(LOG_PREFIX + "병원 선택 상태 조회 시작 - 구급일지 ID: {}", emergencyReportId);
+
+        // 1. 구급일지 존재 여부 확인
+        if (!emergencyReportRepository.existsById(emergencyReportId)) {
+            log.warn(LOG_PREFIX + "구급일지를 찾을 수 없음 - 구급일지 ID: {}", emergencyReportId);
+            throw new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND);
+        }
+
+        // 2. 해당 구급일지에 대한 모든 HospitalSelection 조회 (Hospital Fetch Join)
+        List<HospitalSelection> selections = hospitalSelectionRepository
+                .findByEmergencyReportIdWithHospital(emergencyReportId);
+
+        log.info(LOG_PREFIX + "병원 선택 조회 완료 - 구급일지 ID: {}, 병원 수: {}",
+                emergencyReportId, selections.size());
+
+        // 3. DTO 변환
+        List<HospitalStatusDto> hospitalStatuses = selections.stream()
+                .map(HospitalStatusDto::from)
+                .toList();
+
+        log.info(LOG_PREFIX + "병원 선택 상태 조회 완료 - 구급일지 ID: {}, 반환 병원 수: {}",
+                emergencyReportId, hospitalStatuses.size());
+
+        // 4. 응답 생성
+        return HospitalSelectionStatusResponse.of(emergencyReportId, hospitalStatuses);
+    }
 }

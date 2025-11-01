@@ -51,7 +51,11 @@ public class OpenApiConfig {
 
                         new Server()
                                 .url("https://be.ssairen.site")
-                                .description("Production Server (HTTPS)")
+                                .description("Production Server (HTTPS)"),
+
+                        new Server()
+                                .url("https://api.ssairen.site")
+                                .description("Production API Server (HTTPS)")
                 ))
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth", securityScheme))

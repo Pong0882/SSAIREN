@@ -19,7 +19,39 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - ssairen-network
+      - ssairen-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: ssairen-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: redis-server ${REDIS_PASSWORD:+--requirepass} ${REDIS_PASSWORD}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ssairen-net
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: ssairen-redisinsight
+    restart: unless-stopped
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data:/data
+    networks:
+      - ssairen-net
+    depends_on:
+      - redis
 
   backend:
     build:
@@ -27,9 +59,9 @@ services:
       dockerfile: Dockerfile
     container_name: backend
     restart: unless-stopped
-    # 포트 노출 제거 (nginx를 통해서만 접근)
-    # ports:
-    #   - "8080:8080"
+    # 포트 노출 (로컬 테스트용) - Jenkins가 8080 사용중이므로 18080으로 변경
+    ports:
+      - "18080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
@@ -39,12 +71,19 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION}
       TZ: Asia/Seoul
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
-      - ssairen-network
       - ssairen-net
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health/liveness || exit 1"]
@@ -56,9 +95,11 @@ services:
 volumes:
   postgres_data:
     driver: local
+  redis_data:
+    driver: local
+  redisinsight_data:
+    driver: local
 
 networks:
-  ssairen-network:
-    driver: bridge
   ssairen-net:
     external: true

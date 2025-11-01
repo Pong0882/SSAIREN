@@ -279,4 +279,33 @@ public interface HospitalApi {
             @Parameter(hidden = true)
             @AuthenticationPrincipal CustomUserPrincipal principal
     );
+
+    /**
+     * 구급일지별 병원 선택 상태 조회 (구급대원용)
+     * - 구급대원이 이송 요청을 보낸 병원들의 응답 상태를 확인
+     * - 각 병원의 ID, 이름, 상태(PENDING, ACCEPTED, REJECTED 등) 반환
+     */
+    @Operation(
+            summary = "구급일지별 병원 선택 상태 조회",
+            description = "구급대원이 특정 구급일지에 대해 이송 요청을 보낸 병원들의 응답 상태를 조회합니다. " +
+                    "각 병원의 ID, 공식 명칭, 현재 상태(PENDING, ACCEPTED, REJECTED, CALLREQUEST, COMPLETED)를 확인할 수 있습니다. " +
+                    "실시간으로 병원들의 응답 상태를 확인하여 적절한 병원을 선택할 수 있습니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = HospitalSelectionStatusResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "구급일지를 찾을 수 없음"
+            )
+    })
+    @ApiUnauthorizedError
+    @ApiInternalServerError
+    ResponseEntity<ApiResponse<HospitalSelectionStatusResponse>> getHospitalSelectionStatus(
+            @Parameter(description = "구급일지 ID", required = true, example = "1")
+            @PathVariable("emergency_report_id") Long emergencyReportId
+    );
 }
