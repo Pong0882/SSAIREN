@@ -2,6 +2,7 @@ package com.ssairen.domain.emergency.service;
 
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateRequest;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
+import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
 import com.ssairen.domain.emergency.entity.Dispatch;
 import com.ssairen.domain.emergency.entity.EmergencyReport;
 import com.ssairen.domain.emergency.mapper.EmergencyReportMapper;
@@ -17,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -67,5 +70,28 @@ public class EmergencyReportServiceImpl implements EmergencyReportService {
 
         // 4. 응답 DTO 변환
         return emergencyReportMapper.toEmergencyReportCreateResponse(savedReport);
+    }
+
+    /**
+     * 특정 구급대원이 작성한 모든 보고서 조회
+     *
+     * @param paramedicId 구급대원 ID
+     * @return 구급대원이 작성한 보고서 목록
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<ParamedicEmergencyReportResponse> getEmergencyReportsByParamedic(Integer paramedicId) {
+        // 1. 구급대원 존재 여부 확인
+        Paramedic paramedic = paramedicRepository.findById(paramedicId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PARAMEDIC_NOT_FOUND));
+
+        // 2. 구급일지 조회
+        List<EmergencyReport> emergencyReports = emergencyReportRepository.findByParamedicIdWithFetchJoin(paramedicId);
+
+        log.info("구급대원 보고서 조회 완료 - 구급대원: {}, 조회 건수: {}",
+                paramedic.getName(), emergencyReports.size());
+
+        // 3. DTO 변환
+        return emergencyReportMapper.toParamedicEmergencyReportResponseList(emergencyReports);
     }
 }
