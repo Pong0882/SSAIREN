@@ -4,7 +4,7 @@ import json
 from fastapi import APIRouter, UploadFile, File
 from fastapi.responses import StreamingResponse
 
-from ..services.stt_service import transcribe_audio_stream
+from services.stt_service import transcribe_audio_stream
 
 router = APIRouter(prefix="/stt", tags=["stt"])
 
