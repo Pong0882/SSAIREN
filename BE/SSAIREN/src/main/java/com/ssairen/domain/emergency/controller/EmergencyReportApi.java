@@ -1350,4 +1350,92 @@ public interface EmergencyReportApi {
             @Parameter(description = "섹션 유형", required = true, example = "PATIENT_INFO")
             @PathVariable("type") com.ssairen.domain.emergency.enums.ReportSectionType type
     );
+
+    @Operation(
+            summary = "특정 소방서 보고서 조회",
+            description = "특정 소방서의 모든 구급일지를 조회합니다."
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "소방서 보고서 조회 성공",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "소방서 보고서 조회 성공",
+                            value = """
+                                    {
+                                      "success": true,
+                                      "data": [
+                                        {
+                                            "fireStateInfo": {
+                                                "id": 1,
+                                                "name": "강남소방서"
+                                            },
+                                            "emergencyReports": [
+                                                {
+                                                    "id": 1,
+                                                    "paramedicInfo": {
+                                                        "id": 1,
+                                                        "name": "김철수"
+                                                    },
+                                                    "dispatchInfo": {
+                                                        "id": 1,
+                                                        "disasterNumber": "CB0000000662",
+                                                        "date": "2025-10-30 17:43:28.235931"
+                                                    },
+                                                    "createdAt": "2025-10-30 17:43:28.235931",
+                                                    "updatedAt": "2025-10-30 17:43:28.235931"
+                                                },
+                                                {
+                                                    "id": 2,
+                                                    "paramedicInfo": {
+                                                        "id": 1,
+                                                        "name": "김철수"
+                                                    },
+                                                    "dispatchInfo": {
+                                                        "id": 2,
+                                                        "disasterNumber": "CB0000000662",
+                                                        "date": "2025-11-01 21:00:41.284828"
+                                                    },
+                                                    "createdAt": "2025-11-01 21:00:41.284828",
+                                                    "updatedAt": "2025-11-01 21:00:41.284828"
+                                                }
+                                            ]
+                                        }
+                                      ],
+                                      "message": "소방서 보고서 조회를 완료하였습니다.",
+                                      "timestamp": "2025-10-23T10:46:20+09:00"
+                                    }
+                                    """
+                    )
+            )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404",
+            description = "소방서를 찾을 수 없음",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "소방서 없음",
+                            value = """
+                                    {
+                                      "success": false,
+                                      "error": {
+                                        "code": "FIRE_STATE_NOT_FOUND",
+                                        "message": "존재하지 않는 소방서입니다."
+                                      },
+                                      "status": 404,
+                                      "timestamp": "2023-11-13T10:00:00Z"
+                                    }
+                                    """
+                    )
+            )
+    )
+    @ApiUnauthorizedError
+    @ApiInternalServerError
+    @GetMapping("/fire-state/{fireStateId}")
+    ResponseEntity<? extends ApiResponse> getEmergencyReportsByFireState(
+            @Parameter(description = "소방서 ID", required = true, example = "1")
+            @PathVariable("fireStateId") @Positive(message = "소방서 ID는 양의 정수여야 합니다.") Integer fireStateId
+    );
 }

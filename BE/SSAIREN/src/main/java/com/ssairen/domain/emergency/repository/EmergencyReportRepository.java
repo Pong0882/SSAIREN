@@ -2,6 +2,7 @@ package com.ssairen.domain.emergency.repository;
 
 import com.ssairen.domain.emergency.entity.Dispatch;
 import com.ssairen.domain.emergency.entity.EmergencyReport;
+import com.ssairen.domain.firestation.entity.FireState;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,4 +31,13 @@ public interface EmergencyReportRepository extends JpaRepository<EmergencyReport
            "JOIN FETCH p.fireState " +
            "WHERE p.id = :paramedicId")
     List<EmergencyReport> findByParamedicIdWithFetchJoin(@Param("paramedicId") Integer paramedicId);
+
+    /**
+     * 특정 소방서의 모든 구급일지 조회
+     */
+    @Query("SELECT er FROM EmergencyReport er " +
+           "JOIN FETCH er.paramedic p " +
+           "JOIN FETCH er.dispatch d " +
+           "WHERE er.fireState.id = :fireStateId")
+    List<EmergencyReport> findByFireStateIdWithFetchJoin(@Param("fireStateId") Integer fireStateId);
 }

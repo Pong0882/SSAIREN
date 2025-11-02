@@ -2,6 +2,7 @@ package com.ssairen.domain.emergency.controller;
 
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateRequest;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
+import com.ssairen.domain.emergency.dto.FireStateEmergencyReportsResponse;
 import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
 import com.ssairen.domain.emergency.dto.ReportSectionCreateRequest;
 import com.ssairen.domain.emergency.dto.ReportSectionCreateResponse;
@@ -59,5 +60,13 @@ public class EmergencyReportController implements EmergencyReportApi {
             @PathVariable("type") ReportSectionType type) {
         ReportSectionCreateResponse response = reportSectionService.getReportSection(emergencyReportId, type);
         return ResponseEntity.ok(ApiResponse.success(response, "구급일지 해당 섹션 조회를 완료하였습니다."));
+    }
+
+    @Override
+    @GetMapping("/fire-state/{fireStateId}")
+    public ResponseEntity<ApiResponse<List<FireStateEmergencyReportsResponse>>> getEmergencyReportsByFireState(
+            @PathVariable("fireStateId") @Positive(message = "소방서 ID는 양의 정수여야 합니다.") Integer fireStateId) {
+        List<FireStateEmergencyReportsResponse> response = emergencyReportService.getEmergencyReportsByFireState(fireStateId);
+        return ResponseEntity.ok(ApiResponse.success(response, "소방서 보고서 조회를 완료하였습니다."));
     }
 }
