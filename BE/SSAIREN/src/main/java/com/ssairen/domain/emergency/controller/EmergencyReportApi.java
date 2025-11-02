@@ -826,4 +826,528 @@ public interface EmergencyReportApi {
     ResponseEntity<? extends ApiResponse> createReportSection(
             @Valid @RequestBody com.ssairen.domain.emergency.dto.ReportSectionCreateRequest request
     );
+
+    @Operation(
+            summary = "구급일지 특정 섹션 조회",
+            description = "특정 구급일지의 특정 섹션 데이터를 조회합니다."
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "구급일지 섹션 조회 성공",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = {
+                            @ExampleObject(
+                                    name = "환자 정보",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 789,
+                                                    "emergencyReportId": 5,
+                                                    "type": "PATIENT_INFO",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "patientInfo": {
+                                                            "reporter": {
+                                                                "phone": "01012345678",
+                                                                "reportMethod": "휴대전화"
+                                                            },
+                                                            "patient": {
+                                                                "name": "홍길동",
+                                                                "gender": "남성",
+                                                                "ageYears": 45,
+                                                                "birthDate": "1980-02-12",
+                                                                "address": "서울특별시 중구 을지로 00"
+                                                            },
+                                                            "guardian": {
+                                                                "name": "김철수",
+                                                                "relation": "배우자",
+                                                                "phone": "010-2222-3333"
+                                                            },
+                                                            "incidentLocation": {
+                                                                "text": "서울특별시 중구 모 병원 앞 도로"
+                                                            },
+                                                            "createdAt": "2025-10-21T09:00:00Z",
+                                                            "updatedAt": "2025-10-21T09:00:00Z"
+                                                        }
+                                                    },
+                                                    "version": 2,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "timestamp": "2023-11-13T10:00:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "구급 출동",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 790,
+                                                    "emergencyReportId": 5,
+                                                    "type": "DISPATCH",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "dispatch": {
+                                                            "reportDate": "2022-08-11",
+                                                            "reportTime": "02:26",
+                                                            "departureTime": "02:28",
+                                                            "arrivalSceneTime": "02:29",
+                                                            "contactTime": "02:29",
+                                                            "distanceKm": 2.0,
+                                                            "departureSceneTime": "02:42",
+                                                            "arrivalHospitalTime": "02:47",
+                                                            "returnTime": "03:43",
+                                                            "dispatchType": "정상",
+                                                            "sceneLocation": {
+                                                                "primary": "도로",
+                                                                "detail": null
+                                                            },
+                                                            "symptoms": {
+                                                                "pain": [
+                                                                    {
+                                                                        "name": "흉통",
+                                                                        "isCustom": false
+                                                                    },
+                                                                    {
+                                                                        "name": "치통",
+                                                                        "isCustom": true
+                                                                    }
+                                                                ],
+                                                                "trauma": [
+                                                                    {
+                                                                        "name": "골절",
+                                                                        "isCustom": false
+                                                                    },
+                                                                    {
+                                                                        "name": "치통",
+                                                                        "isCustom": false
+                                                                    }
+                                                                ],
+                                                                "otherSymptoms": [
+                                                                    {
+                                                                        "name": "의식장애",
+                                                                        "isCustom": false
+                                                                    },
+                                                                    {
+                                                                        "name": "구강 내 출혈",
+                                                                        "isCustom": true
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "createdAt": "2025-10-21T09:00:00Z",
+                                                            "updatedAt": "2025-10-21T09:00:00Z"
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "timestamp": "2023-11-13T10:00:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "환자 발생 유형",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 791,
+                                                    "emergencyReportId": 5,
+                                                    "type": "INCIDENT_TYPE",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "incidentType": {
+                                                            "category": "질병",
+                                                            "medicalHistory": {
+                                                                "hasHistory": "미상",
+                                                                "details": ["고혈압", "당뇨"],
+                                                                "notes": null
+                                                            },
+                                                            "externalCause": {
+                                                                "type": "교통사고",
+                                                                "subType": "운전자",
+                                                                "injurySeverity": "사상자"
+                                                            },
+                                                            "trauma": {
+                                                                "mainCause": ["절식", "기계"],
+                                                                "notes": null
+                                                            },
+                                                            "legalSuspicion": {
+                                                                "isSuspected": false,
+                                                                "actions": ["경찰통보"],
+                                                                "notes": null
+                                                            },
+                                                            "other": {
+                                                                "category": null,
+                                                                "notes": null
+                                                            },
+                                                            "createdAt": "2025-10-21T09:00:00Z",
+                                                            "updatedAt": "2025-10-21T09:00:00Z"
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "timestamp": "2023-11-13T10:00:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "환자 평가",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 792,
+                                                    "emergencyReportId": 5,
+                                                    "type": "ASSESSMENT",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "patientAssessment": {
+                                                            "consciousness": {
+                                                                "first": {
+                                                                    "time": "02:30",
+                                                                    "state": "A"
+                                                                },
+                                                                "second": {
+                                                                    "time": "03:00",
+                                                                    "state": "V"
+                                                                }
+                                                            },
+                                                            "pupilReaction": {
+                                                                "left": {
+                                                                    "status": "정상",
+                                                                    "reaction": "반응"
+                                                                },
+                                                                "right": {
+                                                                    "status": "정상",
+                                                                    "reaction": "반응"
+                                                                }
+                                                            },
+                                                            "vitalSigns": {
+                                                                "first": {
+                                                                    "time": "02:35",
+                                                                    "bloodPressure": "120/80",
+                                                                    "pulse": 80,
+                                                                    "respiration": 18,
+                                                                    "temperature": 36.8,
+                                                                    "spo2": 98,
+                                                                    "bloodSugar": 110
+                                                                },
+                                                                "second": {
+                                                                    "time": "03:10",
+                                                                    "bloodPressure": "118/78",
+                                                                    "pulse": 82,
+                                                                    "respiration": 20,
+                                                                    "temperature": 36.9,
+                                                                    "spo2": 97,
+                                                                    "bloodSugar": 108
+                                                                }
+                                                            },
+                                                            "patientLevel": "LEVEL2",
+                                                            "notes": "현장 내 반응 지연, 추가 측정 필요",
+                                                            "createdAt": "2025-10-21T09:00:00Z",
+                                                            "updatedAt": "2025-10-21T09:00:00Z"
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "timestamp": "2023-11-13T10:00:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "응급 처치",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 793,
+                                                    "emergencyReportId": 5,
+                                                    "type": "TREATMENT",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "emergencyTreatment": {
+                                                            "airwayManagement": {
+                                                                "methods": ["기도유지"],
+                                                                "notes": null
+                                                            },
+                                                            "oxygenTherapy": {
+                                                                "applied": true,
+                                                                "flowRateLpm": 10,
+                                                                "device": "비재호흡마스크"
+                                                            },
+                                                            "cpr": {
+                                                                "performed": true,
+                                                                "type": "1회 시행",
+                                                                "aed": {
+                                                                    "used": true,
+                                                                    "shock": true,
+                                                                    "monitoring": true
+                                                                }
+                                                            },
+                                                            "bleedingControl": {
+                                                                "methods": ["직접압박", "지혈"],
+                                                                "notes": null
+                                                            },
+                                                            "woundCare": {
+                                                                "types": ["상처 소독 처리"],
+                                                                "notes": null
+                                                            },
+                                                            "delivery": {
+                                                                "performed": false,
+                                                                "time": null,
+                                                                "babyCondition": null
+                                                            },
+                                                            "notes": null,
+                                                            "createdAt": "2025-10-21T09:00:00Z",
+                                                            "updatedAt": "2025-10-21T09:00:00Z"
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "timestamp": "2023-11-13T10:00:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "의료 지도",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 794,
+                                                    "emergencyReportId": 5,
+                                                    "type": "MEDICAL_GUIDANCE",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "medicalGuidance": {
+                                                            "contactStatus": "연결",
+                                                            "requestTime": "02:55",
+                                                            "guidanceAgency": {
+                                                                "type": "병원",
+                                                                "name": null
+                                                            },
+                                                            "guidanceDoctor": {
+                                                                "name": "이의사"
+                                                            },
+                                                            "requestMethod": "휴대전화",
+                                                            "guidanceContent": {
+                                                                "emergencyTreatment": [
+                                                                    "기관삽관",
+                                                                    "성문의 기도유지기",
+                                                                    "정맥로 확보",
+                                                                    "인공호흡기"
+                                                                ],
+                                                                "medication": [
+                                                                    "NTG",
+                                                                    "NS"
+                                                                ],
+                                                                "hospitalRequest": true,
+                                                                "patientEvaluation": true,
+                                                                "cprTransfer": false,
+                                                                "transferInstructions": [
+                                                                    "이송계속"
+                                                                ]
+                                                            },
+                                                            "notes": null,
+                                                            "createdAt": "2025-10-21T09:00:00Z",
+                                                            "updatedAt": "2025-10-21T09:00:00Z"
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "timestamp": "2023-11-13T10:00:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "환자 이송",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 795,
+                                                    "emergencyReportId": 5,
+                                                    "type": "TRANSPORT",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "patientTransport": {
+                                                            "firstTransport": {
+                                                                "hospitalName": "OO병원",
+                                                                "regionType": "관할",
+                                                                "arrivalTime": "03:10",
+                                                                "distanceKm": 5.2,
+                                                                "selectedBy": "119상황실",
+                                                                "retransportReason": [
+                                                                    "병상부족",
+                                                                    "회로장비 고장"
+                                                                ],
+                                                                "receiver": "의사"
+                                                            },
+                                                            "secondTransport": {
+                                                                "hospitalName": "△△병원",
+                                                                "regionType": "타시·도",
+                                                                "arrivalTime": "04:05",
+                                                                "distanceKm": 23.8,
+                                                                "selectedBy": "구급대",
+                                                                "retransportReason": ["중환자실"],
+                                                                "receiver": "간호사"
+                                                            },
+                                                            "notes": null,
+                                                            "createdAt": "2025-10-21T09:00:00Z",
+                                                            "updatedAt": "2025-10-21T09:00:00Z"
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "timestamp": "2023-11-13T10:00:00Z"
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "세부 상황표",
+                                    value = """
+                                            {
+                                                "success": true,
+                                                "data": {
+                                                    "id": 796,
+                                                    "emergencyReportId": 5,
+                                                    "type": "DETAIL_REPORT",
+                                                    "data": {
+                                                        "schemaVersion": 1,
+                                                        "dispatchMembers": {
+                                                            "doctor": {
+                                                                "affiliation": "소방",
+                                                                "rank": "의사",
+                                                                "name": "홍길동",
+                                                                "signature": null
+                                                            },
+                                                            "paramedic1": {
+                                                                "grade": "1급",
+                                                                "affiliation": "소방",
+                                                                "rank": "소방교",
+                                                                "name": "김철수",
+                                                                "signature": null
+                                                            },
+                                                            "paramedic2": {
+                                                                "grade": "2급",
+                                                                "affiliation": "소방",
+                                                                "rank": "소방사",
+                                                                "name": "박영희",
+                                                                "signature": null
+                                                            },
+                                                            "driver": {
+                                                                "grade": null,
+                                                                "affiliation": "소방",
+                                                                "rank": "소방교",
+                                                                "name": "이운전",
+                                                                "signature": null
+                                                            },
+                                                            "other": {
+                                                                "grade": "기타",
+                                                                "affiliation": "소방",
+                                                                "rank": null,
+                                                                "name": "최지원",
+                                                                "signature": null
+                                                            },
+                                                            "createdAt": "2025-10-21T09:00:00Z",
+                                                            "updatedAt": "2025-10-21T09:00:00Z"
+                                                        }
+                                                    },
+                                                    "version": 1,
+                                                    "createdAt": "2023-11-13T09:25:00Z"
+                                                },
+                                                "timestamp": "2023-11-13T10:00:00Z"
+                                            }
+                                            """
+                            )
+                    }
+            )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "유효성 검증 실패",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "유효성 검증 실패",
+                            value = """
+                                    {
+                                        "success": false,
+                                        "error": {
+                                            "code": "VALIDATION_ERROR",
+                                            "message": "입력 정보가 올바르지 않습니다.",
+                                            "details": [
+                                                {
+                                                    "field": "type",
+                                                    "message": "유효하지 않은 섹션 유형입니다."
+                                                }
+                                            ]
+                                        },
+                                        "status": 400,
+                                        "timestamp": "2023-11-13T10:00:00Z"
+                                    }
+                                    """
+                    )
+            )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404",
+            description = "구급일지를 찾을 수 없음",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "구급일지 없음",
+                            value = """
+                                    {
+                                        "success": false,
+                                        "error": {
+                                            "code": "EMERGENCY_REPORT_NOT_FOUND",
+                                            "message": "구급일지를 찾을 수 없습니다."
+                                        },
+                                        "status": 404,
+                                        "timestamp": "2023-11-13T10:00:00Z"
+                                    }
+                                    """
+                    )
+            )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404",
+            description = "섹션을 찾을 수 없음",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "섹션 없음",
+                            value = """
+                                    {
+                                        "success": false,
+                                        "error": {
+                                            "code": "REPORT_SECTION_NOT_FOUND",
+                                            "message": "구급일지 섹션을 찾을 수 없습니다."
+                                        },
+                                        "status": 404,
+                                        "timestamp": "2023-11-13T10:00:00Z"
+                                    }
+                                    """
+                    )
+            )
+    )
+    @ApiUnauthorizedError
+    @ApiInternalServerError
+    @GetMapping("/{emergencyReportId}/sections/{type}")
+    ResponseEntity<? extends ApiResponse> getReportSection(
+            @Parameter(description = "구급일지 ID", required = true, example = "5")
+            @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
+            @Parameter(description = "섹션 유형", required = true, example = "PATIENT_INFO")
+            @PathVariable("type") com.ssairen.domain.emergency.enums.ReportSectionType type
+    );
 }

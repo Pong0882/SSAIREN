@@ -5,6 +5,7 @@ import com.ssairen.domain.emergency.dto.ReportSectionCreateRequest;
 import com.ssairen.domain.emergency.dto.ReportSectionCreateResponse;
 import com.ssairen.domain.emergency.entity.EmergencyReport;
 import com.ssairen.domain.emergency.entity.ReportSection;
+import com.ssairen.domain.emergency.enums.ReportSectionType;
 import com.ssairen.domain.emergency.mapper.ReportSectionMapper;
 import com.ssairen.domain.emergency.repository.ReportSectionRepository;
 import com.ssairen.domain.emergency.util.ReportSectionTemplate;
@@ -64,5 +65,34 @@ public class ReportSectionServiceImpl implements ReportSectionService {
 
         // 6. 응답 DTO 변환
         return reportSectionMapper.toCreateResponse(savedSection);
+    }
+
+    /**
+     * 구급일지 특정 섹션 조회
+     *
+     * @param emergencyReportId 구급일지 ID
+     * @param type 섹션 타입
+     * @return 섹션 정보 (JSON 데이터 포함)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public ReportSectionCreateResponse getReportSection(Long emergencyReportId, ReportSectionType type) {
+        // 1. 구급일지 존재 여부 검증
+        EmergencyReport emergencyReport = reportSectionValidator
+                .validateEmergencyReportExists(emergencyReportId);
+
+        // 2. 섹션 타입 유효성 검증
+        reportSectionValidator.validateSectionType(type);
+
+        // 3. 섹션 조회
+        ReportSection section = reportSectionRepository
+                .findByEmergencyReportAndType(emergencyReport, type)
+                .orElseThrow(() -> new CustomException(ErrorCode.REPORT_SECTION_NOT_FOUND));
+
+        log.info("구급일지 섹션 조회 완료 - 섹션 ID: {}, 구급일지 ID: {}, 타입: {}",
+                section.getId(), emergencyReportId, type);
+
+        // 4. 응답 DTO 변환
+        return reportSectionMapper.toCreateResponse(section);
     }
 }
