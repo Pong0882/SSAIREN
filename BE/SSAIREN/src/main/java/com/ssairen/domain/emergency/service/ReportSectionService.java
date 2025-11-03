@@ -1,6 +1,7 @@
 package com.ssairen.domain.emergency.service;
 
 import com.ssairen.domain.emergency.dto.ReportSectionCreateResponse;
+import com.ssairen.domain.emergency.dto.ReportSectionUpdateRequest;
 import com.ssairen.domain.emergency.enums.ReportSectionType;
 
 public interface ReportSectionService {
@@ -22,4 +23,14 @@ public interface ReportSectionService {
      * @return 섹션 정보 (JSON 데이터 포함)
      */
     ReportSectionCreateResponse getReportSection(Long emergencyReportId, ReportSectionType type);
+
+    /**
+     * 구급일지 섹션 수정
+     *
+     * @param emergencyReportId 구급일지 ID
+     * @param type 섹션 타입
+     * @param request 수정할 데이터
+     * @return 수정된 섹션 정보
+     */
+    ReportSectionCreateResponse updateReportSection(Long emergencyReportId, ReportSectionType type, ReportSectionUpdateRequest request);
 }
