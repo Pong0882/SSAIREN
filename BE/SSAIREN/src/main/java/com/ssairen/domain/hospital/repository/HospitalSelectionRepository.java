@@ -85,6 +85,42 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     );
 
     /**
+     * 특정 병원의 환자 목록 조회 (페이지네이션 + 필터)
+     * EmergencyReport Fetch Join
+     *
+     * @param hospitalId 병원 ID
+     * @param statuses 필터링할 상태 목록 (ACCEPTED, ARRIVED)
+     * @param offset 시작 위치 (페이지 * 크기)
+     * @param limit 페이지 크기
+     */
+    @Query("SELECT hs FROM HospitalSelection hs " +
+            "JOIN FETCH hs.emergencyReport " +
+            "WHERE hs.hospital.id = :hospitalId " +
+            "AND hs.status IN :statuses " +
+            "ORDER BY hs.responseAt DESC " +
+            "LIMIT :limit OFFSET :offset")
+    List<HospitalSelection> findPatientsByHospitalIdWithPagination(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("statuses") List<HospitalSelectionStatus> statuses,
+            @Param("offset") int offset,
+            @Param("limit") int limit
+    );
+
+    /**
+     * 특정 병원의 환자 전체 개수 조회 (필터)
+     *
+     * @param hospitalId 병원 ID
+     * @param statuses 필터링할 상태 목록
+     */
+    @Query("SELECT COUNT(hs) FROM HospitalSelection hs " +
+            "WHERE hs.hospital.id = :hospitalId " +
+            "AND hs.status IN :statuses")
+    long countPatientsByHospitalIdAndStatuses(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("statuses") List<HospitalSelectionStatus> statuses
+    );
+
+    /**
      * 병원이 특정 환자를 수용했는지 확인 (ACCEPTED 또는 ARRIVED 상태)
      */
     @Query("SELECT COUNT(hs) > 0 FROM HospitalSelection hs " +

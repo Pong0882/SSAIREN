@@ -7,9 +7,11 @@ import com.ssairen.domain.hospital.entity.Hospital;
 import com.ssairen.domain.hospital.entity.HospitalSelection;
 import com.ssairen.domain.hospital.entity.PatientInfo;
 import com.ssairen.domain.hospital.enums.HospitalSelectionStatus;
+import com.ssairen.domain.hospital.enums.PatientFilterType;
 import com.ssairen.domain.hospital.repository.HospitalRepository;
 import com.ssairen.domain.hospital.repository.HospitalSelectionRepository;
 import com.ssairen.domain.hospital.repository.PatientInfoRepository;
+import com.ssairen.global.dto.PageResponse;
 import com.ssairen.global.exception.CustomException;
 import com.ssairen.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -250,7 +252,9 @@ public class HospitalService {
      * @param hospitalId 병원 ID
      * @param currentHospitalId 현재 로그인한 병원 ID
      * @return 수용한 환자 목록
+     * @deprecated 페이지네이션 버전인 getAcceptedPatientsWithPagination 사용 권장
      */
+    @Deprecated
     @Transactional(readOnly = true)
     public List<AcceptedPatientDto> getAcceptedPatients(Integer hospitalId, Integer currentHospitalId) {
         log.info(LOG_PREFIX + "수용한 환자 목록 조회 시작 - 병원 ID: {}", hospitalId);
@@ -300,6 +304,85 @@ public class HospitalService {
                 hospitalId, acceptedPatients.size());
 
         return acceptedPatients;
+    }
+
+    /**
+     * 병원이 수용한 환자 목록 조회 (페이지네이션 + 필터)
+     *
+     * @param hospitalId 병원 ID
+     * @param currentHospitalId 현재 로그인한 병원 ID
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지당 데이터 개수
+     * @param filterType 필터 타입 (ALL: ACCEPTED+ARRIVED, ACCEPTED: ACCEPTED만)
+     * @return 페이지네이션된 환자 목록
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<AcceptedPatientDto> getAcceptedPatientsWithPagination(
+            Integer hospitalId,
+            Integer currentHospitalId,
+            int page,
+            int size,
+            PatientFilterType filterType
+    ) {
+        log.info(LOG_PREFIX + "수용한 환자 목록 조회 시작 (페이지네이션) - 병원 ID: {}, page: {}, size: {}, filter: {}",
+                hospitalId, page, size, filterType);
+
+        // 1. 권한 검증: 본인의 환자만 조회 가능
+        if (!hospitalId.equals(currentHospitalId)) {
+            log.warn(LOG_PREFIX + "권한 없는 환자 목록 조회 시도 - 요청 병원 ID: {}, 현재 병원 ID: {}",
+                    hospitalId, currentHospitalId);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        // 2. 병원 존재 여부 확인
+        if (!hospitalRepository.existsById(hospitalId)) {
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND);
+        }
+
+        // 3. 필터에 따른 상태 목록 가져오기
+        List<HospitalSelectionStatus> statuses = filterType.getStatuses();
+
+        // 4. 전체 데이터 개수 조회
+        long totalElements = hospitalSelectionRepository
+                .countPatientsByHospitalIdAndStatuses(hospitalId, statuses);
+
+        log.info(LOG_PREFIX + "전체 환자 수 - 병원 ID: {}, 개수: {}", hospitalId, totalElements);
+
+        // 5. 페이지네이션된 데이터 조회
+        int offset = page * size;
+        List<HospitalSelection> selections = hospitalSelectionRepository
+                .findPatientsByHospitalIdWithPagination(hospitalId, statuses, offset, size);
+
+        log.info(LOG_PREFIX + "페이지네이션 데이터 조회 완료 - 병원 ID: {}, 조회 개수: {}",
+                hospitalId, selections.size());
+
+        // 6. 각 selection에 대해 환자 정보 조회 및 DTO 변환
+        List<AcceptedPatientDto> acceptedPatients = new ArrayList<>();
+        for (HospitalSelection selection : selections) {
+            Long emergencyReportId = selection.getEmergencyReport().getId();
+
+            // 환자 정보 조회
+            Optional<PatientInfo> patientInfoOptional = patientInfoRepository
+                    .findById(emergencyReportId);
+
+            if (patientInfoOptional.isPresent()) {
+                PatientInfo patientInfo = patientInfoOptional.get();
+                AcceptedPatientDto dto = AcceptedPatientDto.from(selection, patientInfo);
+                acceptedPatients.add(dto);
+
+                log.debug(LOG_PREFIX + "환자 정보 추가 - 선택 ID: {}, 구급일지 ID: {}, 상태: {}",
+                        selection.getId(), emergencyReportId, selection.getStatus());
+            } else {
+                log.warn(LOG_PREFIX + "환자 정보 없음 - 선택 ID: {}, 구급일지 ID: {}",
+                        selection.getId(), emergencyReportId);
+            }
+        }
+
+        log.info(LOG_PREFIX + "수용한 환자 목록 조회 완료 (페이지네이션) - 병원 ID: {}, 반환 개수: {}, 전체: {}",
+                hospitalId, acceptedPatients.size(), totalElements);
+
+        // 7. PageResponse 생성 및 반환
+        return PageResponse.of(acceptedPatients, page, size, totalElements);
     }
 
     /**

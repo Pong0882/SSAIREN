@@ -4,6 +4,7 @@ import com.ssairen.config.swagger.annotation.ApiInternalServerError;
 import com.ssairen.config.swagger.annotation.ApiUnauthorizedError;
 import com.ssairen.domain.hospital.dto.*;
 import com.ssairen.global.dto.ApiResponse;
+import com.ssairen.global.dto.PageResponse;
 import com.ssairen.global.security.dto.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -132,20 +134,28 @@ public interface HospitalApi {
     );
 
     /**
-     * 병원이 수용한 환자 목록 조회
+     * 병원이 수용한 환자 목록 조회 (페이지네이션)
      * - ACCEPTED (내원 대기중) 또는 ARRIVED (내원 완료) 상태의 환자 목록
      * - 각 환자의 기본 정보와 내원 상태 포함
+     * - 페이지네이션 및 상태 필터 지원
      */
     @Operation(
-            summary = "병원이 수용한 환자 목록 조회",
-            description = "병원이 수용(ACCEPTED)하거나 내원 완료(ARRIVED)된 환자 목록을 조회합니다. " +
-                    "각 환자의 성별, 나이, 주호소, 의식상태 등의 정보와 함께 내원 상태를 확인할 수 있습니다."
+            summary = "병원이 수용한 환자 목록 조회 (페이지네이션)",
+            description = "병원이 수용(ACCEPTED)하거나 내원 완료(ARRIVED)된 환자 목록을 페이지네이션하여 조회합니다. " +
+                    "각 환자의 성별, 나이, 주호소, 의식상태 등의 정보와 함께 내원 상태를 확인할 수 있습니다.\n\n" +
+                    "**status 파라미터 설명:**\n" +
+                    "- `all`: ACCEPTED(내원 대기) + ARRIVED(내원 완료) 모두 조회 (기본값)\n" +
+                    "- `accepted`: ACCEPTED(내원 대기) 상태만 조회\n\n" +
+                    "**페이지네이션 예시:**\n" +
+                    "- 1페이지 (1-10번): `page=0&size=10`\n" +
+                    "- 2페이지 (11-20번): `page=1&size=10`\n" +
+                    "- 3페이지 (21-30번): `page=2&size=10`"
     )
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = AcceptedPatientDto.class))
+                    content = @Content(schema = @Schema(implementation = PageResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "403",
@@ -158,9 +168,15 @@ public interface HospitalApi {
     })
     @ApiUnauthorizedError
     @ApiInternalServerError
-    ResponseEntity<ApiResponse<List<AcceptedPatientDto>>> getAcceptedPatients(
-            @Parameter(description = "병원 ID", required = true, example = "5")
+    ResponseEntity<ApiResponse<PageResponse<AcceptedPatientDto>>> getAcceptedPatients(
+            @Parameter(description = "병원 ID", required = true, example = "2")
             @PathVariable Integer hospitalId,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지당 데이터 개수", example = "10")
+            @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "상태 필터 (all: 전체, accepted: 내원 대기만)", example = "all")
+            @RequestParam(defaultValue = "all") String status,
             @Parameter(hidden = true)
             @AuthenticationPrincipal CustomUserPrincipal principal
     );

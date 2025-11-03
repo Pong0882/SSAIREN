@@ -1,8 +1,12 @@
 package com.ssairen.domain.hospital.controller;
 
 import com.ssairen.domain.hospital.dto.*;
+import com.ssairen.domain.hospital.enums.PatientFilterType;
 import com.ssairen.domain.hospital.service.HospitalService;
 import com.ssairen.global.dto.ApiResponse;
+import com.ssairen.global.dto.PageResponse;
+import com.ssairen.global.exception.CustomException;
+import com.ssairen.global.exception.ErrorCode;
 import com.ssairen.global.security.dto.CustomUserPrincipal;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -75,13 +79,28 @@ public class HospitalController implements HospitalApi {
 
     @Override
     @GetMapping("/hospitals/{hospitalId}/patients")
-    public ResponseEntity<ApiResponse<List<AcceptedPatientDto>>> getAcceptedPatients(
+    public ResponseEntity<ApiResponse<PageResponse<AcceptedPatientDto>>> getAcceptedPatients(
             @PathVariable Integer hospitalId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "all") String status,
             @AuthenticationPrincipal CustomUserPrincipal principal
     ) {
-        List<AcceptedPatientDto> patients = hospitalService.getAcceptedPatients(
+        // status 파라미터를 PatientFilterType으로 변환
+        PatientFilterType filterType;
+        try {
+            filterType = PatientFilterType.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE,
+                    "status는 'all' 또는 'accepted'만 가능합니다.");
+        }
+
+        PageResponse<AcceptedPatientDto> patients = hospitalService.getAcceptedPatientsWithPagination(
                 hospitalId,
-                principal.getId()
+                principal.getId(),
+                page,
+                size,
+                filterType
         );
 
         return ResponseEntity.ok(
