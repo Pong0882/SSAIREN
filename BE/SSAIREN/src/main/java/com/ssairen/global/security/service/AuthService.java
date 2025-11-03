@@ -2,6 +2,8 @@ package com.ssairen.global.security.service;
 
 import com.ssairen.domain.firestation.entity.Paramedic;
 import com.ssairen.domain.firestation.repository.ParamedicRepository;
+import com.ssairen.domain.hospital.entity.Hospital;
+import com.ssairen.domain.hospital.repository.HospitalRepository;
 import com.ssairen.global.exception.CustomException;
 import com.ssairen.global.exception.ErrorCode;
 import com.ssairen.global.security.converter.TokenResponseConverter;
@@ -34,6 +36,7 @@ public class AuthService {
     private final ParamedicUserDetailsService paramedicUserDetailsService;
     private final HospitalUserDetailsService hospitalUserDetailsService;
     private final ParamedicRepository paramedicRepository;
+    private final HospitalRepository hospitalRepository;
     private final TokenResponseConverter tokenResponseConverter;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
@@ -102,7 +105,19 @@ public class AuthService {
             );
         }
 
-        // 6. 그 외 사용자는 기본 정보만 반환
+        // 6. 병원인 경우 상세 정보 포함
+        if (principal.getUserType() == UserType.HOSPITAL) {
+            Hospital hospital = hospitalRepository.findById(principal.getId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.HOSPITAL_NOT_FOUND));
+
+            return tokenResponseConverter.toTokenResponseWithHospital(
+                    accessToken,
+                    refreshToken,
+                    hospital
+            );
+        }
+
+        // 7. 그 외 사용자는 기본 정보만 반환
         return tokenResponseConverter.toTokenResponse(
                 accessToken,
                 refreshToken,
@@ -157,7 +172,19 @@ public class AuthService {
             );
         }
 
-        // 5. 그 외 사용자는 기본 정보만 반환
+        // 5. 병원인 경우 상세 정보 포함
+        if (info.userType() == UserType.HOSPITAL) {
+            Hospital hospital = hospitalRepository.findById(info.userId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.HOSPITAL_NOT_FOUND));
+
+            return tokenResponseConverter.toTokenResponseWithHospital(
+                    newAccessToken,
+                    refreshTokenStr,  // RefreshToken은 그대로 유지
+                    hospital
+            );
+        }
+
+        // 6. 그 외 사용자는 기본 정보만 반환
         return tokenResponseConverter.toTokenResponse(
                 newAccessToken,
                 refreshTokenStr,  // RefreshToken은 그대로 유지
