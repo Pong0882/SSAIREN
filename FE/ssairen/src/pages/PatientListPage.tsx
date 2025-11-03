@@ -11,155 +11,174 @@ import {
   Pagination,
 } from "@/components";
 
+interface RecordTime {
+  hour: number;
+  minute: number;
+  second: number;
+  nano: number;
+}
+
 interface Patient {
-  no: number;
-  gender: "M" | "F";
+  hospitalSelectionId: number;
+  emergencyReportId: number;
+  gender: string;
   age: number;
-  time: string;
-  symptoms: string;
-  diagnosis: string;
-  visited: string;
-  alert?: boolean;
+  recordTime: string;
+  chiefComplaint: string;
+  mentalStatus: string;
+  status: "PENDING" | "COMPLETED";
 }
 
 const mockPatients: Patient[] = [
   {
-    no: 1,
+    hospitalSelectionId: 1,
+    emergencyReportId: 1001,
     gender: "F",
     age: 76,
-    time: "10:01",
-    symptoms: "주호소 증상",
-    diagnosis: "alert",
-    visited: "내원 대기",
-    alert: true,
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "alert",
+    status: "PENDING",
   },
   {
-    no: 2,
+    hospitalSelectionId: 2,
+    emergencyReportId: 1002,
     gender: "M",
     age: 55,
-    time: "10:07",
-    symptoms: "주호소 증상",
-    diagnosis: "semicoma",
-    visited: "내원 완료",
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "semicoma",
+    status: "COMPLETED",
   },
   {
-    no: 3,
+    hospitalSelectionId: 3,
+    emergencyReportId: 1003,
     gender: "M",
     age: 47,
-    time: "10:20",
-    symptoms: "주호소 증상",
-    diagnosis: "stupor",
-    visited: "내원 완료",
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "stupor",
+    status: "COMPLETED",
   },
   {
-    no: 4,
+    hospitalSelectionId: 4,
+    emergencyReportId: 1004,
     gender: "F",
     age: 62,
-    time: "10:25",
-    symptoms: "주호소 증상",
-    diagnosis: "semicoma",
-    visited: "내원 완료",
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "semicoma",
+    status: "COMPLETED",
   },
   {
-    no: 5,
+    hospitalSelectionId: 5,
+    emergencyReportId: 1005,
     gender: "M",
     age: 41,
-    time: "10:30",
-    symptoms: "주호소 증상",
-    diagnosis: "stupor",
-    visited: "내원 완료",
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "stupor",
+    status: "COMPLETED",
   },
   {
-    no: 6,
+    hospitalSelectionId: 6,
+    emergencyReportId: 1006,
     gender: "M",
     age: 58,
-    time: "10:35",
-    symptoms: "주호소 증상",
-    diagnosis: "semicoma",
-    visited: "내원 완료",
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "semicoma",
+    status: "COMPLETED",
   },
   {
-    no: 7,
+    hospitalSelectionId: 7,
+    emergencyReportId: 1007,
     gender: "F",
     age: 69,
-    time: "10:40",
-    symptoms: "주호소 증상",
-    diagnosis: "alert",
-    visited: "내원 대기",
-    alert: true,
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "alert",
+    status: "PENDING",
   },
   {
-    no: 8,
+    hospitalSelectionId: 8,
+    emergencyReportId: 1008,
     gender: "M",
     age: 53,
-    time: "10:45",
-    symptoms: "주호소 증상",
-    diagnosis: "stupor",
-    visited: "내원 완료",
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "stupor",
+    status: "COMPLETED",
   },
   {
-    no: 9,
+    hospitalSelectionId: 9,
+    emergencyReportId: 1009,
     gender: "F",
     age: 45,
-    time: "10:50",
-    symptoms: "주호소 증상",
-    diagnosis: "semicoma",
-    visited: "내원 완료",
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "semicoma",
+    status: "COMPLETED",
   },
   {
-    no: 10,
+    hospitalSelectionId: 10,
+    emergencyReportId: 1010,
     gender: "M",
     age: 71,
-    time: "10:55",
-    symptoms: "주호소 증상",
-    diagnosis: "stupor",
-    visited: "내원 완료",
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "stupor",
+    status: "COMPLETED",
   },
   {
-    no: 11,
+    hospitalSelectionId: 11,
+    emergencyReportId: 1011,
     gender: "F",
     age: 38,
-    time: "11:00",
-    symptoms: "주호소 증상",
-    diagnosis: "semicoma",
-    visited: "내원 완료",
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "semicoma",
+    status: "COMPLETED",
   },
   {
-    no: 12,
+    hospitalSelectionId: 12,
+    emergencyReportId: 1012,
     gender: "M",
     age: 64,
-    time: "11:05",
-    symptoms: "주호소 증상",
-    diagnosis: "stupor",
-    visited: "내원 완료",
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "stupor",
+    status: "COMPLETED",
   },
   {
-    no: 13,
+    hospitalSelectionId: 13,
+    emergencyReportId: 1013,
     gender: "F",
     age: 51,
-    time: "11:10",
-    symptoms: "주호소 증상",
-    diagnosis: "alert",
-    visited: "내원 대기",
-    alert: true,
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "alert",
+    status: "PENDING",
   },
   {
-    no: 14,
+    hospitalSelectionId: 14,
+    emergencyReportId: 1014,
     gender: "M",
     age: 49,
-    time: "11:15",
-    symptoms: "주호소 증상",
-    diagnosis: "semicoma",
-    visited: "내원 완료",
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "semicoma",
+    status: "COMPLETED",
   },
   {
-    no: 15,
+    hospitalSelectionId: 15,
+    emergencyReportId: 1015,
     gender: "F",
     age: 57,
-    time: "11:20",
-    symptoms: "주호소 증상",
-    diagnosis: "stupor",
-    visited: "내원 완료",
+    recordTime: "17:53:08.464",
+    chiefComplaint: "주호소 증상",
+    mentalStatus: "stupor",
+    status: "COMPLETED",
   },
 ];
 
@@ -171,7 +190,7 @@ export default function PatientListPage() {
   const filteredPatients =
     activeTab === "all"
       ? mockPatients
-      : mockPatients.filter((p) => p.visited === "내원 대기");
+      : mockPatients.filter((p) => p.status === "PENDING");
 
   const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -228,15 +247,17 @@ export default function PatientListPage() {
                   {paginatedPatients.map((patient, index) => (
                     <TableRow
                       key={index}
-                      variant={patient.alert ? "alert" : "default"}
+                      variant={patient.status === "PENDING" ? "alert" : "default"}
                     >
-                      <TableCell>{patient.no}</TableCell>
+                      <TableCell>{patient.hospitalSelectionId}</TableCell>
                       <TableCell className="hidden sm:table-cell">{patient.gender}</TableCell>
                       <TableCell className="hidden md:table-cell">{patient.age}</TableCell>
-                      <TableCell>{patient.time}</TableCell>
-                      <TableCell className="hidden lg:table-cell">{patient.symptoms}</TableCell>
-                      <TableCell>{patient.diagnosis}</TableCell>
-                      <TableCell>{patient.visited}</TableCell>
+                      <TableCell>{patient.recordTime.split(".")[0]}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{patient.chiefComplaint}</TableCell>
+                      <TableCell>{patient.mentalStatus}</TableCell>
+                      <TableCell>
+                        {patient.status === "PENDING" ? "내원 대기" : "내원 완료"}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
