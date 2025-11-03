@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Header,
   Tabs,
@@ -25,7 +25,7 @@ export default function PatientListPage() {
   const itemsPerPage = 10;
 
   // API 호출 함수
-  const fetchPatients = async () => {
+  const fetchPatients = useCallback(async () => {
     if (!user?.id) {
       setError("로그인 정보가 없습니다.");
       return;
@@ -54,12 +54,27 @@ export default function PatientListPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, currentPage, itemsPerPage, activeTab]);
 
   // 페이지 로드 시 & 탭/페이지 변경 시 데이터 가져오기
   useEffect(() => {
     fetchPatients();
-  }, [currentPage, activeTab, user?.id]);
+  }, [fetchPatients]);
+
+  // WebSocket 메시지 수신 시 환자 목록 새로고침
+  useEffect(() => {
+    const handleNewPatientRequest = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log("🔔 PatientListPage: 새로운 요청 감지", customEvent.detail);
+      fetchPatients();
+    };
+
+    window.addEventListener("newPatientRequest", handleNewPatientRequest);
+
+    return () => {
+      window.removeEventListener("newPatientRequest", handleNewPatientRequest);
+    };
+  }, [fetchPatients]);
 
   const handleTabChange = (tab: "all" | "waiting") => {
     setActiveTab(tab);
