@@ -260,88 +260,6 @@ public interface EmergencyReportApi {
             summary = "구급일지 섹션 생성",
             description = "구급일지의 특정 섹션을 생성합니다. 섹션 타입에 맞는 스켈레톤 데이터가 자동으로 생성됩니다."
     )
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "구급일지 섹션 생성 요청",
-            required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = com.ssairen.domain.emergency.dto.ReportSectionCreateRequest.class),
-                    examples = {
-                            @ExampleObject(
-                                    name = "환자 정보",
-                                    value = """
-                                            {
-                                                "emergencyReportId": 5,
-                                                "type": "PATIENT_INFO"
-                                            }
-                                            """
-                            ),
-                            @ExampleObject(
-                                    name = "구급 출동",
-                                    value = """
-                                            {
-                                                "emergencyReportId": 5,
-                                                "type": "DISPATCH"
-                                            }
-                                            """
-                            ),
-                            @ExampleObject(
-                                    name = "환자 발생 유형",
-                                    value = """
-                                            {
-                                                "emergencyReportId": 5,
-                                                "type": "INCIDENT_TYPE"
-                                            }
-                                            """
-                            ),
-                            @ExampleObject(
-                                    name = "환자 평가",
-                                    value = """
-                                            {
-                                                "emergencyReportId": 5,
-                                                "type": "ASSESSMENT"
-                                            }
-                                            """
-                            ),
-                            @ExampleObject(
-                                    name = "응급 처치",
-                                    value = """
-                                            {
-                                                "emergencyReportId": 5,
-                                                "type": "TREATMENT"
-                                            }
-                                            """
-                            ),
-                            @ExampleObject(
-                                    name = "의료 지도",
-                                    value = """
-                                            {
-                                                "emergencyReportId": 5,
-                                                "type": "MEDICAL_GUIDANCE"
-                                            }
-                                            """
-                            ),
-                            @ExampleObject(
-                                    name = "환자 이송",
-                                    value = """
-                                            {
-                                                "emergencyReportId": 5,
-                                                "type": "TRANSPORT"
-                                            }
-                                            """
-                            ),
-                            @ExampleObject(
-                                    name = "세부 상황표",
-                                    value = """
-                                            {
-                                                "emergencyReportId": 5,
-                                                "type": "DETAIL_REPORT"
-                                            }
-                                            """
-                            )
-                    }
-            )
-    )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
             description = "구급일지 섹션 생성 성공",
@@ -822,9 +740,12 @@ public interface EmergencyReportApi {
     )
     @ApiUnauthorizedError
     @ApiInternalServerError
-    @PostMapping("/report-sections")
+    @PostMapping("/{emergencyReportId}/sections/{type}")
     ResponseEntity<? extends ApiResponse> createReportSection(
-            @Valid @RequestBody com.ssairen.domain.emergency.dto.ReportSectionCreateRequest request
+            @Parameter(description = "구급일지 ID", required = true, example = "5")
+            @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
+            @Parameter(description = "섹션 유형", required = true, example = "PATIENT_INFO")
+            @PathVariable("type") com.ssairen.domain.emergency.enums.ReportSectionType type
     );
 
     @Operation(

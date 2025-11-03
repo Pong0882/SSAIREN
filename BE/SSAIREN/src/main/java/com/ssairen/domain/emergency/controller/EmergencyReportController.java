@@ -4,7 +4,6 @@ import com.ssairen.domain.emergency.dto.EmergencyReportCreateRequest;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
 import com.ssairen.domain.emergency.dto.FireStateEmergencyReportsResponse;
 import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
-import com.ssairen.domain.emergency.dto.ReportSectionCreateRequest;
 import com.ssairen.domain.emergency.dto.ReportSectionCreateResponse;
 import com.ssairen.domain.emergency.enums.ReportSectionType;
 import com.ssairen.domain.emergency.service.EmergencyReportService;
@@ -46,10 +45,11 @@ public class EmergencyReportController implements EmergencyReportApi {
     }
 
     @Override
-    @PostMapping("/report-sections")
+    @PostMapping("/{emergencyReportId}/sections/{type}")
     public ResponseEntity<ApiResponse<ReportSectionCreateResponse>> createReportSection(
-            @Valid @RequestBody ReportSectionCreateRequest request) {
-        ReportSectionCreateResponse response = reportSectionService.createReportSection(request);
+            @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
+            @PathVariable("type") ReportSectionType type) {
+        ReportSectionCreateResponse response = reportSectionService.createReportSection(emergencyReportId, type);
         return ResponseEntity.ok(ApiResponse.success(response, "구급일지 섹션이 저장되었습니다."));
     }
 
