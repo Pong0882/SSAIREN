@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import {
+  Header,
   Tabs,
   TabButton,
   Table,
@@ -77,85 +78,94 @@ export default function PatientListPage() {
   };
 
   return (
-    <div className="h-screen bg-neutral-900 p-8 overflow-hidden">
-      <div className="max-w-7xl mx-auto flex flex-col">
-        {/* 탭 버튼 */}
-        <div className="mb-6">
-          <Tabs>
-            <TabButton
-              active={activeTab === "all"}
-              onClick={() => handleTabChange("all")}
-            >
-              전체
-            </TabButton>
-            <TabButton
-              active={activeTab === "waiting"}
-              onClick={() => handleTabChange("waiting")}
-            >
-              내원 대기
-            </TabButton>
-          </Tabs>
-        </div>
+    <div className="h-screen bg-neutral-900 flex flex-col overflow-hidden">
+      {/* Header */}
+      <Header />
 
-        {/* 테이블 */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden flex-1">
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-neutral-500">로딩 중...</p>
-            </div>
-          ) : error ? (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-danger-500">{error}</p>
-            </div>
-          ) : patients.length === 0 ? (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-neutral-500">환자 데이터가 없습니다.</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableCell header>No</TableCell>
-                  <TableCell header>성별</TableCell>
-                  <TableCell header>나이</TableCell>
-                  <TableCell header>시간</TableCell>
-                  <TableCell header>주호소</TableCell>
-                  <TableCell header>멘탈</TableCell>
-                  <TableCell header>내원 여부</TableCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {patients.map((patient) => (
-                  <TableRow
-                    key={patient.hospitalSelectionId}
-                    variant={patient.status === "PENDING" ? "alert" : "default"}
-                    onClick={() => console.log("Patient clicked:", patient)}
-                  >
-                    <TableCell>{patient.hospitalSelectionId}</TableCell>
-                    <TableCell>{patient.gender}</TableCell>
-                    <TableCell>{patient.age}</TableCell>
-                    <TableCell>
-                      {formatRecordTime(patient.recordTime)}
-                    </TableCell>
-                    <TableCell>{patient.chiefComplaint}</TableCell>
-                    <TableCell>{patient.mentalStatus}</TableCell>
-                    <TableCell>
-                      {patient.status === "PENDING" ? "내원 대기" : "내원 완료"}
-                    </TableCell>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 min-h-0">
+        <div className="max-w-7xl mx-auto w-full flex flex-col h-full">
+          {/* 탭 버튼 */}
+          <div className="mb-4 sm:mb-6 flex-shrink-0">
+            <Tabs>
+              <TabButton
+                active={activeTab === "all"}
+                onClick={() => handleTabChange("all")}
+              >
+                전체
+              </TabButton>
+              <TabButton
+                active={activeTab === "waiting"}
+                onClick={() => handleTabChange("waiting")}
+              >
+                내원 대기
+              </TabButton>
+            </Tabs>
+          </div>
+          {/* 테이블 */}
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden flex-1">
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-neutral-500">로딩 중...</p>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-danger-500">{error}</p>
+              </div>
+            ) : patients.length === 0 ? (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-neutral-500">환자 데이터가 없습니다.</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableCell header>No</TableCell>
+                    <TableCell header>성별</TableCell>
+                    <TableCell header>나이</TableCell>
+                    <TableCell header>시간</TableCell>
+                    <TableCell header>주호소</TableCell>
+                    <TableCell header>멘탈</TableCell>
+                    <TableCell header>내원 여부</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
+                </TableHeader>
+                <TableBody>
+                  {patients.map((patient) => (
+                    <TableRow
+                      key={patient.hospitalSelectionId}
+                      variant={
+                        patient.status === "PENDING" ? "alert" : "default"
+                      }
+                      onClick={() => console.log("Patient clicked:", patient)}
+                    >
+                      <TableCell>{patient.hospitalSelectionId}</TableCell>
+                      <TableCell>{patient.gender}</TableCell>
+                      <TableCell>{patient.age}</TableCell>
+                      <TableCell>
+                        {formatRecordTime(patient.recordTime)}
+                      </TableCell>
+                      <TableCell>{patient.chiefComplaint}</TableCell>
+                      <TableCell>{patient.mentalStatus}</TableCell>
+                      <TableCell>
+                        {patient.status === "PENDING"
+                          ? "내원 대기"
+                          : "내원 완료"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
 
-        {/* 페이지네이션 */}
-        <div className="mt-4">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+          {/* 페이지네이션 */}
+          <div className="mt-3 flex-shrink-0">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         </div>
       </div>
     </div>
