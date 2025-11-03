@@ -22,6 +22,8 @@ export interface TokenResponse {
   status?: string
   fireStateId?: number
   fireStateName?: string
+  // 병원 상세 정보 (HOSPITAL인 경우)
+  officialName?: string
 }
 
 // 백엔드 ApiResponse wrapper
@@ -45,6 +47,7 @@ export interface User {
   name?: string
   email?: string
   role?: string
+  officialName?: string // 병원 공식 명칭
 }
 
 // 로그인 폼 데이터 타입
