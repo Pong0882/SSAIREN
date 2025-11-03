@@ -2,6 +2,7 @@ package com.ssairen.domain.emergency.service;
 
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateRequest;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
+import com.ssairen.domain.emergency.dto.FireStateEmergencyReportsResponse;
 import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
 
 import java.util.List;
@@ -23,4 +24,12 @@ public interface EmergencyReportService {
      * @return 구급대원이 작성한 보고서 목록
      */
     List<ParamedicEmergencyReportResponse> getEmergencyReportsByParamedic(Integer paramedicId);
+
+    /**
+     * 특정 소방서의 모든 구급일지 조회
+     *
+     * @param fireStateId 소방서 ID
+     * @return 소방서별 구급일지 목록 (List로 래핑)
+     */
+    List<FireStateEmergencyReportsResponse> getEmergencyReportsByFireState(Integer fireStateId);
 }

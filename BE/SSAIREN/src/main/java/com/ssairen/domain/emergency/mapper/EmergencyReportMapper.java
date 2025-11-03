@@ -68,4 +68,47 @@ public class EmergencyReportMapper {
                 .map(this::toParamedicEmergencyReportResponse)
                 .collect(Collectors.toList());
     }
+
+    public ParamedicInfoSimple toParamedicInfoSimple(Paramedic paramedic) {
+        return new ParamedicInfoSimple(
+                paramedic.getId(),
+                paramedic.getName()
+        );
+    }
+
+    public DispatchInfoSimple toDispatchInfoSimple(Dispatch dispatch) {
+        return new DispatchInfoSimple(
+                dispatch.getId(),
+                dispatch.getDisasterNumber(),
+                dispatch.getDate()
+        );
+    }
+
+    public EmergencyReportSummaryResponse toEmergencyReportSummaryResponse(EmergencyReport emergencyReport) {
+        ParamedicInfoSimple paramedicInfo = toParamedicInfoSimple(emergencyReport.getParamedic());
+        DispatchInfoSimple dispatchInfo = toDispatchInfoSimple(emergencyReport.getDispatch());
+
+        return new EmergencyReportSummaryResponse(
+                emergencyReport.getId(),
+                paramedicInfo,
+                dispatchInfo,
+                emergencyReport.getCreatedAt()
+        );
+    }
+
+    public List<EmergencyReportSummaryResponse> toEmergencyReportSummaryResponseList(List<EmergencyReport> emergencyReports) {
+        return emergencyReports.stream()
+                .map(this::toEmergencyReportSummaryResponse)
+                .collect(Collectors.toList());
+    }
+
+    public FireStateEmergencyReportsResponse toFireStateEmergencyReportsResponse(FireState fireState, List<EmergencyReport> emergencyReports) {
+        FireStateResponse fireStateInfo = toFireStateResponse(fireState);
+        List<EmergencyReportSummaryResponse> summaryList = toEmergencyReportSummaryResponseList(emergencyReports);
+
+        return new FireStateEmergencyReportsResponse(
+                fireStateInfo,
+                summaryList
+        );
+    }
 }

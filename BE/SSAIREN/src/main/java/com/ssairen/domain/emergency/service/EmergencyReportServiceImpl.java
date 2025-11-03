@@ -2,12 +2,14 @@ package com.ssairen.domain.emergency.service;
 
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateRequest;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
+import com.ssairen.domain.emergency.dto.FireStateEmergencyReportsResponse;
 import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
 import com.ssairen.domain.emergency.entity.Dispatch;
 import com.ssairen.domain.emergency.entity.EmergencyReport;
 import com.ssairen.domain.emergency.mapper.EmergencyReportMapper;
 import com.ssairen.domain.emergency.repository.DispatchRepository;
 import com.ssairen.domain.emergency.repository.EmergencyReportRepository;
+import com.ssairen.domain.emergency.validation.EmergencyReportValidator;
 import com.ssairen.domain.firestation.entity.FireState;
 import com.ssairen.domain.firestation.entity.Paramedic;
 import com.ssairen.domain.firestation.repository.FireStateRepository;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -30,6 +33,7 @@ public class EmergencyReportServiceImpl implements EmergencyReportService {
     private final DispatchRepository dispatchRepository;
     private final ParamedicRepository paramedicRepository;
     private final FireStateRepository fireStateRepository;
+    private final EmergencyReportValidator emergencyReportValidator;
     private final EmergencyReportMapper emergencyReportMapper;
 
     /**
@@ -93,5 +97,30 @@ public class EmergencyReportServiceImpl implements EmergencyReportService {
 
         // 3. DTO 변환
         return emergencyReportMapper.toParamedicEmergencyReportResponseList(emergencyReports);
+    }
+
+    /**
+     * 특정 소방서의 모든 구급일지 조회
+     *
+     * @param fireStateId 소방서 ID
+     * @return 소방서별 구급일지 목록 (List로 래핑)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<FireStateEmergencyReportsResponse> getEmergencyReportsByFireState(Integer fireStateId) {
+        // 1. 소방서 존재 여부 검증
+        FireState fireState = emergencyReportValidator.validateFireStateExists(fireStateId);
+
+        // 2. 소방서의 모든 구급일지 조회
+        List<EmergencyReport> emergencyReports = emergencyReportRepository.findByFireStateIdWithFetchJoin(fireStateId);
+
+        log.info("소방서 보고서 조회 완료 - 소방서: {}, 조회 건수: {}",
+                fireState.getName(), emergencyReports.size());
+
+        // 3. 응답 DTO 변환 (List로 래핑)
+        FireStateEmergencyReportsResponse response = emergencyReportMapper
+                .toFireStateEmergencyReportsResponse(fireState, emergencyReports);
+
+        return Collections.singletonList(response);
     }
 }

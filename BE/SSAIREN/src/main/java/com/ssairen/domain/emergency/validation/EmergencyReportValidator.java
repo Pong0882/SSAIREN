@@ -1,5 +1,9 @@
 package com.ssairen.domain.emergency.validation;
 
+import com.ssairen.domain.firestation.entity.FireState;
+import com.ssairen.domain.firestation.repository.FireStateRepository;
+import com.ssairen.global.exception.CustomException;
+import com.ssairen.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -9,5 +13,11 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class EmergencyReportValidator {
-    // 추후 @Valid로 처리할 수 없는 복잡한 검증 로직이 필요한 경우 여기에 추가
+
+    private final FireStateRepository fireStateRepository;
+
+    public FireState validateFireStateExists(Integer fireStateId) {
+        return fireStateRepository.findById(fireStateId)
+                .orElseThrow(() -> new CustomException(ErrorCode.FIRE_STATE_NOT_FOUND));
+    }
 }
