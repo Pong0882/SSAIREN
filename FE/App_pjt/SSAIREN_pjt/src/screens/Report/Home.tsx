@@ -1,3 +1,4 @@
+//Home.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -8,7 +9,8 @@ import {
   StatusBar,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../App';
+import { RootStackParamList } from '../../App';
+import ReportSearchContent from './ReportSearch'; // 👈 추가
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -197,14 +199,11 @@ function Home({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
         />
       );
-    } else {
-      // 관내 보고서 검색 탭
-      return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>관내 보고서 검색 기능 준비중</Text>
-        </View>
-      );
+    } else if (activeTab === 'search') {
+      // 관내 보고서 검색 탭 - 별도 파일에서 가져온 컴포넌트
+      return <ReportSearchContent />;
     }
+    return null;
   };
   
   return (
@@ -231,7 +230,7 @@ function Home({ navigation }: Props) {
           style={[styles.tabButton, activeTab === 'dispatch' && styles.tabButtonActive]}
           onPress={() => setActiveTab('dispatch')}
         >
-          <Text style={[styles.tabText, activeTab === 'dispatch' && styles.tabTextActive]}>
+          <Text style={[styles.tabText, activeTab === 'dispatch' && styles.tabButtonActive]}>
             출동지령 내역
           </Text>
         </TouchableOpacity>
@@ -380,7 +379,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#999999',
   },
-  // 출동지령 카드 스타일
   dispatchCard: {
     backgroundColor: '#2a2a2a',
     borderRadius: 8,
@@ -413,16 +411,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#cccccc',
     lineHeight: 18,
-  },
-  // 빈 화면 스타일
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#999999',
   },
 });
 
