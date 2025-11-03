@@ -11,13 +11,13 @@ router = APIRouter(prefix="/stt", tags=["stt"])
 @router.post("/whisper")
 async def stt_whisper(
     file: UploadFile = File(...),
-    language: str = None
+    language: str = "ko"
 ):
-    """오디오 파일을 업로드하면 텍스트로 변환 (스트리밍)
+    """오디오 파일을 업로드하면 한국어 텍스트로 변환 (스트리밍, 화자 분리 지원)
     
     Args:
         file: 오디오 파일 (wav, mp3, m4a 등)
-        language: 언어 코드 (선택사항, 미지정 시 자동 감지. 예: 'ko', 'en', 'ja')
+        language: 언어 코드 (기본값: 'ko' 한국어 고정)
     """
     # 임시 파일로 저장
     suffix = os.path.splitext(file.filename or "audio.mp3")[1]
