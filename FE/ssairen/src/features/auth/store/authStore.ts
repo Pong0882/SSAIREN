@@ -32,7 +32,8 @@ export const useAuthStore = create<AuthState>()(
           userType: tokenResponse.userType,
           name: tokenResponse.name,
           email: undefined, // 백엔드 응답에 없음
-          role: tokenResponse.rank // 구급대원의 경우 rank를 role로 사용
+          role: tokenResponse.rank, // 구급대원의 경우 rank를 role로 사용
+          officialName: tokenResponse.officialName // 병원 공식 명칭
         }
 
         set({

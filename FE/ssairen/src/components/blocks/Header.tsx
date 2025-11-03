@@ -21,8 +21,8 @@ export default function Header() {
 
         <div className="flex items-center gap-3 sm:gap-4">
           <span className="text-sm sm:text-base text-white">
-            <span className="hidden sm:inline">{user?.name || user?.username}님 안녕하세요!</span>
-            <span className="sm:hidden">{user?.name || user?.username}님</span>
+            <span className="hidden sm:inline">{user?.officialName || user?.name || user?.username}님 안녕하세요!</span>
+            <span className="sm:hidden">{user?.officialName || user?.name || user?.username}님</span>
           </span>
           <Button
             variant="outline"
