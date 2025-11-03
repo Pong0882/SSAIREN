@@ -30,7 +30,7 @@ interface TableCellProps {
 
 export function Table({ children, className = "" }: TableProps) {
   return (
-    <div className="w-full overflow-x-auto">
+    <div className="w-full">
       <table className={`w-full border-collapse table-fixed ${className}`}>
         {children}
       </table>
@@ -75,7 +75,7 @@ export function TableCell({
   header = false,
   className = "",
 }: TableCellProps) {
-  const baseStyles = "px-4 py-3 text-center";
+  const baseStyles = "px-3 py-2 text-center text-sm";
   const headerStyles = header
     ? "font-semibold text-neutral-700"
     : "text-neutral-800";

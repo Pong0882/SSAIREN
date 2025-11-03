@@ -50,7 +50,7 @@ export const useLogin = () => {
       setAuth(response)
 
       // 로그인 성공 시 메인 페이지로 이동
-      navigate('/')
+      navigate('/patientListPage')
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message)

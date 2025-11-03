@@ -22,7 +22,7 @@ export function Tabs({ children, className = '' }: TabsProps) {
 
 export function TabButton({ active = false, onClick, children, className = '' }: TabButtonProps) {
   const activeStyles = active
-    ? 'bg-primary-500 text-white'
+    ? 'bg-primary-500 text-white border-2 border-primary-500'
     : 'bg-transparent text-white border-2 border-white hover:bg-neutral-700 hover:border-neutral-700'
 
   return (

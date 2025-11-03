@@ -45,6 +45,10 @@ export const useAuthStore = create<AuthState>()(
 
       // 로그아웃 시 인증 정보 초기화
       clearAuth: () => {
+        // localStorage에서 토큰 제거
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+
         set({
           user: null,
           accessToken: null,
