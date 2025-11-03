@@ -1,1 +1,2 @@
-// Layout components will be added here
+export { default as AuthLayout } from './AuthLayout'
+export { default as ProtectedRoute } from './ProtectedRoute'
