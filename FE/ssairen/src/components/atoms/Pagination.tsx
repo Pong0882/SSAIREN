@@ -48,7 +48,7 @@ export default function Pagination({
   };
 
   return (
-    <div className="flex items-center justify-center gap-2 py-4">
+    <div className="flex items-center justify-center gap-2 py-3">
       {/* 이전 버튼 */}
       <button
         onClick={() => onPageChange(currentPage - 1)}
