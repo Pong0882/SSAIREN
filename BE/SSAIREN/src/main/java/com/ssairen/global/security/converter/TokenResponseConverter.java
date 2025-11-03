@@ -1,6 +1,7 @@
 package com.ssairen.global.security.converter;
 
 import com.ssairen.domain.firestation.entity.Paramedic;
+import com.ssairen.domain.hospital.entity.Hospital;
 import com.ssairen.global.security.dto.TokenResponse;
 import com.ssairen.global.security.enums.UserType;
 import org.springframework.stereotype.Component;
@@ -53,6 +54,26 @@ public class TokenResponseConverter {
                 paramedic.getStatus(),
                 paramedic.getFireState().getId(),
                 paramedic.getFireState().getName()
+        );
+    }
+
+    /**
+     * 병원 상세 정보를 포함한 TokenResponse 생성
+     *
+     * @param accessToken  액세스 토큰
+     * @param refreshToken 리프레시 토큰
+     * @param hospital     병원 엔티티
+     * @return TokenResponse (병원 상세 정보 포함)
+     */
+    public TokenResponse toTokenResponseWithHospital(String accessToken, String refreshToken,
+                                                      Hospital hospital) {
+        return new TokenResponse(
+                accessToken,
+                refreshToken,
+                UserType.HOSPITAL,
+                hospital.getId(),
+                hospital.getName(),
+                hospital.getOfficialName()
         );
     }
 }
