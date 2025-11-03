@@ -177,24 +177,47 @@ public interface EmergencyReportApi {
                             value = """
                                     {
                                       "success": true,
-                                      "data": [
-                                        {
-                                          "paramedicInfo": {
-                                            "paramedicId": 1,
-                                            "name": "김철수",
-                                            "studentNumber": "20240001"
-                                          },
-                                          "dispatchInfo": {
-                                            "dispatchId": 1,
-                                            "disasterNumber": "C000000065",
-                                            "date": "2025-10-23T10:46:20+09:00",
-                                            "fireStateInfo": {
+                                      "data": {
+                                        "paramedicInfo": {
+                                          "paramedicId": 1,
+                                          "name": "김철수",
+                                          "rank": "소방장",
+                                          "fireStateId": 1,
+                                          "studentNumber": "20240001"
+                                        },
+                                        "emergencyReports": [
+                                          {
+                                            "id": 1,
+                                            "dispatchInfo": {
+                                              "dispatchId": 1,
+                                              "disasterNumber": "CB0000000662",
+                                              "disasterType": "화재",
+                                              "locationAddress": "서울시 강남구",
+                                              "date": "2025-10-30T17:43:28+09:00",
+                                              "fireStateInfo": {
                                                 "id": 1,
                                                 "name": "강남소방서"
-                                            }
+                                              }
+                                            },
+                                            "createdAt": "2025-10-30 17:43:28.235931"
+                                          },
+                                          {
+                                            "id": 2,
+                                            "dispatchInfo": {
+                                              "dispatchId": 2,
+                                              "disasterNumber": "CB0000000663",
+                                              "disasterType": "구조",
+                                              "locationAddress": "서울시 서초구",
+                                              "date": "2025-11-01T21:00:41+09:00",
+                                              "fireStateInfo": {
+                                                "id": 1,
+                                                "name": "강남소방서"
+                                              }
+                                            },
+                                            "createdAt": "2025-11-01 21:00:41.284828"
                                           }
-                                        }
-                                      ],
+                                        ]
+                                      },
                                       "message": "구급대원이 작성한 보고서 조회를 완료하였습니다.",
                                       "timestamp": "2025-10-23T10:46:20+09:00"
                                     }
@@ -253,7 +276,7 @@ public interface EmergencyReportApi {
     @ApiUnauthorizedError
     @ApiInternalServerError
     @GetMapping("/{paramedicId}")
-    ResponseEntity<ApiResponse<List<ParamedicEmergencyReportResponse>>> getEmergencyReportsByParamedic(
+    ResponseEntity<ApiResponse<ParamedicEmergencyReportResponse>> getEmergencyReportsByParamedic(
             @Parameter(description = "구급대원 ID", required = true, example = "1")
             @PathVariable("paramedicId") @Positive(message = "구급대원 ID는 양의 정수여야 합니다.") Integer paramedicId
     );
@@ -1381,7 +1404,8 @@ public interface EmergencyReportApi {
                                                     "patientInfo": {
                                                         "reporter": {
                                                             "phone": "01012345678",
-                                                            "reportMethod": "휴대전화"
+                                                            "reportMethod": "휴대전화",
+                                                            "value": null
                                                         },
                                                         "patient": {
                                                             "name": "홍길동",
@@ -1412,10 +1436,9 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "schemaVersion": 1,
                                                     "dispatch": {
-                                                        "reportDate": "2022-08-11",
-                                                        "reportTime": "02:26",
-                                                        "departureTime": "02:28",
-                                                        "arrivalSceneTime": "02:29",
+                                                        "reportDatetime": "2022-08-11T02:26:00",
+                                                        "departureTime": "02:00",
+                                                        "arrivalSceneTime": "02:27",
                                                         "contactTime": "02:29",
                                                         "distanceKm": 2.0,
                                                         "departureSceneTime": "02:42",
@@ -1423,26 +1446,38 @@ public interface EmergencyReportApi {
                                                         "returnTime": "03:43",
                                                         "dispatchType": "정상",
                                                         "sceneLocation": {
-                                                            "primary": "도로",
-                                                            "detail": null
+                                                            "name": "도로",
+                                                            "value": null
                                                         },
                                                         "symptoms": {
                                                             "pain": [
                                                                 {
                                                                     "name": "흉통",
-                                                                    "isCustom": false
+                                                                    "value": null
+                                                                },
+                                                                {
+                                                                    "name": "치통",
+                                                                    "value": null
                                                                 }
                                                             ],
                                                             "trauma": [
                                                                 {
                                                                     "name": "골절",
-                                                                    "isCustom": false
+                                                                    "value": null
+                                                                },
+                                                                {
+                                                                    "name": "손톱 빠짐",
+                                                                    "value": null
                                                                 }
                                                             ],
                                                             "otherSymptoms": [
                                                                 {
                                                                     "name": "의식장애",
-                                                                    "isCustom": false
+                                                                    "value": null
+                                                                },
+                                                                {
+                                                                    "name": "기타",
+                                                                    "value": "구강 내 출혈"
                                                                 }
                                                             ]
                                                         },
@@ -1460,29 +1495,57 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "schemaVersion": 1,
                                                     "incidentType": {
-                                                        "category": "질병",
                                                         "medicalHistory": {
-                                                            "hasHistory": "미상",
-                                                            "details": ["고혈압", "당뇨"],
-                                                            "notes": null
+                                                            "status": "있음",
+                                                            "items": [
+                                                                {
+                                                                    "name": "고혈압",
+                                                                    "value": null
+                                                                },
+                                                                {
+                                                                    "name": "당뇨",
+                                                                    "value": null
+                                                                },
+                                                                {
+                                                                    "name": "암",
+                                                                    "value": "폐암"
+                                                                },
+                                                                {
+                                                                    "name": "감염병",
+                                                                    "value": "결핵"
+                                                                },
+                                                                {
+                                                                    "name": "신부전",
+                                                                    "value": "예"
+                                                                },
+                                                                {
+                                                                    "name": "기타",
+                                                                    "value": "과거 수술 이력 있음"
+                                                                }
+                                                            ]
                                                         },
-                                                        "externalCause": {
+                                                        "category": "질병외",
+                                                        "subCategory_traffic": {
                                                             "type": "교통사고",
-                                                            "subType": "운전자",
-                                                            "injurySeverity": "사상자"
+                                                            "name": "운전자",
+                                                            "value": null
                                                         },
-                                                        "trauma": {
-                                                            "mainCause": ["절식", "기계"],
-                                                            "notes": null
+                                                        "subCategory_injury": {
+                                                            "type": "그 외 손상",
+                                                            "name": "추락"
+                                                        },
+                                                        "subCategory_nonTrauma": {
+                                                            "type": "비외상성 손상",
+                                                            "name": "동물/곤충",
+                                                            "value": "살모사"
+                                                        },
+                                                        "category_other": "기타",
+                                                        "subCategory_other": {
+                                                            "name": "자연재해",
+                                                            "value": null
                                                         },
                                                         "legalSuspicion": {
-                                                            "isSuspected": false,
-                                                            "actions": ["경찰통보"],
-                                                            "notes": null
-                                                        },
-                                                        "other": {
-                                                            "category": null,
-                                                            "notes": null
+                                                            "name": "경찰통보"
                                                         },
                                                         "createdAt": "2025-10-21T09:00:00Z",
                                                         "updatedAt": "2025-10-21T09:00:00Z"
@@ -1497,7 +1560,7 @@ public interface EmergencyReportApi {
                                             {
                                                 "data": {
                                                     "schemaVersion": 1,
-                                                    "patientAssessment": {
+                                                    "assessment": {
                                                         "consciousness": {
                                                             "first": {
                                                                 "time": "02:30",
@@ -1519,6 +1582,7 @@ public interface EmergencyReportApi {
                                                             }
                                                         },
                                                         "vitalSigns": {
+                                                            "available": null,
                                                             "first": {
                                                                 "time": "02:35",
                                                                 "bloodPressure": "120/80",
@@ -1529,7 +1593,7 @@ public interface EmergencyReportApi {
                                                                 "bloodSugar": 110
                                                             },
                                                             "second": {
-                                                                "time": "03:10",
+                                                                "time": "02:50",
                                                                 "bloodPressure": "118/78",
                                                                 "pulse": 82,
                                                                 "respiration": 20,
@@ -1539,7 +1603,11 @@ public interface EmergencyReportApi {
                                                             }
                                                         },
                                                         "patientLevel": "LEVEL2",
-                                                        "notes": "현장 내 반응 지연, 추가 측정 필요",
+                                                        "notes": {
+                                                            "cheifComplaint": "두통",
+                                                            "onset": "02:31",
+                                                            "note": "상기 환자 고혈압 두통을 앓고 있던 환자로, 현장 도착 시 침대에 앙와위로 누워 있었으며\\n극심한 두통을 호소하고 있었음. 2일 전 00병원 방문하여 진단 후 아세트아미노펜 750mg 복용 중인 상태로\\n작일 오후 11시에 두통이 심해 8알을 먹었다고 함. 의료 지도 하 활성탄 50g PO 02:37분 시작하였으며 ㅁㅁ병원으로 이송"
+                                                        },
                                                         "createdAt": "2025-10-21T09:00:00Z",
                                                         "updatedAt": "2025-10-21T09:00:00Z"
                                                     }
@@ -1553,39 +1621,34 @@ public interface EmergencyReportApi {
                                             {
                                                 "data": {
                                                     "schemaVersion": 1,
-                                                    "emergencyTreatment": {
+                                                    "treatment": {
                                                         "airwayManagement": {
-                                                            "methods": ["기도유지"],
-                                                            "notes": null
+                                                            "methods": ["기도유지"]
                                                         },
                                                         "oxygenTherapy": {
-                                                            "applied": true,
                                                             "flowRateLpm": 10,
                                                             "device": "비재호흡마스크"
                                                         },
-                                                        "cpr": {
-                                                            "performed": true,
-                                                            "type": "1회 시행",
-                                                            "aed": {
-                                                                "used": true,
-                                                                "shock": true,
-                                                                "monitoring": true
-                                                            }
-                                                        },
-                                                        "bleedingControl": {
-                                                            "methods": ["직접압박", "지혈"],
-                                                            "notes": null
-                                                        },
-                                                        "woundCare": {
-                                                            "types": ["상처 소독 처리"],
-                                                            "notes": null
-                                                        },
-                                                        "delivery": {
-                                                            "performed": false,
-                                                            "time": null,
-                                                            "babyCondition": null
+                                                        "cpr": "실시",
+                                                        "ecg": true,
+                                                        "aed": {
+                                                            "type": "shock",
+                                                            "value": null
                                                         },
                                                         "notes": null,
+                                                        "circulation": {
+                                                            "type": "수액공급 확보",
+                                                            "value": "200"
+                                                        },
+                                                        "drug": {
+                                                            "name": "아스피린",
+                                                            "dosage": "500mg",
+                                                            "time": "14:30"
+                                                        },
+                                                        "fixed": "목뼈",
+                                                        "woundCare": "지혈",
+                                                        "deliverytime": null,
+                                                        "temperature": null,
                                                         "createdAt": "2025-10-21T09:00:00Z",
                                                         "updatedAt": "2025-10-21T09:00:00Z"
                                                     }
@@ -1602,33 +1665,45 @@ public interface EmergencyReportApi {
                                                     "medicalGuidance": {
                                                         "contactStatus": "연결",
                                                         "requestTime": "02:55",
+                                                        "requestMethod": {
+                                                            "type": "일반전화",
+                                                            "value": null
+                                                        },
                                                         "guidanceAgency": {
                                                             "type": "병원",
-                                                            "name": null
+                                                            "value": null
                                                         },
                                                         "guidanceDoctor": {
                                                             "name": "이의사"
                                                         },
-                                                        "requestMethod": "휴대전화",
                                                         "guidanceContent": {
                                                             "emergencyTreatment": [
-                                                                "기관삽관",
-                                                                "성문의 기도유지기",
-                                                                "정맥로 확보",
-                                                                "인공호흡기"
+                                                                {
+                                                                    "name": "기관삽관",
+                                                                    "value": null
+                                                                },
+                                                                {
+                                                                    "name": "기타",
+                                                                    "value": "드레싱"
+                                                                }
                                                             ],
                                                             "medication": [
-                                                                "NTG",
-                                                                "NS"
+                                                                {
+                                                                    "name": "N/S",
+                                                                    "value": null
+                                                                },
+                                                                {
+                                                                    "name": "기타",
+                                                                    "value": "활성탄"
+                                                                }
                                                             ],
                                                             "hospitalRequest": true,
                                                             "patientEvaluation": true,
                                                             "cprTransfer": false,
-                                                            "transferInstructions": [
-                                                                "이송계속"
-                                                            ]
+                                                            "transferRefusal": false,
+                                                            "transferRejection": false,
+                                                            "notes": null
                                                         },
-                                                        "notes": null,
                                                         "createdAt": "2025-10-21T09:00:00Z",
                                                         "updatedAt": "2025-10-21T09:00:00Z"
                                                     }
@@ -1642,7 +1717,7 @@ public interface EmergencyReportApi {
                                             {
                                                 "data": {
                                                     "schemaVersion": 1,
-                                                    "patientTransport": {
+                                                    "transport": {
                                                         "firstTransport": {
                                                             "hospitalName": "OO병원",
                                                             "regionType": "관할",
@@ -1650,10 +1725,24 @@ public interface EmergencyReportApi {
                                                             "distanceKm": 5.2,
                                                             "selectedBy": "119상황실",
                                                             "retransportReason": [
-                                                                "병상부족",
-                                                                "회로장비 고장"
+                                                                {
+                                                                    "type": "병상부족",
+                                                                    "name": ["응급실", "중환자실"]
+                                                                },
+                                                                {
+                                                                    "type": "전문의부재",
+                                                                    "isCustom": false
+                                                                },
+                                                                {
+                                                                    "type": "원내 CPR",
+                                                                    "isCustom": true
+                                                                }
                                                             ],
-                                                            "receiver": "의사"
+                                                            "receiver": "의사",
+                                                            "receiverSign": {
+                                                                "type": "image/png",
+                                                                "data": "<base64-encoded-signature>"
+                                                            }
                                                         },
                                                         "secondTransport": {
                                                             "hospitalName": "△△병원",
@@ -1661,10 +1750,26 @@ public interface EmergencyReportApi {
                                                             "arrivalTime": "04:05",
                                                             "distanceKm": 23.8,
                                                             "selectedBy": "구급대",
-                                                            "retransportReason": ["중환자실"],
-                                                            "receiver": "간호사"
+                                                            "retransportReason": [
+                                                                {
+                                                                    "type": "병상부족",
+                                                                    "name": ["응급실", "중환자실"]
+                                                                },
+                                                                {
+                                                                    "type": "전문의부재",
+                                                                    "isCustom": false
+                                                                },
+                                                                {
+                                                                    "type": "원내 CPR",
+                                                                    "isCustom": true
+                                                                }
+                                                            ],
+                                                            "receiver": "간호사",
+                                                            "receiverSign": {
+                                                                "type": "image/png",
+                                                                "data": "<base64-encoded-signature>"
+                                                            }
                                                         },
-                                                        "notes": null,
                                                         "createdAt": "2025-10-21T09:00:00Z",
                                                         "updatedAt": "2025-10-21T09:00:00Z"
                                                     }
@@ -1678,40 +1783,39 @@ public interface EmergencyReportApi {
                                             {
                                                 "data": {
                                                     "schemaVersion": 1,
-                                                    "dispatchMembers": {
+                                                    "detailReport": {
                                                         "doctor": {
                                                             "affiliation": "소방",
-                                                            "rank": "의사",
                                                             "name": "홍길동",
                                                             "signature": null
                                                         },
                                                         "paramedic1": {
                                                             "grade": "1급",
-                                                            "affiliation": "소방",
-                                                            "rank": "소방교",
+                                                            "rank": "교",
                                                             "name": "김철수",
                                                             "signature": null
                                                         },
                                                         "paramedic2": {
                                                             "grade": "2급",
-                                                            "affiliation": "소방",
-                                                            "rank": "소방사",
+                                                            "rank": "사",
                                                             "name": "박영희",
                                                             "signature": null
                                                         },
                                                         "driver": {
-                                                            "grade": null,
-                                                            "affiliation": "소방",
+                                                            "grade": "구급교육",
                                                             "rank": "소방교",
                                                             "name": "이운전",
                                                             "signature": null
                                                         },
                                                         "other": {
                                                             "grade": "기타",
-                                                            "affiliation": "소방",
                                                             "rank": null,
                                                             "name": "최지원",
                                                             "signature": null
+                                                        },
+                                                        "obstacles": {
+                                                            "type": "없음",
+                                                            "isCustom": false
                                                         },
                                                         "createdAt": "2025-10-21T09:00:00Z",
                                                         "updatedAt": "2025-10-21T09:00:00Z"

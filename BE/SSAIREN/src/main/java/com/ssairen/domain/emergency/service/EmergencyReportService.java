@@ -21,9 +21,9 @@ public interface EmergencyReportService {
      * 특정 구급대원이 작성한 모든 보고서 조회
      *
      * @param paramedicId 구급대원 ID
-     * @return 구급대원이 작성한 보고서 목록
+     * @return 구급대원 정보와 작성한 보고서 목록
      */
-    List<ParamedicEmergencyReportResponse> getEmergencyReportsByParamedic(Integer paramedicId);
+    ParamedicEmergencyReportResponse getEmergencyReportsByParamedic(Integer paramedicId);
 
     /**
      * 특정 소방서의 모든 구급일지 조회

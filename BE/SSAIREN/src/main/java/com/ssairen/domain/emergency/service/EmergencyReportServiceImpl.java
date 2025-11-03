@@ -80,11 +80,11 @@ public class EmergencyReportServiceImpl implements EmergencyReportService {
      * 특정 구급대원이 작성한 모든 보고서 조회
      *
      * @param paramedicId 구급대원 ID
-     * @return 구급대원이 작성한 보고서 목록
+     * @return 구급대원 정보와 작성한 보고서 목록
      */
     @Override
     @Transactional(readOnly = true)
-    public List<ParamedicEmergencyReportResponse> getEmergencyReportsByParamedic(Integer paramedicId) {
+    public ParamedicEmergencyReportResponse getEmergencyReportsByParamedic(Integer paramedicId) {
         // 1. 구급대원 존재 여부 확인
         Paramedic paramedic = paramedicRepository.findById(paramedicId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PARAMEDIC_NOT_FOUND));
@@ -96,7 +96,7 @@ public class EmergencyReportServiceImpl implements EmergencyReportService {
                 paramedic.getName(), emergencyReports.size());
 
         // 3. DTO 변환
-        return emergencyReportMapper.toParamedicEmergencyReportResponseList(emergencyReports);
+        return emergencyReportMapper.toParamedicEmergencyReportResponse(emergencyReports);
     }
 
     /**

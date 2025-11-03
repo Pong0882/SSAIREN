@@ -23,7 +23,8 @@ public class ReportSectionTemplate {
                 "patientInfo": {
                     "reporter": {
                         "phone": null,
-                        "reportMethod": null
+                        "reportMethod": null,
+                        "value": null
                     },
                     "patient": {
                         "name": null,
@@ -51,8 +52,7 @@ public class ReportSectionTemplate {
             {
                 "schemaVersion": 1,
                 "dispatch": {
-                    "reportDate": null,
-                    "reportTime": null,
+                    "reportDatetime": null,
                     "departureTime": null,
                     "arrivalSceneTime": null,
                     "contactTime": null,
@@ -62,8 +62,8 @@ public class ReportSectionTemplate {
                     "returnTime": null,
                     "dispatchType": null,
                     "sceneLocation": {
-                        "primary": null,
-                        "detail": null
+                        "name": null,
+                        "value": null
                     },
                     "symptoms": {
                         "pain": null,
@@ -81,29 +81,32 @@ public class ReportSectionTemplate {
             {
                 "schemaVersion": 1,
                 "incidentType": {
-                    "category": null,
                     "medicalHistory": {
-                        "hasHistory": null,
-                        "details": null,
-                        "notes": null
+                        "status": null,
+                        "items": null
                     },
-                    "externalCause": {
+                    "category": null,
+                    "subCategory_traffic": {
                         "type": null,
-                        "subType": null,
-                        "injurySeverity": null
+                        "name": null,
+                        "value": null
                     },
-                    "trauma": {
-                        "mainCause": null,
-                        "notes": null
+                    "subCategory_injury": {
+                        "type": null,
+                        "name": null
+                    },
+                    "subCategory_nonTrauma": {
+                        "type": null,
+                        "name": null,
+                        "value": null
+                    },
+                    "category_other": null,
+                    "subCategory_other": {
+                        "name": null,
+                        "value": null
                     },
                     "legalSuspicion": {
-                        "isSuspected": null,
-                        "actions": null,
-                        "notes": null
-                    },
-                    "other": {
-                        "category": null,
-                        "notes": null
+                        "name": null
                     },
                     "createdAt": null,
                     "updatedAt": null
@@ -115,7 +118,7 @@ public class ReportSectionTemplate {
     private static final String ASSESSMENT_TEMPLATE = """
             {
                 "schemaVersion": 1,
-                "patientAssessment": {
+                "assessment": {
                     "consciousness": {
                         "first": {
                             "time": null,
@@ -137,6 +140,7 @@ public class ReportSectionTemplate {
                         }
                     },
                     "vitalSigns": {
+                        "available": null,
                         "first": {
                             "time": null,
                             "bloodPressure": null,
@@ -157,7 +161,11 @@ public class ReportSectionTemplate {
                         }
                     },
                     "patientLevel": null,
-                    "notes": null,
+                    "notes": {
+                        "cheifComplaint": null,
+                        "onset": null,
+                        "note": null
+                    },
                     "createdAt": null,
                     "updatedAt": null
                 }
@@ -168,39 +176,30 @@ public class ReportSectionTemplate {
     private static final String TREATMENT_TEMPLATE = """
             {
                 "schemaVersion": 1,
-                "emergencyTreatment": {
+                "treatment": {
                     "airwayManagement": {
-                        "methods": null,
-                        "notes": null
+                        "methods": null
                     },
                     "oxygenTherapy": {
-                        "applied": null,
                         "flowRateLpm": null,
                         "device": null
                     },
-                    "cpr": {
-                        "performed": null,
+                    "cpr": null,
+                    "ecg": null,
+                    "aed": {
                         "type": null,
-                        "aed": {
-                            "used": null,
-                            "shock": null,
-                            "monitoring": null
-                        }
-                    },
-                    "bleedingControl": {
-                        "methods": null,
-                        "notes": null
-                    },
-                    "woundCare": {
-                        "types": null,
-                        "notes": null
-                    },
-                    "delivery": {
-                        "performed": null,
-                        "time": null,
-                        "babyCondition": null
+                        "value": null
                     },
                     "notes": null,
+                    "circulation": {
+                        "type": null,
+                        "value": null
+                    },
+                    "drug": null,
+                    "fixed": null,
+                    "woundCare": null,
+                    "deliverytime": null,
+                    "temperature": null,
                     "createdAt": null,
                     "updatedAt": null
                 }
@@ -214,23 +213,27 @@ public class ReportSectionTemplate {
                 "medicalGuidance": {
                     "contactStatus": null,
                     "requestTime": null,
+                    "requestMethod": {
+                        "type": null,
+                        "value": null
+                    },
                     "guidanceAgency": {
                         "type": null,
-                        "name": null
+                        "value": null
                     },
                     "guidanceDoctor": {
                         "name": null
                     },
-                    "requestMethod": null,
                     "guidanceContent": {
                         "emergencyTreatment": null,
                         "medication": null,
                         "hospitalRequest": null,
                         "patientEvaluation": null,
                         "cprTransfer": null,
-                        "transferInstructions": null
+                        "transferRefusal": null,
+                        "transferRejection": null,
+                        "notes": null
                     },
-                    "notes": null,
                     "createdAt": null,
                     "updatedAt": null
                 }
@@ -241,7 +244,7 @@ public class ReportSectionTemplate {
     private static final String TRANSPORT_TEMPLATE = """
             {
                 "schemaVersion": 1,
-                "patientTransport": {
+                "transport": {
                     "firstTransport": {
                         "hospitalName": null,
                         "regionType": null,
@@ -249,7 +252,11 @@ public class ReportSectionTemplate {
                         "distanceKm": null,
                         "selectedBy": null,
                         "retransportReason": null,
-                        "receiver": null
+                        "receiver": null,
+                        "receiverSign": {
+                            "type": null,
+                            "data": null
+                        }
                     },
                     "secondTransport": {
                         "hospitalName": null,
@@ -258,9 +265,12 @@ public class ReportSectionTemplate {
                         "distanceKm": null,
                         "selectedBy": null,
                         "retransportReason": null,
-                        "receiver": null
+                        "receiver": null,
+                        "receiverSign": {
+                            "type": null,
+                            "data": null
+                        }
                     },
-                    "notes": null,
                     "createdAt": null,
                     "updatedAt": null
                 }
@@ -271,40 +281,39 @@ public class ReportSectionTemplate {
     private static final String DETAIL_REPORT_TEMPLATE = """
             {
                 "schemaVersion": 1,
-                "dispatchMembers": {
+                "detailReport": {
                     "doctor": {
                         "affiliation": null,
-                        "rank": null,
                         "name": null,
                         "signature": null
                     },
                     "paramedic1": {
                         "grade": null,
-                        "affiliation": null,
                         "rank": null,
                         "name": null,
                         "signature": null
                     },
                     "paramedic2": {
                         "grade": null,
-                        "affiliation": null,
                         "rank": null,
                         "name": null,
                         "signature": null
                     },
                     "driver": {
                         "grade": null,
-                        "affiliation": null,
                         "rank": null,
                         "name": null,
                         "signature": null
                     },
                     "other": {
                         "grade": null,
-                        "affiliation": null,
                         "rank": null,
                         "name": null,
                         "signature": null
+                    },
+                    "obstacles": {
+                        "type": null,
+                        "isCustom": null
                     },
                     "createdAt": null,
                     "updatedAt": null
