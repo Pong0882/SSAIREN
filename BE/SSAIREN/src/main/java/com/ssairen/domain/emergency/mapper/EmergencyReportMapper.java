@@ -53,20 +53,33 @@ public class EmergencyReportMapper {
         );
     }
 
-    public ParamedicEmergencyReportResponse toParamedicEmergencyReportResponse(EmergencyReport emergencyReport) {
-        ParamedicInfoResponse paramedicInfo = toParamedicInfoResponse(emergencyReport.getParamedic());
+    public EmergencyReportItemResponse toEmergencyReportItemResponse(EmergencyReport emergencyReport) {
         DispatchInfoResponse dispatchInfo = toDispatchInfoResponse(emergencyReport.getDispatch());
 
-        return new ParamedicEmergencyReportResponse(
-                paramedicInfo,
-                dispatchInfo
+        return new EmergencyReportItemResponse(
+                emergencyReport.getId(),
+                dispatchInfo,
+                emergencyReport.getCreatedAt()
         );
     }
 
-    public List<ParamedicEmergencyReportResponse> toParamedicEmergencyReportResponseList(List<EmergencyReport> emergencyReports) {
-        return emergencyReports.stream()
-                .map(this::toParamedicEmergencyReportResponse)
+    public ParamedicEmergencyReportResponse toParamedicEmergencyReportResponse(List<EmergencyReport> emergencyReports) {
+        if (emergencyReports.isEmpty()) {
+            throw new IllegalArgumentException("Emergency reports list cannot be empty");
+        }
+
+        // 첫 번째 보고서에서 구급대원 정보 추출
+        ParamedicInfoResponse paramedicInfo = toParamedicInfoResponse(emergencyReports.get(0).getParamedic());
+
+        // 모든 보고서를 EmergencyReportItemResponse로 변환
+        List<EmergencyReportItemResponse> reportItems = emergencyReports.stream()
+                .map(this::toEmergencyReportItemResponse)
                 .collect(Collectors.toList());
+
+        return new ParamedicEmergencyReportResponse(
+                paramedicInfo,
+                reportItems
+        );
     }
 
     public ParamedicInfoSimple toParamedicInfoSimple(Paramedic paramedic) {

@@ -177,24 +177,47 @@ public interface EmergencyReportApi {
                             value = """
                                     {
                                       "success": true,
-                                      "data": [
-                                        {
-                                          "paramedicInfo": {
-                                            "paramedicId": 1,
-                                            "name": "김철수",
-                                            "studentNumber": "20240001"
-                                          },
-                                          "dispatchInfo": {
-                                            "dispatchId": 1,
-                                            "disasterNumber": "C000000065",
-                                            "date": "2025-10-23T10:46:20+09:00",
-                                            "fireStateInfo": {
+                                      "data": {
+                                        "paramedicInfo": {
+                                          "paramedicId": 1,
+                                          "name": "김철수",
+                                          "rank": "소방장",
+                                          "fireStateId": 1,
+                                          "studentNumber": "20240001"
+                                        },
+                                        "emergencyReports": [
+                                          {
+                                            "id": 1,
+                                            "dispatchInfo": {
+                                              "dispatchId": 1,
+                                              "disasterNumber": "CB0000000662",
+                                              "disasterType": "화재",
+                                              "locationAddress": "서울시 강남구",
+                                              "date": "2025-10-30T17:43:28+09:00",
+                                              "fireStateInfo": {
                                                 "id": 1,
                                                 "name": "강남소방서"
-                                            }
+                                              }
+                                            },
+                                            "createdAt": "2025-10-30 17:43:28.235931"
+                                          },
+                                          {
+                                            "id": 2,
+                                            "dispatchInfo": {
+                                              "dispatchId": 2,
+                                              "disasterNumber": "CB0000000663",
+                                              "disasterType": "구조",
+                                              "locationAddress": "서울시 서초구",
+                                              "date": "2025-11-01T21:00:41+09:00",
+                                              "fireStateInfo": {
+                                                "id": 1,
+                                                "name": "강남소방서"
+                                              }
+                                            },
+                                            "createdAt": "2025-11-01 21:00:41.284828"
                                           }
-                                        }
-                                      ],
+                                        ]
+                                      },
                                       "message": "구급대원이 작성한 보고서 조회를 완료하였습니다.",
                                       "timestamp": "2025-10-23T10:46:20+09:00"
                                     }
@@ -253,7 +276,7 @@ public interface EmergencyReportApi {
     @ApiUnauthorizedError
     @ApiInternalServerError
     @GetMapping("/{paramedicId}")
-    ResponseEntity<ApiResponse<List<ParamedicEmergencyReportResponse>>> getEmergencyReportsByParamedic(
+    ResponseEntity<ApiResponse<ParamedicEmergencyReportResponse>> getEmergencyReportsByParamedic(
             @Parameter(description = "구급대원 ID", required = true, example = "1")
             @PathVariable("paramedicId") @Positive(message = "구급대원 ID는 양의 정수여야 합니다.") Integer paramedicId
     );
