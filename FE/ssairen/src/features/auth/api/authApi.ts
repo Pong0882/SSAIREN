@@ -1,7 +1,5 @@
 import { LoginRequest, TokenResponse, ApiResponse } from '../types/auth.types'
-
-// API 기본 URL (환경변수로 관리)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+import axiosInstance from '@/lib/apiClient'
 
 /**
  * 로그인 API 호출
@@ -10,22 +8,15 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
  */
 export const loginApi = async (credentials: LoginRequest): Promise<TokenResponse> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    // 로그인은 인증이 필요 없으므로 requiresAuth: false
+    const response = await axiosInstance<ApiResponse<TokenResponse>>({
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    })
+      url: '/api/auth/login',
+      data: credentials,
+      requiresAuth: false,
+    } as any)
 
-    if (!response.ok) {
-      // HTTP 에러 처리
-      const errorData: ApiResponse<null> = await response.json().catch(() => null)
-      throw new Error(errorData?.error?.message || errorData?.message || '로그인에 실패했습니다.')
-    }
-
-    // 백엔드는 ApiResponse<TokenResponse> 형식으로 응답
-    const apiResponse: ApiResponse<TokenResponse> = await response.json()
+    const apiResponse = response.data
 
     if (!apiResponse.success || !apiResponse.data) {
       throw new Error(apiResponse.message || '로그인에 실패했습니다.')
@@ -55,17 +46,11 @@ export const loginApi = async (credentials: LoginRequest): Promise<TokenResponse
  */
 export const logoutApi = async (): Promise<void> => {
   try {
-    const token = localStorage.getItem('accessToken')
-
-    if (token) {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-    }
+    await axiosInstance({
+      method: 'POST',
+      url: '/api/auth/logout',
+      requiresAuth: true,
+    } as any)
   } finally {
     // 에러 여부와 관계없이 로컬 스토리지 정리
     localStorage.removeItem('accessToken')
@@ -77,25 +62,16 @@ export const logoutApi = async (): Promise<void> => {
  * 토큰 검증 및 사용자 정보 조회
  */
 export const getCurrentUserApi = async () => {
-  const token = localStorage.getItem('accessToken')
-
-  if (!token) {
-    throw new Error('인증 토큰이 없습니다.')
-  }
-
-  const response = await fetch(`${API_BASE_URL}/auth/me`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (!response.ok) {
+  try {
+    const response = await axiosInstance({
+      method: 'GET',
+      url: '/api/auth/me',
+      requiresAuth: true,
+    } as any)
+    return response.data
+  } catch (error) {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
-    throw new Error('인증이 만료되었습니다.')
+    throw error
   }
-
-  return response.json()
 }
