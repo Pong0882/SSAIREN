@@ -1,6 +1,5 @@
 package com.ssairen.domain.emergency.service;
 
-import com.ssairen.domain.emergency.dto.EmergencyReportCreateRequest;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
 import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
 import com.ssairen.domain.emergency.entity.Dispatch;
@@ -62,14 +61,11 @@ class EmergencyReportServiceImplTest {
                 .build();
         dispatch = dispatchRepository.save(dispatch);
 
-        EmergencyReportCreateRequest request = new EmergencyReportCreateRequest(
-                dispatch.getId(),
-                paramedic.getId(),
-                fireState.getId()
-        );
-
         // when
-        EmergencyReportCreateResponse response = emergencyReportService.createEmergencyReport(request);
+        EmergencyReportCreateResponse response = emergencyReportService.createEmergencyReport(
+                dispatch.getId(),
+                paramedic.getId()
+        );
 
         // then
         assertThat(response).isNotNull();
@@ -85,17 +81,13 @@ class EmergencyReportServiceImplTest {
         Paramedic paramedic = paramedicRepository.findAll().stream().findFirst()
                 .orElseThrow(() -> new IllegalStateException("테스트용 구급대원 데이터가 없습니다."));
 
-        FireState fireState = fireStateRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("테스트용 소방서 데이터가 없습니다."));
-
-        EmergencyReportCreateRequest request = new EmergencyReportCreateRequest(
-                99999L,  // 존재하지 않는 출동지령 ID
-                paramedic.getId(),
-                fireState.getId()
-        );
+        Long nonExistentDispatchId = 99999L;  // 존재하지 않는 출동지령 ID
 
         // when & then
-        assertThatThrownBy(() -> emergencyReportService.createEmergencyReport(request))
+        assertThatThrownBy(() -> emergencyReportService.createEmergencyReport(
+                nonExistentDispatchId,
+                paramedic.getId()
+        ))
                 .isInstanceOf(CustomException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.DISPATCH_NOT_FOUND);
     }
