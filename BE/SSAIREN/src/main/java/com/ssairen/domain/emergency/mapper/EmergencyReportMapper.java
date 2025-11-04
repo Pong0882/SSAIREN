@@ -63,13 +63,8 @@ public class EmergencyReportMapper {
         );
     }
 
-    public ParamedicEmergencyReportResponse toParamedicEmergencyReportResponse(List<EmergencyReport> emergencyReports) {
-        if (emergencyReports.isEmpty()) {
-            throw new IllegalArgumentException("Emergency reports list cannot be empty");
-        }
-
-        // 첫 번째 보고서에서 구급대원 정보 추출
-        ParamedicInfoResponse paramedicInfo = toParamedicInfoResponse(emergencyReports.get(0).getParamedic());
+    public ParamedicEmergencyReportResponse toParamedicEmergencyReportResponse(Paramedic paramedic, List<EmergencyReport> emergencyReports) {
+        ParamedicInfoResponse paramedicInfo = toParamedicInfoResponse(paramedic);
 
         // 모든 보고서를 EmergencyReportItemResponse로 변환
         List<EmergencyReportItemResponse> reportItems = emergencyReports.stream()
