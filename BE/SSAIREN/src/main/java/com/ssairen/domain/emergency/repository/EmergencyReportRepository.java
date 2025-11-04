@@ -2,7 +2,6 @@ package com.ssairen.domain.emergency.repository;
 
 import com.ssairen.domain.emergency.entity.Dispatch;
 import com.ssairen.domain.emergency.entity.EmergencyReport;
-import com.ssairen.domain.firestation.entity.FireState;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

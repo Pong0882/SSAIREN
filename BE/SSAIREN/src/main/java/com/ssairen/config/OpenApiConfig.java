@@ -46,16 +46,16 @@ public class OpenApiConfig {
                                 "- 병원: `userType=HOSPITAL`, `username=서울대병원`, `password=Password123!`"))
                 .servers(List.of(
                         new Server()
-                                .url("http://localhost:8080")
-                                .description("Local Server"),
+                                .url("https://api.ssairen.site")
+                                .description("Production API Server (HTTPS)"),
 
                         new Server()
                                 .url("https://be.ssairen.site")
                                 .description("Production Server (HTTPS)"),
 
                         new Server()
-                                .url("https://api.ssairen.site")
-                                .description("Production API Server (HTTPS)")
+                                .url("http://localhost:8080")
+                                .description("Local Server")
                 ))
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth", securityScheme))
