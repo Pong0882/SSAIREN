@@ -3,6 +3,7 @@ package com.ssairen.domain.firestation.entity;
 import com.ssairen.domain.common.entity.BaseEntity;
 import com.ssairen.domain.firestation.enums.ParamedicRank;
 import com.ssairen.domain.firestation.enums.ParamedicStatus;
+import com.ssairen.global.annotation.ExcludeFromLogging;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,9 +23,10 @@ public class Paramedic extends BaseEntity {
     @JoinColumn(name = "fire_state_id", nullable = false)
     private FireState fireState;
 
-    @Column(name = "student_number", nullable = false, length = 20)
+    @Column(name = "student_number", nullable = false, unique = true, length = 20)
     private String studentNumber;
 
+    @ExcludeFromLogging
     @Column(name = "password", nullable = false, length = 100)
     private String password;
 

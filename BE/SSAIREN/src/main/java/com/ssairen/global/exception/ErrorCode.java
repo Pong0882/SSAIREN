@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
  */
 @Getter
 @RequiredArgsConstructor
-public enum ErrorCode {
+public enum
+
+ErrorCode {
 
     // ============================================
     // Common Errors (1000번대)
@@ -19,6 +21,7 @@ public enum ErrorCode {
     INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "INVALID_TYPE_VALUE", "잘못된 타입입니다."),
     MISSING_REQUEST_PARAMETER(HttpStatus.BAD_REQUEST, "MISSING_REQUEST_PARAMETER", "필수 파라미터가 누락되었습니다."),
     INVALID_JSON_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_JSON_FORMAT", "JSON 형식이 올바르지 않습니다."),
+    INVALID_CURSOR(HttpStatus.BAD_REQUEST, "INVALID_CURSOR", "유효하지 않은 커서 형식입니다."),
 
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED", "지원하지 않는 HTTP 메소드입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."),
@@ -32,6 +35,7 @@ public enum ErrorCode {
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "EXPIRED_TOKEN", "토큰이 만료되었습니다."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", "유효하지 않은 토큰입니다."),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "접근 권한이 없습니다."),
+    REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_NOT_FOUND", "RefreshToken을 찾을 수 없습니다."),
 
     // ============================================
     // Paramedic (3000번대)
@@ -48,6 +52,7 @@ public enum ErrorCode {
     // ============================================
     FIRE_STATION_NOT_FOUND(HttpStatus.NOT_FOUND, "FIRE_STATION_NOT_FOUND", "소방서를 찾을 수 없습니다."),
     FIRE_STATION_ALREADY_EXISTS(HttpStatus.CONFLICT, "FIRE_STATION_ALREADY_EXISTS", "이미 존재하는 소방서입니다."),
+    FIRE_STATE_NOT_FOUND(HttpStatus.NOT_FOUND, "FIRE_STATE_NOT_FOUND", "존재하지 않는 소방서입니다."),
 
     // ============================================
     // Dispatch (5000번대)
@@ -64,6 +69,7 @@ public enum ErrorCode {
     EMERGENCY_REPORT_ALREADY_EXISTS(HttpStatus.CONFLICT, "EMERGENCY_REPORT_ALREADY_EXISTS", "해당 출동에 대한 구급일지가 이미 존재합니다."),
     INVALID_REPORT_SECTION_TYPE(HttpStatus.BAD_REQUEST, "INVALID_REPORT_SECTION_TYPE", "유효하지 않은 섹션 타입입니다."),
     REPORT_SECTION_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORT_SECTION_NOT_FOUND", "구급일지 섹션을 찾을 수 없습니다."),
+    REPORT_SECTION_ALREADY_EXISTS(HttpStatus.CONFLICT, "REPORT_SECTION_ALREADY_EXISTS", "해당 구급일지에 이미 동일한 타입의 섹션이 존재합니다."),
     INVALID_JSONB_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_JSONB_FORMAT", "데이터 형식이 올바르지 않습니다."),
 
     // ============================================
@@ -75,6 +81,7 @@ public enum ErrorCode {
     HOSPITAL_SELECTION_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "HOSPITAL_SELECTION_ALREADY_PROCESSED", "이미 처리된 요청입니다."),
     INVALID_HOSPITAL_SELECTION_STATUS(HttpStatus.BAD_REQUEST, "INVALID_HOSPITAL_SELECTION_STATUS", "유효하지 않은 병원 선택 상태입니다."),
     NO_AVAILABLE_HOSPITALS(HttpStatus.NOT_FOUND, "NO_AVAILABLE_HOSPITALS", "이송 가능한 병원이 없습니다."),
+    UNAUTHORIZED_HOSPITAL_RESPONSE(HttpStatus.FORBIDDEN, "UNAUTHORIZED_HOSPITAL_RESPONSE", "이 요청에 응답할 권한이 없습니다."),
 
     // ============================================
     // Vital Signs (8000번대)

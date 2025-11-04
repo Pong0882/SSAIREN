@@ -2,6 +2,8 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.6'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.sonarqube' version '6.0.1.5171'
+    id 'jacoco'
 }
 
 group = 'com.myocean'
@@ -37,8 +39,25 @@ dependencies {
     // .env 파일 지원
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 
+    // Spring Security - 비밀번호 암호화 (BCrypt)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
     // Spring MVC를 사용한 웹 애플리케이션 개발
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring Security - 인증 및 권한 관리
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // Validation - Bean Validation (JSR-380) 구현체
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // JWT - JSON Web Token 생성 및 검증
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+    // Redis - 리프레시 토큰 저장소
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // Spring Boot Actuator - 프로덕션 레벨 모니터링 및 헬스체크
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -73,8 +92,34 @@ dependencies {
 
     // JUnit Platform 런처
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // WebSocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport // 테스트 후 자동으로 커버리지 리포트 생성
+}
+
+// JaCoCo 설정
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+jacocoTestReport {
+    dependsOn test // 테스트 실행 후 리포트 생성
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+// SonarQube 설정
+sonar {
+    properties {
+        property "sonar.organization", "ssafy-ai-codereview1"
+        property "sonar.projectKey", "ssafy-ai-codereview1_a205-ssairen"
+        property "sonar.host.url", "https://sonarcloud.io"
+    }
 }
