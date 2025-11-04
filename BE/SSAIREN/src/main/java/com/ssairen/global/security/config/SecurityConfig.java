@@ -64,6 +64,9 @@ public class SecurityConfig {
                         // WebSocket 엔드포인트 허용
                         .requestMatchers("/ws/**").permitAll()
 
+                        // 출동 지령 관련 (로그인 불필요 - 119 시스템에서 호출)
+                        .requestMatchers("/api/dispatches/**").permitAll()
+
                         // 구급대원 전용 엔드포인트
                         .requestMatchers("/api/paramedics/**").hasRole(ROLE_PARAMEDIC)
                         .requestMatchers("/api/emergency/**").hasRole(ROLE_PARAMEDIC)  // ������������ ������
