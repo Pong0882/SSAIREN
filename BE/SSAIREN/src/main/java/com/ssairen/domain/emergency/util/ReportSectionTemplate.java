@@ -3,9 +3,13 @@ package com.ssairen.domain.emergency.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.ssairen.domain.emergency.entity.Dispatch;
 import com.ssairen.domain.emergency.enums.ReportSectionType;
 import com.ssairen.global.exception.CustomException;
 import com.ssairen.global.exception.ErrorCode;
+
+import java.time.format.DateTimeFormatter;
 
 /**
  * 구급일지 섹션 타입별 스켈레톤 JSON 템플릿 제공
@@ -345,5 +349,31 @@ public class ReportSectionTemplate {
         } catch (JsonProcessingException e) {
             throw new CustomException(ErrorCode.INVALID_JSONB_FORMAT);
         }
+    }
+
+    /**
+     * DISPATCH 섹션용 템플릿 반환 (실제 Dispatch 데이터로 초기값 설정)
+     *
+     * @param dispatch Dispatch 엔티티
+     * @return DISPATCH 템플릿 (reportDatetime, departureTime에 실제 값 설정됨)
+     * @throws CustomException JSON 파싱 실패 시
+     */
+    public static JsonNode getTemplateForDispatch(Dispatch dispatch) {
+        JsonNode template = getTemplate(ReportSectionType.DISPATCH);
+
+        // dispatch 노드를 ObjectNode로 캐스팅하여 수정 가능하게 함
+        ObjectNode dispatchNode = (ObjectNode) template.get("dispatch");
+
+        // ISO 8601 형식으로 날짜/시간 포맷팅
+        String reportDatetime = dispatch.getDate()
+                .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        String departureTime = dispatch.getCreatedAt()
+                .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+
+        // 실제 값으로 설정
+        dispatchNode.put("reportDatetime", reportDatetime);
+        dispatchNode.put("departureTime", departureTime);
+
+        return template;
     }
 }

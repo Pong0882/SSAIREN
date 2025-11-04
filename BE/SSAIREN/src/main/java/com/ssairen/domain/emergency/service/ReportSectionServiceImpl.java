@@ -51,7 +51,14 @@ public class ReportSectionServiceImpl implements ReportSectionService {
         }
 
         // 4. 타입에 맞는 스켈레톤 JSON 생성
-        JsonNode skeletonData = ReportSectionTemplate.getTemplate(type);
+        JsonNode skeletonData;
+        if (type == ReportSectionType.DISPATCH) {
+            // DISPATCH 타입은 실제 Dispatch 데이터로 초기값 설정
+            skeletonData = ReportSectionTemplate.getTemplateForDispatch(emergencyReport.getDispatch());
+        } else {
+            // 다른 타입은 기본 템플릿 사용 (모든 값 null)
+            skeletonData = ReportSectionTemplate.getTemplate(type);
+        }
 
         // 5. 섹션 엔티티 생성 및 저장
         ReportSection section = ReportSection.builder()
