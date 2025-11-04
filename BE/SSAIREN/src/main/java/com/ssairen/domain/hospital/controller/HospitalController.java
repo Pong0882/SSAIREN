@@ -35,7 +35,8 @@ public class HospitalController implements HospitalApi {
     @Override
     @PostMapping("/hospital-selection/request")
     public ResponseEntity<ApiResponse<HospitalSelectionResponse>> createHospitalSelectionRequest(
-            @Valid @RequestBody HospitalSelectionRequest request
+            @Valid @RequestBody HospitalSelectionRequest request,
+            @AuthenticationPrincipal CustomUserPrincipal principal
     ) {
         HospitalSelectionResponse response = hospitalService.createHospitalSelectionRequest(request);
         return ResponseEntity.ok(
@@ -172,7 +173,8 @@ public class HospitalController implements HospitalApi {
     @Override
     @GetMapping("/emergency-reports/{emergency_report_id}/hospital-selections")
     public ResponseEntity<ApiResponse<HospitalSelectionStatusResponse>> getHospitalSelectionStatus(
-            @PathVariable("emergency_report_id") Long emergencyReportId
+            @PathVariable("emergency_report_id") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
+            @AuthenticationPrincipal CustomUserPrincipal principal
     ) {
         HospitalSelectionStatusResponse response = hospitalService.getHospitalSelectionStatus(emergencyReportId);
 
