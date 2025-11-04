@@ -1,8 +1,8 @@
 package com.ssairen.config;
 
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,13 +14,11 @@ import javax.sql.DataSource;
 @Slf4j
 @Component
 @Profile("dev")  // dev 프로파일에서만 실행
+@RequiredArgsConstructor
 public class DataLoader {
 
-    @Autowired
-    private DataSource dataSource;
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private final DataSource dataSource;
+    private final JdbcTemplate jdbcTemplate;
 
     @PostConstruct
     public void loadData() {
