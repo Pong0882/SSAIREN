@@ -13,6 +13,7 @@ interface AuthState {
   setAuth: (tokenResponse: TokenResponse) => void
   clearAuth: () => void
   updateUser: (user: Partial<User>) => void
+  updateTokens: (accessToken: string, refreshToken?: string) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -46,10 +47,6 @@ export const useAuthStore = create<AuthState>()(
 
       // 로그아웃 시 인증 정보 초기화
       clearAuth: () => {
-        // localStorage에서 토큰 제거
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-
         set({
           user: null,
           accessToken: null,
@@ -62,6 +59,14 @@ export const useAuthStore = create<AuthState>()(
       updateUser: (userUpdate) => {
         set((state) => ({
           user: state.user ? { ...state.user, ...userUpdate } : null,
+        }))
+      },
+
+      // 토큰만 업데이트 (refresh 시 사용)
+      updateTokens: (accessToken, refreshToken) => {
+        set((state) => ({
+          accessToken,
+          refreshToken: refreshToken || state.refreshToken,
         }))
       },
     }),
