@@ -754,7 +754,8 @@ public interface EmergencyReportApi {
             @Parameter(description = "구급일지 ID", required = true, example = "5")
             @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
             @Parameter(description = "섹션 유형", required = true, example = "PATIENT_INFO")
-            @PathVariable("type") com.ssairen.domain.emergency.enums.ReportSectionType type
+            @PathVariable("type") com.ssairen.domain.emergency.enums.ReportSectionType type,
+            @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal com.ssairen.global.security.dto.CustomUserPrincipal principal
     );
 
     @Operation(
@@ -1278,7 +1279,8 @@ public interface EmergencyReportApi {
             @Parameter(description = "구급일지 ID", required = true, example = "5")
             @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
             @Parameter(description = "섹션 유형", required = true, example = "PATIENT_INFO")
-            @PathVariable("type") com.ssairen.domain.emergency.enums.ReportSectionType type
+            @PathVariable("type") com.ssairen.domain.emergency.enums.ReportSectionType type,
+            @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal com.ssairen.global.security.dto.CustomUserPrincipal principal
     );
 
     @Operation(
@@ -2324,6 +2326,7 @@ public interface EmergencyReportApi {
             @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
             @Parameter(description = "섹션 유형", required = true, example = "PATIENT_INFO")
             @PathVariable("type") ReportSectionType type,
-            @Valid @RequestBody com.ssairen.domain.emergency.dto.ReportSectionUpdateRequest request
+            @Valid @RequestBody com.ssairen.domain.emergency.dto.ReportSectionUpdateRequest request,
+            @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal com.ssairen.global.security.dto.CustomUserPrincipal principal
     );
 }

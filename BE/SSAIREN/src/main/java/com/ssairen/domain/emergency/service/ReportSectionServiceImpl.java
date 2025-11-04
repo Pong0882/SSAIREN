@@ -32,17 +32,28 @@ public class ReportSectionServiceImpl implements ReportSectionService {
      * 구급일지 섹션 생성
      *
      * @param emergencyReportId 구급일지 ID
-     * @param type 섹션 타입
+     * @param type              섹션 타입
+     * @param paramedicId       구급대원 ID (권한 검증용)
      * @return 생성된 섹션 정보 (스켈레톤 JSON 포함)
      */
     @Override
     @Transactional
-    public ReportSectionCreateResponse createReportSection(Long emergencyReportId, ReportSectionType type) {
+    public ReportSectionCreateResponse createReportSection(Long emergencyReportId, ReportSectionType type, Integer paramedicId) {
+        log.info("Creating report section - Emergency Report ID: {}, Type: {}, Paramedic ID: {}",
+                emergencyReportId, type, paramedicId);
+
         // 1. 구급일지 존재 여부 검증
         EmergencyReport emergencyReport = reportSectionValidator
                 .validateEmergencyReportExists(emergencyReportId);
 
-        // 2. 섹션 타입 유효성 검증
+        // 2. 권한 검증: 해당 구급일지를 작성한 구급대원인지 확인
+        if (!emergencyReport.getParamedic().getId().equals(paramedicId)) {
+            log.warn("Unauthorized section creation attempt - Emergency Report ID: {}, Paramedic ID: {}, Report Owner: {}",
+                    emergencyReportId, paramedicId, emergencyReport.getParamedic().getId());
+            throw new CustomException(ErrorCode.ACCESS_DENIED, "본인이 작성한 구급일지에 대해서만 섹션을 생성할 수 있습니다.");
+        }
+
+        // 3. 섹션 타입 유효성 검증
         reportSectionValidator.validateSectionType(type);
 
         // 3. 중복 생성 방지
@@ -74,17 +85,28 @@ public class ReportSectionServiceImpl implements ReportSectionService {
      * 구급일지 특정 섹션 조회
      *
      * @param emergencyReportId 구급일지 ID
-     * @param type 섹션 타입
+     * @param type              섹션 타입
+     * @param paramedicId       구급대원 ID (권한 검증용)
      * @return 섹션 정보 (JSON 데이터 포함)
      */
     @Override
     @Transactional(readOnly = true)
-    public ReportSectionCreateResponse getReportSection(Long emergencyReportId, ReportSectionType type) {
+    public ReportSectionCreateResponse getReportSection(Long emergencyReportId, ReportSectionType type, Integer paramedicId) {
+        log.info("Fetching report section - Emergency Report ID: {}, Type: {}, Paramedic ID: {}",
+                emergencyReportId, type, paramedicId);
+
         // 1. 구급일지 존재 여부 검증
         EmergencyReport emergencyReport = reportSectionValidator
                 .validateEmergencyReportExists(emergencyReportId);
 
-        // 2. 섹션 타입 유효성 검증
+        // 2. 권한 검증: 해당 구급일지를 작성한 구급대원인지 확인
+        if (!emergencyReport.getParamedic().getId().equals(paramedicId)) {
+            log.warn("Unauthorized section access attempt - Emergency Report ID: {}, Paramedic ID: {}, Report Owner: {}",
+                    emergencyReportId, paramedicId, emergencyReport.getParamedic().getId());
+            throw new CustomException(ErrorCode.ACCESS_DENIED, "본인이 작성한 구급일지의 섹션만 조회할 수 있습니다.");
+        }
+
+        // 3. 섹션 타입 유효성 검증
         reportSectionValidator.validateSectionType(type);
 
         // 3. 섹션 조회
@@ -103,18 +125,29 @@ public class ReportSectionServiceImpl implements ReportSectionService {
      * 구급일지 섹션 수정
      *
      * @param emergencyReportId 구급일지 ID
-     * @param type 섹션 타입
-     * @param request 수정할 데이터
+     * @param type              섹션 타입
+     * @param request           수정할 데이터
+     * @param paramedicId       구급대원 ID (권한 검증용)
      * @return 수정된 섹션 정보
      */
     @Override
     @Transactional
-    public ReportSectionCreateResponse updateReportSection(Long emergencyReportId, ReportSectionType type, ReportSectionUpdateRequest request) {
+    public ReportSectionCreateResponse updateReportSection(Long emergencyReportId, ReportSectionType type, ReportSectionUpdateRequest request, Integer paramedicId) {
+        log.info("Updating report section - Emergency Report ID: {}, Type: {}, Paramedic ID: {}",
+                emergencyReportId, type, paramedicId);
+
         // 1. 구급일지 존재 여부 검증
         EmergencyReport emergencyReport = reportSectionValidator
                 .validateEmergencyReportExists(emergencyReportId);
 
-        // 2. 섹션 타입 유효성 검증
+        // 2. 권한 검증: 해당 구급일지를 작성한 구급대원인지 확인
+        if (!emergencyReport.getParamedic().getId().equals(paramedicId)) {
+            log.warn("Unauthorized section update attempt - Emergency Report ID: {}, Paramedic ID: {}, Report Owner: {}",
+                    emergencyReportId, paramedicId, emergencyReport.getParamedic().getId());
+            throw new CustomException(ErrorCode.ACCESS_DENIED, "본인이 작성한 구급일지의 섹션만 수정할 수 있습니다.");
+        }
+
+        // 3. 섹션 타입 유효성 검증
         reportSectionValidator.validateSectionType(type);
 
         // 3. 섹션 조회

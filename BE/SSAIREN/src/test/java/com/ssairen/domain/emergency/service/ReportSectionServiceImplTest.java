@@ -55,7 +55,8 @@ class ReportSectionServiceImplTest {
         // when
         ReportSectionCreateResponse response = reportSectionService.createReportSection(
                 emergencyReport.getId(),
-                ReportSectionType.PATIENT_INFO
+                ReportSectionType.PATIENT_INFO,
+                emergencyReport.getParamedic().getId()
         );
 
         // then
@@ -70,17 +71,20 @@ class ReportSectionServiceImplTest {
     void createReportSection_alreadyExists() {
         // given
         EmergencyReport emergencyReport = createTestEmergencyReport();
+        Integer paramedicId = emergencyReport.getParamedic().getId();
 
         // 첫 번째 섹션 생성
         reportSectionService.createReportSection(
                 emergencyReport.getId(),
-                ReportSectionType.PATIENT_INFO
+                ReportSectionType.PATIENT_INFO,
+                paramedicId
         );
 
         // when & then - 동일한 타입의 섹션 중복 생성 시도
         assertThatThrownBy(() -> reportSectionService.createReportSection(
                 emergencyReport.getId(),
-                ReportSectionType.PATIENT_INFO
+                ReportSectionType.PATIENT_INFO,
+                paramedicId
         ))
                 .isInstanceOf(CustomException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.REPORT_SECTION_ALREADY_EXISTS);
@@ -91,16 +95,19 @@ class ReportSectionServiceImplTest {
     void getReportSection_success() {
         // given
         EmergencyReport emergencyReport = createTestEmergencyReport();
+        Integer paramedicId = emergencyReport.getParamedic().getId();
 
         reportSectionService.createReportSection(
                 emergencyReport.getId(),
-                ReportSectionType.DISPATCH
+                ReportSectionType.DISPATCH,
+                paramedicId
         );
 
         // when
         ReportSectionCreateResponse response = reportSectionService.getReportSection(
                 emergencyReport.getId(),
-                ReportSectionType.DISPATCH
+                ReportSectionType.DISPATCH,
+                paramedicId
         );
 
         // then
