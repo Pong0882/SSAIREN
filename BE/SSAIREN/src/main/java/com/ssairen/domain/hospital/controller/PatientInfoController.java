@@ -4,6 +4,7 @@ import com.ssairen.domain.hospital.dto.PatientInfoCreateRequest;
 import com.ssairen.domain.hospital.dto.PatientInfoResponse;
 import com.ssairen.domain.hospital.service.PatientInfoService;
 import com.ssairen.global.dto.ApiResponse;
+import com.ssairen.global.security.dto.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,6 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,9 +57,10 @@ public class PatientInfoController {
     })
     @PostMapping
     public ResponseEntity<ApiResponse<PatientInfoResponse>> createPatientInfo(
-            @Valid @RequestBody PatientInfoCreateRequest request
+            @Valid @RequestBody PatientInfoCreateRequest request,
+            @AuthenticationPrincipal CustomUserPrincipal principal
     ) {
-        PatientInfoResponse response = patientInfoService.createPatientInfo(request);
+        PatientInfoResponse response = patientInfoService.createPatientInfo(request, principal.getId());
         return ResponseEntity.ok(
                 ApiResponse.success(response, "환자 정보가 생성되었습니다.")
         );
@@ -85,9 +88,10 @@ public class PatientInfoController {
     @GetMapping("/{emergencyReportId}")
     public ResponseEntity<ApiResponse<PatientInfoResponse>> getPatientInfo(
             @Parameter(description = "구급일지 ID", required = true, example = "1")
-            @PathVariable @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId
+            @PathVariable @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
+            @AuthenticationPrincipal CustomUserPrincipal principal
     ) {
-        PatientInfoResponse response = patientInfoService.getPatientInfo(emergencyReportId);
+        PatientInfoResponse response = patientInfoService.getPatientInfo(emergencyReportId, principal.getId());
         return ResponseEntity.ok(
                 ApiResponse.success(response, "환자 정보 조회가 완료되었습니다.")
         );
@@ -116,9 +120,10 @@ public class PatientInfoController {
     public ResponseEntity<ApiResponse<PatientInfoResponse>> updatePatientInfo(
             @Parameter(description = "구급일지 ID", required = true, example = "1")
             @PathVariable @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
-            @Valid @RequestBody PatientInfoCreateRequest request
+            @Valid @RequestBody PatientInfoCreateRequest request,
+            @AuthenticationPrincipal CustomUserPrincipal principal
     ) {
-        PatientInfoResponse response = patientInfoService.updatePatientInfo(emergencyReportId, request);
+        PatientInfoResponse response = patientInfoService.updatePatientInfo(emergencyReportId, request, principal.getId());
         return ResponseEntity.ok(
                 ApiResponse.success(response, "환자 정보가 수정되었습니다.")
         );
