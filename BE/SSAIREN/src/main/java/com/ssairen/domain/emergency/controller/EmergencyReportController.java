@@ -50,8 +50,9 @@ public class EmergencyReportController implements EmergencyReportApi {
     @PostMapping("/{emergencyReportId}/sections/{type}")
     public ResponseEntity<ApiResponse<ReportSectionCreateResponse>> createReportSection(
             @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
-            @PathVariable("type") ReportSectionType type) {
-        ReportSectionCreateResponse response = reportSectionService.createReportSection(emergencyReportId, type);
+            @PathVariable("type") ReportSectionType type,
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
+        ReportSectionCreateResponse response = reportSectionService.createReportSection(emergencyReportId, type, principal.getId());
         return ResponseEntity.ok(ApiResponse.success(response, "구급일지 섹션이 저장되었습니다."));
     }
 
@@ -59,8 +60,9 @@ public class EmergencyReportController implements EmergencyReportApi {
     @GetMapping("/{emergencyReportId}/sections/{type}")
     public ResponseEntity<ApiResponse<ReportSectionCreateResponse>> getReportSection(
             @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
-            @PathVariable("type") ReportSectionType type) {
-        ReportSectionCreateResponse response = reportSectionService.getReportSection(emergencyReportId, type);
+            @PathVariable("type") ReportSectionType type,
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
+        ReportSectionCreateResponse response = reportSectionService.getReportSection(emergencyReportId, type, principal.getId());
         return ResponseEntity.ok(ApiResponse.success(response, "구급일지 해당 섹션 조회를 완료하였습니다."));
     }
 
@@ -77,8 +79,9 @@ public class EmergencyReportController implements EmergencyReportApi {
     public ResponseEntity<ApiResponse<ReportSectionCreateResponse>> updateReportSection(
             @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
             @PathVariable("type") ReportSectionType type,
-            @Valid @RequestBody ReportSectionUpdateRequest request) {
-        ReportSectionCreateResponse response = reportSectionService.updateReportSection(emergencyReportId, type, request);
+            @Valid @RequestBody ReportSectionUpdateRequest request,
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
+        ReportSectionCreateResponse response = reportSectionService.updateReportSection(emergencyReportId, type, request, principal.getId());
         return ResponseEntity.ok(ApiResponse.success(response, "구급일지 섹션이 수정되었습니다."));
     }
 }

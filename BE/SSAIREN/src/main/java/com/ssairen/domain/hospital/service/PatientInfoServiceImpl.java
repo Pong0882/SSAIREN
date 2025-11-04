@@ -30,14 +30,22 @@ public class PatientInfoServiceImpl implements PatientInfoService {
      */
     @Override
     @Transactional
-    public PatientInfoResponse createPatientInfo(PatientInfoCreateRequest request) {
-        log.info("Creating patient info for emergency report ID: {}", request.emergencyReportId());
+    public PatientInfoResponse createPatientInfo(PatientInfoCreateRequest request, Integer paramedicId) {
+        log.info("Creating patient info for emergency report ID: {} by paramedic ID: {}",
+                request.emergencyReportId(), paramedicId);
 
         // 1. 구급일지 존재 확인
         EmergencyReport emergencyReport = emergencyReportRepository.findById(request.emergencyReportId())
                 .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
 
-        // 2. 이미 환자 정보가 존재하는지 확인
+        // 2. 권한 검증: 해당 구급일지를 작성한 구급대원인지 확인
+        if (!emergencyReport.getParamedic().getId().equals(paramedicId)) {
+            log.warn("Unauthorized patient info creation attempt - Emergency Report ID: {}, Paramedic ID: {}, Report Owner: {}",
+                    request.emergencyReportId(), paramedicId, emergencyReport.getParamedic().getId());
+            throw new CustomException(ErrorCode.ACCESS_DENIED, "본인이 작성한 구급일지에 대해서만 환자 정보를 생성할 수 있습니다.");
+        }
+
+        // 3. 이미 환자 정보가 존재하는지 확인
         if (patientInfoRepository.findById(request.emergencyReportId()).isPresent()) {
             throw new CustomException(ErrorCode.PATIENT_INFO_ALREADY_EXISTS);
         }
@@ -74,11 +82,20 @@ public class PatientInfoServiceImpl implements PatientInfoService {
      * 환자 정보 조회
      */
     @Override
-    public PatientInfoResponse getPatientInfo(Long emergencyReportId) {
-        log.info("Fetching patient info for emergency report ID: {}", emergencyReportId);
+    public PatientInfoResponse getPatientInfo(Long emergencyReportId, Integer paramedicId) {
+        log.info("Fetching patient info for emergency report ID: {} by paramedic ID: {}",
+                emergencyReportId, paramedicId);
 
+        // 1. 환자 정보 조회
         PatientInfo patientInfo = patientInfoRepository.findById(emergencyReportId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PATIENT_INFO_NOT_FOUND));
+
+        // 2. 권한 검증: 해당 구급일지를 작성한 구급대원인지 확인
+        if (!patientInfo.getEmergencyReport().getParamedic().getId().equals(paramedicId)) {
+            log.warn("Unauthorized patient info access attempt - Emergency Report ID: {}, Paramedic ID: {}, Report Owner: {}",
+                    emergencyReportId, paramedicId, patientInfo.getEmergencyReport().getParamedic().getId());
+            throw new CustomException(ErrorCode.ACCESS_DENIED, "본인이 작성한 구급일지의 환자 정보만 조회할 수 있습니다.");
+        }
 
         return PatientInfoResponse.from(patientInfo);
     }
@@ -88,12 +105,20 @@ public class PatientInfoServiceImpl implements PatientInfoService {
      */
     @Override
     @Transactional
-    public PatientInfoResponse updatePatientInfo(Long emergencyReportId, PatientInfoCreateRequest request) {
-        log.info("Updating patient info for emergency report ID: {}", emergencyReportId);
+    public PatientInfoResponse updatePatientInfo(Long emergencyReportId, PatientInfoCreateRequest request, Integer paramedicId) {
+        log.info("Updating patient info for emergency report ID: {} by paramedic ID: {}",
+                emergencyReportId, paramedicId);
 
         // 1. 환자 정보 조회
         PatientInfo patientInfo = patientInfoRepository.findById(emergencyReportId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PATIENT_INFO_NOT_FOUND));
+
+        // 2. 권한 검증: 해당 구급일지를 작성한 구급대원인지 확인
+        if (!patientInfo.getEmergencyReport().getParamedic().getId().equals(paramedicId)) {
+            log.warn("Unauthorized patient info update attempt - Emergency Report ID: {}, Paramedic ID: {}, Report Owner: {}",
+                    emergencyReportId, paramedicId, patientInfo.getEmergencyReport().getParamedic().getId());
+            throw new CustomException(ErrorCode.ACCESS_DENIED, "본인이 작성한 구급일지의 환자 정보만 수정할 수 있습니다.");
+        }
 
         // 2. 환자 정보 수정
         patientInfo.updatePatientInfo(

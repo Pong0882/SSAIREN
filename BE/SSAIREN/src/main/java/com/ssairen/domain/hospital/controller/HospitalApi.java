@@ -55,7 +55,8 @@ public interface HospitalApi {
     @ApiInternalServerError
     ResponseEntity<ApiResponse<HospitalSelectionResponse>> createHospitalSelectionRequest(
             @Parameter(description = "병원 이송 요청 정보 (구급일지 ID, 병원 이름 목록)", required = true)
-            @Valid @RequestBody HospitalSelectionRequest request
+            @Valid @RequestBody HospitalSelectionRequest request,
+            @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal com.ssairen.global.security.dto.CustomUserPrincipal principal
     );
 
     /**
@@ -322,6 +323,7 @@ public interface HospitalApi {
     @ApiInternalServerError
     ResponseEntity<ApiResponse<HospitalSelectionStatusResponse>> getHospitalSelectionStatus(
             @Parameter(description = "구급일지 ID", required = true, example = "1")
-            @PathVariable("emergency_report_id") Long emergencyReportId
+            @PathVariable("emergency_report_id") @jakarta.validation.constraints.Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
+            @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal com.ssairen.global.security.dto.CustomUserPrincipal principal
     );
 }
