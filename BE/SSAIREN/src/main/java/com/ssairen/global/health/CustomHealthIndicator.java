@@ -18,6 +18,7 @@ public class CustomHealthIndicator implements HealthIndicator {
     private static final double MEMORY_WARNING_THRESHOLD = 0.8; // 80%
     private static final double MEMORY_CRITICAL_THRESHOLD = 0.95; // 95%
     private static final String MESSAGE_KEY = "message";
+    private static final String STATUS_KEY = "status";
 
     @Override
     public Health health() {
@@ -44,15 +45,15 @@ public class CustomHealthIndicator implements HealthIndicator {
             // 메모리 사용률에 따라 상태 결정
             if (memoryUsageRatio >= MEMORY_CRITICAL_THRESHOLD) {
                 builder = Health.down()
-                    .withDetail("status", "CRITICAL")
+                        .withDetail(STATUS_KEY, "CRITICAL")
                         .withDetail(MESSAGE_KEY, "��������� ������������ ������ ���������������");
             } else if (memoryUsageRatio >= MEMORY_WARNING_THRESHOLD) {
                 builder = Health.up()
-                    .withDetail("status", "WARNING")
+                        .withDetail(STATUS_KEY, "WARNING")
                         .withDetail(MESSAGE_KEY, "��������� ������������ ������������");
             } else {
                 builder = Health.up()
-                    .withDetail("status", "HEALTHY")
+                        .withDetail(STATUS_KEY, "HEALTHY")
                         .withDetail(MESSAGE_KEY, "������ ������������ ���������������");
             }
 
