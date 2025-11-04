@@ -135,13 +135,13 @@ export default function PatientListPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell header>No</TableCell>
-                    <TableCell header>성별</TableCell>
-                    <TableCell header>나이</TableCell>
-                    <TableCell header>시간</TableCell>
-                    <TableCell header>주호소</TableCell>
-                    <TableCell header>멘탈</TableCell>
-                    <TableCell header>내원 여부</TableCell>
+                    <TableCell header className="w-[8%]">No</TableCell>
+                    <TableCell header className="w-[8%]">성별</TableCell>
+                    <TableCell header className="w-[8%]">나이</TableCell>
+                    <TableCell header className="w-[12%]">시간</TableCell>
+                    <TableCell header className="w-[30%]">주호소</TableCell>
+                    <TableCell header className="w-[12%]">멘탈</TableCell>
+                    <TableCell header className="w-[12%]">내원 여부</TableCell>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -153,16 +153,16 @@ export default function PatientListPage() {
                       }
                       onClick={() => console.log("Patient clicked:", patient)}
                     >
-                      <TableCell>{patient.hospitalSelectionId}</TableCell>
-                      <TableCell>{patient.gender}</TableCell>
-                      <TableCell>{patient.age}</TableCell>
-                      <TableCell>
+                      <TableCell className="w-[8%]">{patient.hospitalSelectionId}</TableCell>
+                      <TableCell className="w-[8%]">{patient.gender}</TableCell>
+                      <TableCell className="w-[8%]">{patient.age}</TableCell>
+                      <TableCell className="w-[12%]">
                         {formatRecordTime(patient.recordTime)}
                       </TableCell>
-                      <TableCell>{patient.chiefComplaint}</TableCell>
-                      <TableCell>{patient.mentalStatus}</TableCell>
-                      <TableCell>
-                        {patient.status === "PENDING"
+                      <TableCell className="w-[30%]">{patient.chiefComplaint}</TableCell>
+                      <TableCell className="w-[12%]">{patient.mentalStatus}</TableCell>
+                      <TableCell className="w-[12%]">
+                        {patient.status === "ACCEPTED"
                           ? "내원 대기"
                           : "내원 완료"}
                       </TableCell>

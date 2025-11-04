@@ -75,7 +75,7 @@ export function TableCell({
   header = false,
   className = "",
 }: TableCellProps) {
-  const baseStyles = "px-3 py-2 text-center text-sm";
+  const baseStyles = "px-3 py-2 text-center text-sm border-r border-neutral-200 last:border-r-0";
   const headerStyles = header
     ? "font-semibold text-neutral-700"
     : "text-neutral-800";
