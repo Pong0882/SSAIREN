@@ -150,23 +150,22 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
   // 현재 요청 삭제
   const handleCloseCurrentRequest = () => {
-    setRequestQueue((prev) => {
-      const newQueue = prev.filter((_, index) => index !== currentIndex);
+    const newQueue = requestQueue.filter((_, index) => index !== currentIndex);
 
-      // 삭제 후 배열이 비었으면 모달 닫기
-      if (newQueue.length === 0) {
-        setIsModalOpen(false);
-        setCurrentIndex(0);
-        return [];
-      }
+    // 삭제 후 배열이 비었으면 모달 닫기
+    if (newQueue.length === 0) {
+      setIsModalOpen(false);
+      setCurrentIndex(0);
+      setRequestQueue([]);
+      return;
+    }
 
-      // 마지막 요청을 삭제한 경우 인덱스 조정
-      if (currentIndex >= newQueue.length) {
-        setCurrentIndex(newQueue.length - 1);
-      }
+    // 마지막 요청을 삭제한 경우 인덱스 조정
+    if (currentIndex >= newQueue.length) {
+      setCurrentIndex(newQueue.length - 1);
+    }
 
-      return newQueue;
-    });
+    setRequestQueue(newQueue);
   };
 
   // 모든 요청 닫기

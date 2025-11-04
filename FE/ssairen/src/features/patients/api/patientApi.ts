@@ -14,6 +14,29 @@ export interface AcceptPatientResponse {
   data?: any;
 }
 
+export interface PatientDetailResponse {
+  success: boolean;
+  data: {
+    emergencyReportId: number;
+    gender: string;
+    age: number;
+    recordTime: string;
+    mentalStatus: string;
+    chiefComplaint: string;
+    hr: number;
+    bp: string;
+    spo2: number;
+    rr: number;
+    bt: number;
+    hasGuardian: boolean;
+    hx: string;
+    onsetTime: string;
+    lnt: string;
+  };
+  message: string;
+  timestamp: string;
+}
+
 export async function fetchPatientsApi({
   hospitalId,
   page = 1,
@@ -127,6 +150,50 @@ export async function callRequestApi(
   } as any);
 
   console.log('📞 전화요망 API 응답:', response.data);
+
+  return response.data;
+}
+
+/**
+ * 환자 상세 정보 조회 API
+ * @param hospitalId - 병원 ID
+ * @param emergencyReportId - 응급 보고서 ID
+ */
+export async function fetchPatientDetailApi(
+  hospitalId: number,
+  emergencyReportId: number
+): Promise<PatientDetailResponse> {
+  console.log('📋 환자 상세 정보 조회 API 호출:', { hospitalId, emergencyReportId });
+
+  const response = await axiosInstance<PatientDetailResponse>({
+    method: 'GET',
+    url: `/api/hospitals/${hospitalId}/patients/${emergencyReportId}`,
+    requiresAuth: true,
+  } as any);
+
+  console.log('📋 환자 상세 정보 조회 API 응답:', response.data);
+
+  return response.data;
+}
+
+/**
+ * 내원완료 처리 API
+ * @param hospitalId - 병원 ID
+ * @param emergencyReportId - 응급 보고서 ID
+ */
+export async function completePatientArrivalApi(
+  hospitalId: number,
+  emergencyReportId: number
+): Promise<AcceptPatientResponse> {
+  console.log('🏥 내원완료 API 호출:', { hospitalId, emergencyReportId });
+
+  const response = await axiosInstance<AcceptPatientResponse>({
+    method: 'PATCH',
+    url: `/api/hospitals/${hospitalId}/patients/${emergencyReportId}/arrival`,
+    requiresAuth: true,
+  } as any);
+
+  console.log('🏥 내원완료 API 응답:', response.data);
 
   return response.data;
 }
