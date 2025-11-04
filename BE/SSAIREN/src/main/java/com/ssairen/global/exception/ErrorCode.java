@@ -99,6 +99,7 @@ ErrorCode {
     LLM_PROCESSING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "LLM_PROCESSING_FAILED", "요약 생성에 실패했습니다."),
     INVALID_AUDIO_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_AUDIO_FORMAT", "지원하지 않는 오디오 형식입니다."),
     AUDIO_FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "AUDIO_FILE_TOO_LARGE", "오디오 파일 크기가 너무 큽니다."),
+    EXTERNAL_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "EXTERNAL_API_ERROR", "외부 API 호출에 실패했습니다."),
 
     // ============================================
     // 파일 스토리지 (9100번대)

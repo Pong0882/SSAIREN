@@ -5,9 +5,11 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
@@ -46,6 +48,19 @@ public class WebClientConfig {
         return WebClient.builder()
                 .baseUrl(aiServerProperties.getBaseUrl())
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
+    }
+
+    /**
+     * RestTemplate Bean 생성
+     * AI 추천 API 호출을 위한 RestTemplate
+     */
+    @Bean
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+        log.info("RestTemplate 초기화 완료");
+        return builder
+                .setConnectTimeout(Duration.ofSeconds(30))
+                .setReadTimeout(Duration.ofSeconds(30))
                 .build();
     }
 }
