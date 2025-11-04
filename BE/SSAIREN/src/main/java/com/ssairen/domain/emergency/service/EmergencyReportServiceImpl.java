@@ -96,7 +96,7 @@ public class EmergencyReportServiceImpl implements EmergencyReportService {
                 paramedic.getName(), emergencyReports.size());
 
         // 3. DTO 변환
-        return emergencyReportMapper.toParamedicEmergencyReportResponse(emergencyReports);
+        return emergencyReportMapper.toParamedicEmergencyReportResponse(paramedic, emergencyReports);
     }
 
     /**
