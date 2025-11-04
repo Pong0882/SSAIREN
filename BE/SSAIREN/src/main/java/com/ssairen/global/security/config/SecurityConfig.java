@@ -105,7 +105,9 @@ public class SecurityConfig {
         config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",           // 로컬 개발
                 "https://ssairen.site",            // 배포 환경
-                "https://www.ssairen.site"         // 배포 환경 (www 포함)
+                "https://www.ssairen.site",        // 배포 환경 (www 포함)
+                "https://api.ssairen.site",        // API 서버 (Swagger UI)
+                "https://be.ssairen.site"          // Backend 서버 (Swagger UI)
         ));
 
         // 허용할 HTTP 메서드
