@@ -1,6 +1,5 @@
 package com.ssairen.domain.emergency.service;
 
-import com.ssairen.domain.emergency.dto.EmergencyReportCreateRequest;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
 import com.ssairen.domain.emergency.dto.FireStateEmergencyReportsResponse;
 import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
@@ -39,20 +38,21 @@ public class EmergencyReportServiceImpl implements EmergencyReportService {
     /**
      * 구급일지 생성 (출동 배정)
      *
-     * @param request 구급일지 생성 요청 (출동지령 ID, 구급대원 ID, 소방서 ID)
+     * @param dispatchId  출동지령 ID
+     * @param paramedicId 구급대원 ID
      * @return 생성된 구급일지 정보
      */
     @Override
     @Transactional
-    public EmergencyReportCreateResponse createEmergencyReport(EmergencyReportCreateRequest request) {
+    public EmergencyReportCreateResponse createEmergencyReport(Long dispatchId, Integer paramedicId) {
         // 1. 엔티티 조회
-        Dispatch dispatch = dispatchRepository.findById(request.dispatchId())
+        Dispatch dispatch = dispatchRepository.findById(dispatchId)
                 .orElseThrow(() -> new CustomException(ErrorCode.DISPATCH_NOT_FOUND));
 
-        Paramedic paramedic = paramedicRepository.findById(request.paramedicId())
+        Paramedic paramedic = paramedicRepository.findById(paramedicId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PARAMEDIC_NOT_FOUND));
 
-        FireState fireState = fireStateRepository.findById(request.fireStateId())
+        FireState fireState = fireStateRepository.findById(paramedic.getFireState().getId())
                 .orElseThrow(() -> new CustomException(ErrorCode.FIRE_STATE_NOT_FOUND));
 
         // 2. 중복 생성 방지
