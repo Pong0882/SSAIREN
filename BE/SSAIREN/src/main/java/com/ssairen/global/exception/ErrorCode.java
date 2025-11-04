@@ -108,7 +108,14 @@ ErrorCode {
     FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "FILE_NOT_FOUND", "파일을 찾을 수 없습니다."),
     EMPTY_FILE(HttpStatus.BAD_REQUEST, "EMPTY_FILE", "빈 파일은 업로드할 수 없습니다."),
     INVALID_VIDEO_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_VIDEO_FORMAT", "지원하지 않는 영상 형식입니다."),
-    VIDEO_FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "VIDEO_FILE_TOO_LARGE", "영상 파일 크기가 너무 큽니다.");
+    VIDEO_FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "VIDEO_FILE_TOO_LARGE", "영상 파일 크기가 너무 큽니다."),
+
+    // ============================================
+    // MinIO (9200번대)
+    // ============================================
+    MINIO_CLIENT_INITIALIZATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MINIO_CLIENT_INITIALIZATION_FAILED", "MinIO 클라이언트 초기화에 실패했습니다."),
+    MINIO_BUCKET_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MINIO_BUCKET_CREATION_FAILED", "MinIO 버킷 생성에 실패했습니다."),
+    MINIO_CONNECTION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "MINIO_CONNECTION_FAILED", "MinIO 서버에 연결할 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;
