@@ -22,17 +22,8 @@ export const loginApi = async (credentials: LoginRequest): Promise<TokenResponse
       throw new Error(apiResponse.message || '로그인에 실패했습니다.')
     }
 
-    const tokenData = apiResponse.data
-
-    // 토큰을 로컬 스토리지에 저장
-    if (tokenData.accessToken) {
-      localStorage.setItem('accessToken', tokenData.accessToken)
-    }
-    if (tokenData.refreshToken) {
-      localStorage.setItem('refreshToken', tokenData.refreshToken)
-    }
-
-    return tokenData
+    // 토큰은 zustand store의 setAuth에서 저장하므로 여기서는 반환만
+    return apiResponse.data
   } catch (error) {
     if (error instanceof Error) {
       throw error
@@ -43,18 +34,43 @@ export const loginApi = async (credentials: LoginRequest): Promise<TokenResponse
 
 /**
  * 로그아웃 API 호출
+ * 토큰 정리는 zustand store의 clearAuth에서 처리
  */
 export const logoutApi = async (): Promise<void> => {
+  await axiosInstance({
+    method: 'POST',
+    url: '/api/auth/logout',
+    requiresAuth: true,
+  } as any)
+}
+
+/**
+ * 토큰 갱신 API 호출
+ * @param refreshToken - 리프레시 토큰
+ * @returns 새로운 accessToken과 refreshToken
+ * 토큰 저장은 zustand store의 updateTokens에서 처리
+ */
+export const refreshTokenApi = async (refreshToken: string): Promise<TokenResponse> => {
   try {
-    await axiosInstance({
+    const response = await axiosInstance<ApiResponse<TokenResponse>>({
       method: 'POST',
-      url: '/api/auth/logout',
-      requiresAuth: true,
+      url: '/api/auth/refresh',
+      data: { refreshToken },
+      requiresAuth: false,
     } as any)
-  } finally {
-    // 에러 여부와 관계없이 로컬 스토리지 정리
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
+
+    const apiResponse = response.data
+
+    if (!apiResponse.success || !apiResponse.data) {
+      throw new Error(apiResponse.message || '토큰 갱신에 실패했습니다.')
+    }
+
+    return apiResponse.data
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error
+    }
+    throw new Error('토큰 갱신에 실패했습니다.')
   }
 }
 
@@ -62,16 +78,10 @@ export const logoutApi = async (): Promise<void> => {
  * 토큰 검증 및 사용자 정보 조회
  */
 export const getCurrentUserApi = async () => {
-  try {
-    const response = await axiosInstance({
-      method: 'GET',
-      url: '/api/auth/me',
-      requiresAuth: true,
-    } as any)
-    return response.data
-  } catch (error) {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    throw error
-  }
+  const response = await axiosInstance({
+    method: 'GET',
+    url: '/api/auth/me',
+    requiresAuth: true,
+  } as any)
+  return response.data
 }
