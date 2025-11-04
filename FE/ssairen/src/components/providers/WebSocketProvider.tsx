@@ -4,6 +4,11 @@ import { useHospitalWebSocket } from "@/features/patients/hooks/useHospitalWebSo
 import { Modal } from "@/components";
 import leftArrow from "@/assets/left-arrow.png";
 import rightArrow from "@/assets/right-arrow.png";
+import {
+  acceptPatientApi,
+  rejectPatientApi,
+  callRequestApi,
+} from "@/features/patients/api/patientApi";
 
 interface WebSocketProviderProps {
   children: ReactNode;
@@ -13,12 +18,44 @@ interface WebSocketProviderProps {
  * WebSocket 연결을 관리하는 Provider
  * 로그인된 사용자에게만 WebSocket 연결을 제공합니다.
  */
+const STORAGE_KEY = "pendingPatientRequests";
+
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
   const { isAuthenticated } = useAuthStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [requestQueue, setRequestQueue] = useState<any[]>([]); // 요청 배열
   const [currentIndex, setCurrentIndex] = useState(0); // 현재 보고 있는 인덱스
   const [isExpanded, setIsExpanded] = useState(false); // 모달 펼침/접힘 상태
+  const [showToast, setShowToast] = useState(false); // 토스트 알림 표시 여부
+
+  // 페이지 로드 시 LocalStorage에서 미처리 요청 복구
+  useEffect(() => {
+    const savedRequests = localStorage.getItem(STORAGE_KEY);
+    if (savedRequests) {
+      try {
+        const parsed = JSON.parse(savedRequests);
+        if (parsed.length > 0) {
+          console.log("📦 LocalStorage에서 미처리 요청 복구:", parsed);
+          setRequestQueue(parsed);
+          setIsModalOpen(true);
+        }
+      } catch (error) {
+        console.error("❌ LocalStorage 복구 실패:", error);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }, []);
+
+  // requestQueue가 변경될 때마다 LocalStorage에 저장
+  useEffect(() => {
+    if (requestQueue.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(requestQueue));
+      console.log("💾 LocalStorage에 요청 저장:", requestQueue.length);
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+      console.log("🗑️ LocalStorage 비움");
+    }
+  }, [requestQueue]);
 
   // 브라우저 알림 권한 요청
   useEffect(() => {
@@ -34,7 +71,18 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     console.log("🚨 [전역] 새로운 수용 요청 수신:", request);
 
     // 요청 배열에 추가 (늦게 온 요청이 뒤에 추가됨)
-    setRequestQueue((prev) => [...prev, request]);
+    setRequestQueue((prev) => {
+      const isFirstRequest = prev.length === 0;
+
+      // 이미 모달이 열려있는 상태에서 새 요청이 오면 토스트 표시
+      if (!isFirstRequest) {
+        setShowToast(true);
+        // 3초 후 자동으로 토스트 숨김
+        setTimeout(() => setShowToast(false), 3000);
+      }
+
+      return [...prev, request];
+    });
     setIsModalOpen(true);
 
     // 커스텀 이벤트 발생 - 다른 컴포넌트에서 리스닝 가능
@@ -54,9 +102,37 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     }
   }, []);
 
+  // WebSocket으로 완료 알림 수신
+  const handleCompleted = useCallback((message: any) => {
+    console.log("❌ [전역] 요청 완료 알림 수신:", message);
+
+    // 해당 hospitalSelectionId를 가진 요청 삭제
+    setRequestQueue((prev) => {
+      const newQueue = prev.filter(
+        (req) => req.hospitalSelectionId !== message.hospitalSelectionId
+      );
+
+      // 모든 요청이 삭제되면 모달 닫기
+      if (newQueue.length === 0) {
+        setIsModalOpen(false);
+        setCurrentIndex(0);
+        setIsExpanded(false);
+        return [];
+      }
+
+      // 현재 보던 요청이 삭제된 경우 인덱스 조정
+      if (currentIndex >= newQueue.length) {
+        setCurrentIndex(newQueue.length - 1);
+      }
+
+      return newQueue;
+    });
+  }, [currentIndex]);
+
   // Hook은 항상 호출되어야 함 (조건문 밖에서)
   useHospitalWebSocket({
     onNewRequest: isAuthenticated ? handleNewRequest : undefined,
+    onCompleted: isAuthenticated ? handleCompleted : undefined,
     onError: (error) => {
       console.error("❌ WebSocket 에러:", error);
     },
@@ -101,11 +177,123 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     setIsExpanded(false);
   };
 
+  // 수용가능 버튼 클릭
+  const handleAccept = async () => {
+    if (!currentRequest?.hospitalSelectionId) {
+      console.error("❌ hospitalSelectionId가 없습니다.");
+      return;
+    }
+
+    try {
+      console.log("✅ 수용가능 버튼 클릭:", currentRequest.hospitalSelectionId);
+
+      const result = await acceptPatientApi(currentRequest.hospitalSelectionId);
+
+      console.log("✅ 수용 성공:", result);
+
+      // 성공 시 현재 요청 삭제
+      handleCloseCurrentRequest();
+
+      // 성공 알림 (선택적)
+      if (Notification.permission === "granted") {
+        new Notification("수용 완료", {
+          body: "환자 수용이 완료되었습니다.",
+          icon: "/favicon.ico",
+        });
+      }
+    } catch (error) {
+      console.error("❌ 수용 실패:", error);
+      alert("수용 처리에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
+  // 거절 버튼 클릭
+  const handleReject = async () => {
+    if (!currentRequest?.hospitalSelectionId) {
+      console.error("❌ hospitalSelectionId가 없습니다.");
+      return;
+    }
+
+    try {
+      console.log("❌ 거절 버튼 클릭:", currentRequest.hospitalSelectionId);
+
+      const result = await rejectPatientApi(currentRequest.hospitalSelectionId);
+
+      console.log("❌ 거절 성공:", result);
+
+      // 성공 시 현재 요청 삭제
+      handleCloseCurrentRequest();
+
+      // 성공 알림 (선택적)
+      if (Notification.permission === "granted") {
+        new Notification("거절 완료", {
+          body: "환자 거절이 완료되었습니다.",
+          icon: "/favicon.ico",
+        });
+      }
+    } catch (error) {
+      console.error("❌ 거절 실패:", error);
+      alert("거절 처리에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
+  // 전화요망 버튼 클릭
+  const handleCallRequest = async () => {
+    if (!currentRequest?.hospitalSelectionId) {
+      console.error("❌ hospitalSelectionId가 없습니다.");
+      return;
+    }
+
+    try {
+      console.log("📞 전화요망 버튼 클릭:", currentRequest.hospitalSelectionId);
+
+      const result = await callRequestApi(currentRequest.hospitalSelectionId);
+
+      console.log("📞 전화요망 성공:", result);
+
+      // 성공 시 현재 요청 삭제
+      handleCloseCurrentRequest();
+
+      // 성공 알림 (선택적)
+      if (Notification.permission === "granted") {
+        new Notification("전화요망 완료", {
+          body: "전화 요청이 완료되었습니다.",
+          icon: "/favicon.ico",
+        });
+      }
+    } catch (error) {
+      console.error("❌ 전화요망 실패:", error);
+      alert("전화요망 처리에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
   const currentRequest = requestQueue[currentIndex];
 
   return (
     <>
       {children}
+
+      {/* 새 요청 토스트 알림 */}
+      {showToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] animate-slideDown">
+          <div className="bg-primary-500 text-white px-6 py-3 rounded-lg shadow-2xl backdrop-blur-md border border-white/30 flex items-center gap-3">
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+            <span className="font-semibold text-lg">새로운 수용 요청이 도착했습니다!</span>
+          </div>
+        </div>
+      )}
 
       {/* 수용 요청 알림 모달 - 캐러셀 형태 */}
       <Modal
@@ -113,6 +301,8 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
         onClose={handleCloseAll}
         size="md"
         showCloseButton={false}
+        closeOnOverlayClick={false}
+        closeOnEscape={false}
       >
         <div className="relative">
           {/* 좌측 화살표 */}
@@ -338,16 +528,22 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
                 {/* 하단 버튼 */}
                 <div className="grid grid-cols-3 gap-3 mt-6">
-                  <button className="px-3 py-2 bg-primary-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors">
+                  <button
+                    onClick={handleAccept}
+                    className="px-3 py-2 bg-primary-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+                  >
                     수용가능
                   </button>
                   <button
-                    onClick={handleCloseCurrentRequest}
+                    onClick={handleReject}
                     className="px-3 py-2 bg-neutral-500 text-white rounded-lg font-semibold hover:bg-neutral-600 transition-colors"
                   >
                     거절
                   </button>
-                  <button className="px-3 py-2 bg-secondary-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors">
+                  <button
+                    onClick={handleCallRequest}
+                    className="px-3 py-2 bg-secondary-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors"
+                  >
                     전화요망
                   </button>
                 </div>

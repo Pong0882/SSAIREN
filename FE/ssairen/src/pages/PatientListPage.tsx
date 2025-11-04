@@ -43,6 +43,7 @@ export default function PatientListPage() {
       });
 
       setPatients(result.patients);
+      console.log("patients", patients);
       setTotalPages(result.totalPages);
     } catch (err) {
       setError(
@@ -135,13 +136,27 @@ export default function PatientListPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell header className="w-[8%]">No</TableCell>
-                    <TableCell header className="w-[8%]">성별</TableCell>
-                    <TableCell header className="w-[8%]">나이</TableCell>
-                    <TableCell header className="w-[12%]">시간</TableCell>
-                    <TableCell header className="w-[30%]">주호소</TableCell>
-                    <TableCell header className="w-[12%]">멘탈</TableCell>
-                    <TableCell header className="w-[12%]">내원 여부</TableCell>
+                    <TableCell header className="w-[8%]">
+                      No
+                    </TableCell>
+                    <TableCell header className="w-[8%]">
+                      성별
+                    </TableCell>
+                    <TableCell header className="w-[8%]">
+                      나이
+                    </TableCell>
+                    <TableCell header className="w-[12%]">
+                      시간
+                    </TableCell>
+                    <TableCell header className="w-[30%]">
+                      주호소
+                    </TableCell>
+                    <TableCell header className="w-[12%]">
+                      멘탈
+                    </TableCell>
+                    <TableCell header className="w-[12%]">
+                      내원 여부
+                    </TableCell>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -149,18 +164,24 @@ export default function PatientListPage() {
                     <TableRow
                       key={patient.hospitalSelectionId}
                       variant={
-                        patient.status === "PENDING" ? "alert" : "default"
+                        patient.status === "ACCEPTED" ? "alert" : "default"
                       }
                       onClick={() => console.log("Patient clicked:", patient)}
                     >
-                      <TableCell className="w-[8%]">{patient.hospitalSelectionId}</TableCell>
+                      <TableCell className="w-[8%]">
+                        {patient.hospitalSelectionId}
+                      </TableCell>
                       <TableCell className="w-[8%]">{patient.gender}</TableCell>
                       <TableCell className="w-[8%]">{patient.age}</TableCell>
                       <TableCell className="w-[12%]">
                         {formatRecordTime(patient.recordTime)}
                       </TableCell>
-                      <TableCell className="w-[30%]">{patient.chiefComplaint}</TableCell>
-                      <TableCell className="w-[12%]">{patient.mentalStatus}</TableCell>
+                      <TableCell className="w-[30%]">
+                        {patient.chiefComplaint}
+                      </TableCell>
+                      <TableCell className="w-[12%]">
+                        {patient.mentalStatus}
+                      </TableCell>
                       <TableCell className="w-[12%]">
                         {patient.status === "ACCEPTED"
                           ? "내원 대기"
