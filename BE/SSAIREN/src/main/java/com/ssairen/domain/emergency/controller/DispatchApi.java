@@ -7,6 +7,7 @@ import com.ssairen.domain.emergency.dto.DispatchCreateResponse;
 import com.ssairen.domain.emergency.dto.DispatchListQueryRequest;
 import com.ssairen.domain.emergency.dto.DispatchListResponse;
 import com.ssairen.global.dto.ApiResponse;
+import com.ssairen.global.security.dto.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,8 +15,8 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @Tag(name = "Dispatches", description = "출동 지령 관련 API")
 public interface DispatchApi {
@@ -137,7 +138,7 @@ public interface DispatchApi {
 
     @Operation(
             summary = "소방서 전체 출동 목록 조회",
-            description = "특정 소방서에서 출동한 모든 내역을 조회합니다."
+            description = "현재 로그인한 구급대원이 소속된 소방서의 출동 내역을 조회합니다."
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
@@ -247,15 +248,13 @@ public interface DispatchApi {
     @ApiUnauthorizedError
     @ApiInternalServerError
     ResponseEntity<? extends ApiResponse> getDispatchList(
-            @Parameter(description = "소방서 ID", required = true, example = "1")
-            @Positive(message = "소방서 ID는 양의 정수여야 합니다.")
-            Integer fireStateId,
             @Parameter(description = """
                     조회 조건
                     - cursor: 다음 페이지 커서 (첫 요청 시 생략, 이후 응답의 next_cursor 값 사용)
                     - limit: 페이지당 개수 (기본값: 10, 최소: 1, 최대: 100)
                     """)
             @Valid
-            DispatchListQueryRequest request
+            DispatchListQueryRequest request,
+            @AuthenticationPrincipal CustomUserPrincipal principal
     );
 }
