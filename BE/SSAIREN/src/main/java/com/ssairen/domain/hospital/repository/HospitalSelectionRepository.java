@@ -144,4 +144,18 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
             @Param("emergencyReportId") Long emergencyReportId,
             @Param("status") HospitalSelectionStatus status
     );
+
+    /**
+     * 특정 EmergencyReport의 다른 HospitalSelection들 조회 (PENDING 상태만)
+     * ACCEPTED 응답 시 COMPLETED로 변경할 대상들을 조회 (Hospital Fetch Join)
+     */
+    @Query("SELECT hs FROM HospitalSelection hs " +
+            "JOIN FETCH hs.hospital " +
+            "WHERE hs.emergencyReport.id = :emergencyReportId " +
+            "AND hs.id != :excludeId " +
+            "AND hs.status = 'PENDING'")
+    List<HospitalSelection> findByEmergencyReportIdAndStatusNotIn(
+            @Param("emergencyReportId") Long emergencyReportId,
+            @Param("excludeId") Integer excludeId
+    );
 }
