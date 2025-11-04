@@ -82,6 +82,8 @@ ErrorCode {
     INVALID_HOSPITAL_SELECTION_STATUS(HttpStatus.BAD_REQUEST, "INVALID_HOSPITAL_SELECTION_STATUS", "유효하지 않은 병원 선택 상태입니다."),
     NO_AVAILABLE_HOSPITALS(HttpStatus.NOT_FOUND, "NO_AVAILABLE_HOSPITALS", "이송 가능한 병원이 없습니다."),
     UNAUTHORIZED_HOSPITAL_RESPONSE(HttpStatus.FORBIDDEN, "UNAUTHORIZED_HOSPITAL_RESPONSE", "이 요청에 응답할 권한이 없습니다."),
+    PATIENT_INFO_NOT_FOUND(HttpStatus.NOT_FOUND, "PATIENT_INFO_NOT_FOUND", "환자 정보를 찾을 수 없습니다."),
+    PATIENT_INFO_ALREADY_EXISTS(HttpStatus.CONFLICT, "PATIENT_INFO_ALREADY_EXISTS", "해당 구급일지에 대한 환자 정보가 이미 존재합니다."),
 
     // ============================================
     // Vital Signs (8000번대)
@@ -108,7 +110,14 @@ ErrorCode {
     FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "FILE_NOT_FOUND", "파일을 찾을 수 없습니다."),
     EMPTY_FILE(HttpStatus.BAD_REQUEST, "EMPTY_FILE", "빈 파일은 업로드할 수 없습니다."),
     INVALID_VIDEO_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_VIDEO_FORMAT", "지원하지 않는 영상 형식입니다."),
-    VIDEO_FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "VIDEO_FILE_TOO_LARGE", "영상 파일 크기가 너무 큽니다.");
+    VIDEO_FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "VIDEO_FILE_TOO_LARGE", "영상 파일 크기가 너무 큽니다."),
+
+    // ============================================
+    // MinIO (9200번대)
+    // ============================================
+    MINIO_CLIENT_INITIALIZATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MINIO_CLIENT_INITIALIZATION_FAILED", "MinIO 클라이언트 초기화에 실패했습니다."),
+    MINIO_BUCKET_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MINIO_BUCKET_CREATION_FAILED", "MinIO 버킷 생성에 실패했습니다."),
+    MINIO_CONNECTION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "MINIO_CONNECTION_FAILED", "MinIO 서버에 연결할 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

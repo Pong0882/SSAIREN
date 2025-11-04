@@ -30,6 +30,8 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private static final String ROLE_PARAMEDIC = "PARAMEDIC";
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
@@ -62,13 +64,17 @@ public class SecurityConfig {
                         // WebSocket 엔드포인트 허용
                         .requestMatchers("/ws/**").permitAll()
 
+                        // 출동 지령 생성 (로그인 불필요 - 119 시스템에서 호출)
+                        .requestMatchers("/api/dispatches").permitAll()
+
                         // 구급대원 전용 엔드포인트
-                        .requestMatchers("/api/paramedics/**").hasRole("PARAMEDIC")
-                        .requestMatchers("/api/emergency/**").hasRole("PARAMEDIC")  // 구급일지 관련
-                        .requestMatchers("/api/dispatches/**").hasRole("PARAMEDIC")  // 출동 지령 관련
+                        .requestMatchers("/api/paramedics/**").hasRole(ROLE_PARAMEDIC)
+                        .requestMatchers("/api/emergency/**").hasRole(ROLE_PARAMEDIC)  // 구급일지 관련
+                        .requestMatchers("/api/dispatches/**").hasRole(ROLE_PARAMEDIC)  // 출동 지령 조회/수정
+                        .requestMatchers("/api/patient-info/**").hasRole(ROLE_PARAMEDIC)  // 환자 정보 관리
 
                         // 병원 선택 요청 관련 (더 구체적인 패턴 먼저)
-                        .requestMatchers("/api/hospital-selection/request").hasRole("PARAMEDIC")  // 요청 생성
+                        .requestMatchers("/api/hospital-selection/request").hasRole(ROLE_PARAMEDIC)  // ������ ������
                         .requestMatchers("/api/hospital-selection/**").hasRole("HOSPITAL")  // 요청 응답
 
                         // 병원 전용 엔드포인트
@@ -103,7 +109,9 @@ public class SecurityConfig {
         config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",           // 로컬 개발
                 "https://ssairen.site",            // 배포 환경
-                "https://www.ssairen.site"         // 배포 환경 (www 포함)
+                "https://www.ssairen.site",        // 배포 환경 (www 포함)
+                "https://api.ssairen.site",        // API 서버 (Swagger UI)
+                "https://be.ssairen.site"          // Backend 서버 (Swagger UI)
         ));
 
         // 허용할 HTTP 메서드

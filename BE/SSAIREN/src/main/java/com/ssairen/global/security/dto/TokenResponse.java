@@ -61,15 +61,21 @@ public record TokenResponse(
 
         @JsonInclude(JsonInclude.Include.NON_NULL)
         @Schema(description = "소방서명 (PARAMEDIC인 경우)", example = "서울소방서")
-        String fireStateName
+        String fireStateName,
+
+        // 병원 상세 정보 (HOSPITAL인 경우에만 포함)
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Schema(description = "병원 공식 명칭 (HOSPITAL인 경우)", example = "서울대학교병원")
+        String officialName
 ) {
+    private static final String DEFAULT_TOKEN_TYPE = "Bearer";
     /**
      * 편의 생성자 (tokenType 기본값: Bearer, 상세 정보 없음)
      */
     public TokenResponse(String accessToken, String refreshToken, UserType userType,
                          Integer userId, String username) {
-        this(accessToken, refreshToken, userType, userId, username, "Bearer",
-             null, null, null, null, null);
+        this(accessToken, refreshToken, userType, userId, username, DEFAULT_TOKEN_TYPE,
+             null, null, null, null, null, null);
     }
 
     /**
@@ -79,7 +85,16 @@ public record TokenResponse(
                          Integer userId, String username, String name,
                          ParamedicRank rank, ParamedicStatus status,
                          Integer fireStateId, String fireStateName) {
-        this(accessToken, refreshToken, userType, userId, username, "Bearer",
-             name, rank, status, fireStateId, fireStateName);
+        this(accessToken, refreshToken, userType, userId, username, DEFAULT_TOKEN_TYPE,
+             name, rank, status, fireStateId, fireStateName, null);
+    }
+
+    /**
+     * 편의 생성자 (병원 상세 정보 포함)
+     */
+    public TokenResponse(String accessToken, String refreshToken, UserType userType,
+                         Integer userId, String username, String officialName) {
+        this(accessToken, refreshToken, userType, userId, username, DEFAULT_TOKEN_TYPE,
+             null, null, null, null, null, officialName);
     }
 }

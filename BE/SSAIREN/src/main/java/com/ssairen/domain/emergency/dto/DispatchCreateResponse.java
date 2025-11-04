@@ -1,7 +1,6 @@
 package com.ssairen.domain.emergency.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.ssairen.domain.emergency.entity.Dispatch;
 
 import java.time.LocalDateTime;
 
