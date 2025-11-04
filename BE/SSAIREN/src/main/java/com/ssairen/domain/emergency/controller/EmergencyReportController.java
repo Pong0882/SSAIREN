@@ -65,10 +65,10 @@ public class EmergencyReportController implements EmergencyReportApi {
     }
 
     @Override
-    @GetMapping("/fire-state/{fireStateId}")
+    @GetMapping("/fire-state")
     public ResponseEntity<ApiResponse<List<FireStateEmergencyReportsResponse>>> getEmergencyReportsByFireState(
-            @PathVariable("fireStateId") @Positive(message = "소방서 ID는 양의 정수여야 합니다.") Integer fireStateId) {
-        List<FireStateEmergencyReportsResponse> response = emergencyReportService.getEmergencyReportsByFireState(fireStateId);
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
+        List<FireStateEmergencyReportsResponse> response = emergencyReportService.getEmergencyReportsByFireState(principal.getId());
         return ResponseEntity.ok(ApiResponse.success(response, "소방서 보고서 조회를 완료하였습니다."));
     }
 

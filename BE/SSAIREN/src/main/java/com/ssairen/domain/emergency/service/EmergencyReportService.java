@@ -28,8 +28,8 @@ public interface EmergencyReportService {
     /**
      * 특정 소방서의 모든 구급일지 조회
      *
-     * @param fireStateId 소방서 ID
+     * @param paramedicId 구급대원 ID
      * @return 소방서별 구급일지 목록 (List로 래핑)
      */
-    List<FireStateEmergencyReportsResponse> getEmergencyReportsByFireState(Integer fireStateId);
+    List<FireStateEmergencyReportsResponse> getEmergencyReportsByFireState(Integer paramedicId);
 }

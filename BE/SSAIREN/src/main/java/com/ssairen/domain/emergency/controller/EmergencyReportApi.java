@@ -1282,8 +1282,8 @@ public interface EmergencyReportApi {
     );
 
     @Operation(
-            summary = "특정 소방서 보고서 조회",
-            description = "특정 소방서의 모든 구급일지를 조회합니다."
+            summary = "소속 소방서 보고서 조회",
+            description = "현재 로그인한 구급대원이 소속된 소방서의 모든 구급일지를 조회합니다."
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
@@ -1363,10 +1363,9 @@ public interface EmergencyReportApi {
     )
     @ApiUnauthorizedError
     @ApiInternalServerError
-    @GetMapping("/fire-state/{fireStateId}")
+    @GetMapping("/fire-state")
     ResponseEntity<? extends ApiResponse> getEmergencyReportsByFireState(
-            @Parameter(description = "소방서 ID", required = true, example = "1")
-            @PathVariable("fireStateId") @Positive(message = "소방서 ID는 양의 정수여야 합니다.") Integer fireStateId
+            @AuthenticationPrincipal CustomUserPrincipal principal
     );
 
     @Operation(
