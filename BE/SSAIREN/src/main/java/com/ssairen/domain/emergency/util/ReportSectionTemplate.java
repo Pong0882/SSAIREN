@@ -10,6 +10,7 @@ import com.ssairen.global.exception.CustomException;
 import com.ssairen.global.exception.ErrorCode;
 
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 /**
  * 구급일지 섹션 타입별 스켈레톤 JSON 템플릿 제공
@@ -364,10 +365,12 @@ public class ReportSectionTemplate {
         // dispatch 노드를 ObjectNode로 캐스팅하여 수정 가능하게 함
         ObjectNode dispatchNode = (ObjectNode) template.get("dispatch");
 
-        // ISO 8601 형식으로 날짜/시간 포맷팅
+        // ISO 8601 형식으로 날짜/시간 포맷팅 (밀리초 제외)
         String reportDatetime = dispatch.getDate()
+                .truncatedTo(ChronoUnit.SECONDS)
                 .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         String departureTime = dispatch.getCreatedAt()
+                .truncatedTo(ChronoUnit.SECONDS)
                 .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
         // 실제 값으로 설정
