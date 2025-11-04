@@ -8,6 +8,12 @@ export interface FetchPatientsResult {
   currentPage: number;
 }
 
+export interface AcceptPatientResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+}
+
 export async function fetchPatientsApi({
   hospitalId,
   page = 1,
@@ -54,4 +60,73 @@ export async function fetchPatientsApi({
     totalElements: paginatedData.totalElements,
     currentPage: paginatedData.page,
   };
+}
+
+/**
+ * 환자 수용 가능 API
+ * @param hospitalSelectionId - 병원 선택 ID
+ */
+export async function acceptPatientApi(
+  hospitalSelectionId: number
+): Promise<AcceptPatientResponse> {
+  console.log('✅ 수용가능 API 호출:', { hospitalSelectionId });
+
+  const response = await axiosInstance<AcceptPatientResponse>({
+    method: 'PATCH',
+    url: `/api/hospital-selection/${hospitalSelectionId}`,
+    data: {
+      status: 'ACCEPTED',
+    },
+    requiresAuth: true,
+  } as any);
+
+  console.log('✅ 수용가능 API 응답:', response.data);
+
+  return response.data;
+}
+
+/**
+ * 환자 거절 API
+ * @param hospitalSelectionId - 병원 선택 ID
+ */
+export async function rejectPatientApi(
+  hospitalSelectionId: number
+): Promise<AcceptPatientResponse> {
+  console.log('❌ 거절 API 호출:', { hospitalSelectionId });
+
+  const response = await axiosInstance<AcceptPatientResponse>({
+    method: 'PATCH',
+    url: `/api/hospital-selection/${hospitalSelectionId}`,
+    data: {
+      status: 'REJECTED',
+    },
+    requiresAuth: true,
+  } as any);
+
+  console.log('❌ 거절 API 응답:', response.data);
+
+  return response.data;
+}
+
+/**
+ * 전화 요망 API
+ * @param hospitalSelectionId - 병원 선택 ID
+ */
+export async function callRequestApi(
+  hospitalSelectionId: number
+): Promise<AcceptPatientResponse> {
+  console.log('📞 전화요망 API 호출:', { hospitalSelectionId });
+
+  const response = await axiosInstance<AcceptPatientResponse>({
+    method: 'PATCH',
+    url: `/api/hospital-selection/${hospitalSelectionId}`,
+    data: {
+      status: 'CALLREQUEST',
+    },
+    requiresAuth: true,
+  } as any);
+
+  console.log('📞 전화요망 API 응답:', response.data);
+
+  return response.data;
 }

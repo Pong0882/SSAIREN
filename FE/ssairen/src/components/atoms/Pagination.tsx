@@ -53,7 +53,7 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="w-[30px] h-[30px] rounded-lg hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+        className="w-[30px] h-[30px] rounded-lg hover:bg-neutral-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
       >
         <img
           src={leftArrow}
@@ -79,7 +79,7 @@ export default function Pagination({
             className={`w-[30px] h-[30px] rounded-lg transition-colors flex items-center justify-center ${
               currentPage === page
                 ? "bg-primary-500 text-white font-semibold"
-                : "border border-neutral-300 text-neutral-700 hover:bg-neutral-50"
+                : "border border-neutral-300 text-white hover:bg-neutral-500"
             }`}
           >
             {page}
@@ -91,7 +91,7 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="w-[30px] h-[30px] rounded-lg hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+        className="w-[30px] h-[30px] rounded-lg hover:bg-neutral-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
       >
         <img
           src={rightArrow}

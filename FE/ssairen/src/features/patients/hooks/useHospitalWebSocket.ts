@@ -3,9 +3,11 @@ import { getWebSocketClient } from '@/lib/websocketClient';
 import { useAuthStore } from '@/features/auth/store/authStore';
 
 interface EmergencyRequest {
+  type?: string;          // 메시지 타입 (선택적)
   hospitalSelectionId: number;
   emergencyReportId: number;
-  patientInfo: {
+  status?: string;        // COMPLETED 메시지용
+  patientInfo?: {
     emergencyReportId: number;
     age: number;
     gender: string;
@@ -24,8 +26,15 @@ interface EmergencyRequest {
   };
 }
 
+interface CompletedMessage {
+  type: "COMPLETED";
+  hospitalSelectionId: number;
+  emergencyReportId: number;
+}
+
 interface UseHospitalWebSocketOptions {
   onNewRequest?: ((request: EmergencyRequest) => void) | undefined;
+  onCompleted?: ((message: CompletedMessage) => void) | undefined;
   onError?: (error: Error) => void;
 }
 
@@ -38,17 +47,27 @@ export function useHospitalWebSocket(options?: UseHospitalWebSocketOptions) {
   const wsClient = useRef(getWebSocketClient());
   const isConnecting = useRef(false);
 
-  const { onNewRequest, onError } = options || {};
+  const { onNewRequest, onCompleted, onError } = options || {};
 
   // 메시지 핸들러
   const handleMessage = useCallback(
-    (message: EmergencyRequest) => {
+    (message: EmergencyRequest | CompletedMessage) => {
+      // COMPLETED 메시지 처리
+      if (message.type === 'COMPLETED') {
+        console.log('❌ 요청 완료 알림:', message);
+        if (onCompleted) {
+          onCompleted(message as CompletedMessage);
+        }
+        return;
+      }
+
+      // 새로운 요청 처리
       console.log('🚨 새로운 수용 요청:', message);
       if (onNewRequest) {
-        onNewRequest(message);
+        onNewRequest(message as EmergencyRequest);
       }
     },
-    [onNewRequest]
+    [onNewRequest, onCompleted]
   );
 
   // WebSocket 연결 및 구독

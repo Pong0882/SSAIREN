@@ -53,8 +53,8 @@ export function TableRow({
   onClick,
 }: TableRowProps) {
   const variantStyles = {
-    default: "bg-white hover:bg-neutral-50",
-    alert: "bg-secondary-400 hover:bg-secondary-500",
+    default: "bg-neutral-100 hover:bg-neutral-300",
+    alert: "bg-secondary-300 hover:bg-secondary-400",
     warning: "bg-danger-100 hover:bg-danger-200",
   };
 
@@ -75,7 +75,8 @@ export function TableCell({
   header = false,
   className = "",
 }: TableCellProps) {
-  const baseStyles = "px-3 py-2 text-center text-sm border-r border-neutral-200 last:border-r-0";
+  const baseStyles =
+    "px-3 py-2 text-center text-sm border-r border-neutral-200 last:border-r-0";
   const headerStyles = header
     ? "font-semibold text-neutral-700"
     : "text-neutral-800";

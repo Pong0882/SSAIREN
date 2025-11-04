@@ -1,29 +1,30 @@
-import { ReactNode } from 'react'
+import { ReactNode } from "react";
 
 interface TabsProps {
-  children: ReactNode
-  className?: string
+  children: ReactNode;
+  className?: string;
 }
 
 interface TabButtonProps {
-  active?: boolean
-  onClick?: () => void
-  children: ReactNode
-  className?: string
+  active?: boolean;
+  onClick?: () => void;
+  children: ReactNode;
+  className?: string;
 }
 
-export function Tabs({ children, className = '' }: TabsProps) {
-  return (
-    <div className={`flex gap-2 ${className}`}>
-      {children}
-    </div>
-  )
+export function Tabs({ children, className = "" }: TabsProps) {
+  return <div className={`flex gap-2 ${className}`}>{children}</div>;
 }
 
-export function TabButton({ active = false, onClick, children, className = '' }: TabButtonProps) {
+export function TabButton({
+  active = false,
+  onClick,
+  children,
+  className = "",
+}: TabButtonProps) {
   const activeStyles = active
-    ? 'bg-primary-500 text-white border-2 border-primary-500'
-    : 'bg-transparent text-white border-2 border-white hover:bg-neutral-700 hover:border-neutral-700'
+    ? "bg-primary-500 text-white border-2 border-primary-500"
+    : "bg-transparent text-white border-2 border-white hover:bg-neutral-500 hover:border-neutral-700";
 
   return (
     <button
@@ -32,5 +33,5 @@ export function TabButton({ active = false, onClick, children, className = '' }:
     >
       {children}
     </button>
-  )
+  );
 }
