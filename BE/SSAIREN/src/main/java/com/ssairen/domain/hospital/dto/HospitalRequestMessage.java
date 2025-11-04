@@ -12,12 +12,14 @@ import lombok.*;
 @Builder
 public class HospitalRequestMessage {
 
+    private String type;  // "REQUEST"
     private Integer hospitalSelectionId;
     private Long emergencyReportId;
     private PatientInfoDto patientInfo;
 
     public static HospitalRequestMessage of(Integer hospitalSelectionId, Long emergencyReportId, PatientInfoDto patientInfo) {
         return HospitalRequestMessage.builder()
+                .type("REQUEST")
                 .hospitalSelectionId(hospitalSelectionId)
                 .emergencyReportId(emergencyReportId)
                 .patientInfo(patientInfo)
