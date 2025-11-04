@@ -39,11 +39,10 @@ public class EmergencyReportController implements EmergencyReportApi {
     }
 
     @Override
-    @GetMapping("/{paramedicId}")
+    @GetMapping("/me")
     public ResponseEntity<ApiResponse<ParamedicEmergencyReportResponse>> getEmergencyReportsByParamedic(
-            @PathVariable("paramedicId") @Positive(message = "구급대원 ID는 양의 정수여야 합니다.") Integer paramedicId) {
-        // TODO: JWT에서 구급대원 ID 추출하여 사용하도록 변경 필요
-        ParamedicEmergencyReportResponse response = emergencyReportService.getEmergencyReportsByParamedic(paramedicId);
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
+        ParamedicEmergencyReportResponse response = emergencyReportService.getEmergencyReportsByParamedic(principal.getId());
         return ResponseEntity.ok(ApiResponse.success(response, "구급대원이 작성한 보고서 조회를 완료하였습니다."));
     }
 

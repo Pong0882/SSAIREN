@@ -149,8 +149,8 @@ public interface EmergencyReportApi {
     );
 
     @Operation(
-            summary = "특정 구급대원 보고서 조회",
-            description = "특정 구급대원이 작성한 모든 보고서를 조회합니다."
+            summary = "내 보고서 조회",
+            description = "현재 로그인한 구급대원이 작성한 모든 보고서를 조회합니다."
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
@@ -260,10 +260,9 @@ public interface EmergencyReportApi {
     )
     @ApiUnauthorizedError
     @ApiInternalServerError
-    @GetMapping("/{paramedicId}")
+    @GetMapping("/me")
     ResponseEntity<ApiResponse<ParamedicEmergencyReportResponse>> getEmergencyReportsByParamedic(
-            @Parameter(description = "구급대원 ID", required = true, example = "1")
-            @PathVariable("paramedicId") @Positive(message = "구급대원 ID는 양의 정수여야 합니다.") Integer paramedicId
+            @AuthenticationPrincipal CustomUserPrincipal principal
     );
 
     @Operation(
