@@ -13,6 +13,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,7 +59,7 @@ public interface HospitalApi {
     ResponseEntity<ApiResponse<HospitalSelectionResponse>> createHospitalSelectionRequest(
             @Parameter(description = "병원 이송 요청 정보 (구급일지 ID, 병원 이름 목록)", required = true)
             @Valid @RequestBody HospitalSelectionRequest request,
-            @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal com.ssairen.global.security.dto.CustomUserPrincipal principal
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal principal
     );
 
     /**
@@ -92,7 +95,7 @@ public interface HospitalApi {
     @ApiInternalServerError
     ResponseEntity<ApiResponse<HospitalResponseDto>> respondToRequest(
             @Parameter(description = "병원 선택 ID", required = true, example = "48")
-            @PathVariable Integer hospitalSelectionId,
+            @PathVariable @Positive(message = "병원 선택 ID는 양의 정수여야 합니다.") Integer hospitalSelectionId,
             @Parameter(description = "병원 응답 정보 (status: ACCEPTED, REJECTED, CALLREQUEST)", required = true)
             @Valid @RequestBody HospitalResponseRequest request,
             @Parameter(hidden = true)
@@ -129,7 +132,7 @@ public interface HospitalApi {
     @ApiInternalServerError
     ResponseEntity<ApiResponse<List<HospitalRequestMessage>>> getPendingRequests(
             @Parameter(description = "병원 ID", required = true, example = "5")
-            @PathVariable Integer hospitalId,
+            @PathVariable @Positive(message = "병원 ID는 양의 정수여야 합니다.") Integer hospitalId,
             @Parameter(hidden = true)
             @AuthenticationPrincipal CustomUserPrincipal principal
     );
@@ -171,11 +174,11 @@ public interface HospitalApi {
     @ApiInternalServerError
     ResponseEntity<ApiResponse<PageResponse<AcceptedPatientDto>>> getAcceptedPatients(
             @Parameter(description = "병원 ID", required = true, example = "2")
-            @PathVariable Integer hospitalId,
+            @PathVariable @Positive(message = "병원 ID는 양의 정수여야 합니다.") Integer hospitalId,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "페이지 번호는 0 이상이어야 합니다.") int page,
             @Parameter(description = "페이지당 데이터 개수", example = "10")
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "페이지 크기는 1 이상이어야 합니다.") @Max(value = 100, message = "페이지 크기는 100 이하여야 합니다.") int size,
             @Parameter(description = "상태 필터 (all: 전체, accepted: 내원 대기만)", example = "all")
             @RequestParam(defaultValue = "all") String status,
             @Parameter(hidden = true)
@@ -212,9 +215,9 @@ public interface HospitalApi {
     @ApiInternalServerError
     ResponseEntity<ApiResponse<PatientInfoDto>> getPatientDetail(
             @Parameter(description = "병원 ID", required = true, example = "5")
-            @PathVariable Integer hospitalId,
+            @PathVariable @Positive(message = "병원 ID는 양의 정수여야 합니다.") Integer hospitalId,
             @Parameter(description = "구급일지 ID (환자 식별자)", required = true, example = "1")
-            @PathVariable Long emergencyReportId,
+            @PathVariable @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
             @Parameter(hidden = true)
             @AuthenticationPrincipal CustomUserPrincipal principal
     );
@@ -253,9 +256,9 @@ public interface HospitalApi {
     @ApiInternalServerError
     ResponseEntity<ApiResponse<PatientInfoDto>> updatePatientInfo(
             @Parameter(description = "병원 ID", required = true, example = "5")
-            @PathVariable Integer hospitalId,
+            @PathVariable @Positive(message = "병원 ID는 양의 정수여야 합니다.") Integer hospitalId,
             @Parameter(description = "구급일지 ID (환자 식별자)", required = true, example = "1")
-            @PathVariable Long emergencyReportId,
+            @PathVariable @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
             @Parameter(description = "환자 정보 수정 요청", required = true)
             @Valid @RequestBody UpdatePatientInfoRequest request,
             @Parameter(hidden = true)
@@ -290,9 +293,9 @@ public interface HospitalApi {
     @ApiInternalServerError
     ResponseEntity<ApiResponse<Void>> markPatientAsArrived(
             @Parameter(description = "병원 ID", required = true, example = "5")
-            @PathVariable Integer hospitalId,
+            @PathVariable @Positive(message = "병원 ID는 양의 정수여야 합니다.") Integer hospitalId,
             @Parameter(description = "구급일지 ID (환자 식별자)", required = true, example = "1")
-            @PathVariable Long emergencyReportId,
+            @PathVariable @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
             @Parameter(hidden = true)
             @AuthenticationPrincipal CustomUserPrincipal principal
     );
@@ -323,7 +326,7 @@ public interface HospitalApi {
     @ApiInternalServerError
     ResponseEntity<ApiResponse<HospitalSelectionStatusResponse>> getHospitalSelectionStatus(
             @Parameter(description = "구급일지 ID", required = true, example = "1")
-            @PathVariable("emergency_report_id") @jakarta.validation.constraints.Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
-            @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal com.ssairen.global.security.dto.CustomUserPrincipal principal
+            @PathVariable("emergency_report_id") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal principal
     );
 }
