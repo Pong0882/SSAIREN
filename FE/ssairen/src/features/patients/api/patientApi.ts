@@ -23,6 +23,14 @@ export async function fetchPatientsApi({
     params.append('status', status);
   }
 
+  console.log('📤 API 요청:', {
+    hospitalId,
+    page: page - 1,
+    size,
+    status,
+    url: `/api/hospitals/${hospitalId}/patients?${params}`,
+  });
+
   const response = await axiosInstance<PatientsResponse>({
     method: 'GET',
     url: `/api/hospitals/${hospitalId}/patients?${params}`,
@@ -31,6 +39,14 @@ export async function fetchPatientsApi({
 
   // API 응답 구조: { success, data: { content, page, size, totalElements, totalPages }, message, timestamp }
   const paginatedData = response.data.data;
+
+  console.log('📥 API 응답:', {
+    받은데이터개수: paginatedData.content.length,
+    요청한size: size,
+    totalPages: paginatedData.totalPages,
+    totalElements: paginatedData.totalElements,
+    currentPage: paginatedData.page,
+  });
 
   return {
     patients: paginatedData.content,

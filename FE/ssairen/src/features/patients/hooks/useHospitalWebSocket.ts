@@ -3,14 +3,25 @@ import { getWebSocketClient } from '@/lib/websocketClient';
 import { useAuthStore } from '@/features/auth/store/authStore';
 
 interface EmergencyRequest {
+  hospitalSelectionId: number;
   emergencyReportId: number;
   patientInfo: {
+    emergencyReportId: number;
     age: number;
     gender: string;
     chiefComplaint: string;
     mentalStatus: string;
+    hr: number;           // Heart Rate
+    bp: string;           // Blood Pressure
+    spo2: number;         // SpO2
+    rr: number;           // Respiratory Rate
+    bt: number;           // Body Temperature
+    hasGuardian: boolean; // 보호자 유무
+    hx: string;           // History
+    onsetTime: string;    // 발령 시간
+    lnt: string;          // LNT (Last Normal Time)
+    recordTime: string;   // 기록 시간
   };
-  timestamp: string;
 }
 
 interface UseHospitalWebSocketOptions {

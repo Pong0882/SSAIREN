@@ -13,7 +13,7 @@ export interface Patient {
   recordTime: RecordTime;
   chiefComplaint: string;
   mentalStatus: string;
-  status: "PENDING" | "COMPLETED";
+  status: string;
 }
 
 export interface ApiResponse<T> {
