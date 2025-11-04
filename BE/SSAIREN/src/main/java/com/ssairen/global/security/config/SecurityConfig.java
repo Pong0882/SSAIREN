@@ -30,6 +30,8 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private static final String ROLE_PARAMEDIC = "PARAMEDIC";
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
@@ -63,12 +65,12 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
 
                         // 구급대원 전용 엔드포인트
-                        .requestMatchers("/api/paramedics/**").hasRole("PARAMEDIC")
-                        .requestMatchers("/api/emergency/**").hasRole("PARAMEDIC")  // 구급일지 관련
-                        .requestMatchers("/api/dispatches/**").hasRole("PARAMEDIC")  // 출동 지령 관련
+                        .requestMatchers("/api/paramedics/**").hasRole(ROLE_PARAMEDIC)
+                        .requestMatchers("/api/emergency/**").hasRole(ROLE_PARAMEDIC)  // ������������ ������
+                        .requestMatchers("/api/dispatches/**").hasRole(ROLE_PARAMEDIC)  // ������ ������ ������
 
                         // 병원 선택 요청 관련 (더 구체적인 패턴 먼저)
-                        .requestMatchers("/api/hospital-selection/request").hasRole("PARAMEDIC")  // 요청 생성
+                        .requestMatchers("/api/hospital-selection/request").hasRole(ROLE_PARAMEDIC)  // ������ ������
                         .requestMatchers("/api/hospital-selection/**").hasRole("HOSPITAL")  // 요청 응답
 
                         // 병원 전용 엔드포인트
