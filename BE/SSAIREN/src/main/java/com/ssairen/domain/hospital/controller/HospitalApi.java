@@ -324,4 +324,43 @@ public interface HospitalApi {
             @Parameter(description = "구급일지 ID", required = true, example = "1")
             @PathVariable("emergency_report_id") Long emergencyReportId
     );
+
+    /**
+     * AI 기반 병원 추천 및 이송 요청
+     * - 환자 정보와 위치 정보를 기반으로 AI가 최적의 병원을 추천
+     * - 추천된 병원들에게 자동으로 웹소켓으로 이송 요청 전송
+     * - AI 추론 정보와 병원 선택 결과를 함께 반환
+     */
+    @Operation(
+            summary = "AI 기반 병원 추천 및 이송 요청",
+            description = "환자의 상태 정보와 현재 위치를 기반으로 AI가 최적의 병원을 추천하고, " +
+                    "추천된 병원들에게 자동으로 웹소켓을 통해 이송 요청을 전송합니다. " +
+                    "구급일지 ID, 위도, 경도, 검색 반경을 입력하면 AI가 환자 정보를 분석하여 적합한 병원 목록을 추천하고, " +
+                    "해당 병원들에게 실시간으로 알림을 전송합니다. " +
+                    "응답에는 AI의 추론 과정(GPT reasoning), 추천 병원 목록, 생성된 병원 이송 요청 정보가 포함됩니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "추천 및 요청 전송 성공",
+                    content = @Content(schema = @Schema(implementation = AiHospitalRecommendationResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (유효하지 않은 입력값)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "구급일지를 찾을 수 없음 또는 추천된 병원을 찾을 수 없음"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "502",
+                    description = "AI 서버 연결 실패"
+            )
+    })
+    @ApiInternalServerError
+    ResponseEntity<ApiResponse<AiHospitalRecommendationResponse>> getAiHospitalRecommendation(
+            @Parameter(description = "AI 병원 추천 요청 정보 (구급일지 ID, 위도, 경도, 반경)", required = true)
+            @Valid @RequestBody HospitalAiRecommendationRequest request
+    );
 }

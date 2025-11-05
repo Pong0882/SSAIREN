@@ -47,8 +47,8 @@ public class HospitalService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${ai.recommendation.api.url:http://localhost:8000/api/emergency/recommend}")
-    private String aiRecommendationApiUrl;
+    @Value("${ai.server.base-url:http://localhost:8000}")
+    private String aiServerBaseUrl;
 
     /**
      * 병원 이송 요청 생성
@@ -58,8 +58,8 @@ public class HospitalService {
      */
     @Transactional
     public HospitalSelectionResponse createHospitalSelectionRequest(HospitalSelectionRequest request) {
-        log.info(LOG_PREFIX + "병원 이송 요청 생성 시작 - 구급일지 ID: {}, 위도: {}, 경도: {}, 반경: {}",
-                request.getEmergencyReportId(), request.getLatitude(), request.getLongitude(), request.getRadius());
+        log.info(LOG_PREFIX + "병원 이송 요청 생성 시작 - 구급일지 ID: {}, 병원 개수: {}",
+                request.getEmergencyReportId(), request.getHospitalNames().size());
 
         // 1. 구급일지 조회
         EmergencyReport emergencyReport = emergencyReportRepository.findById(request.getEmergencyReportId())
@@ -76,70 +76,18 @@ public class HospitalService {
             log.warn(LOG_PREFIX + "환자 정보가 없습니다 - 구급일지 ID: {}", request.getEmergencyReportId());
         }
 
-        // 3. 환자 정보를 JSON 문자열로 변환
-        String patientConditionJson;
-        try {
-            patientConditionJson = objectMapper.writeValueAsString(patientInfoDto);
-            log.info(LOG_PREFIX + "환자 정보 JSON 변환 완료 - 구급일지 ID: {}", request.getEmergencyReportId());
-        } catch (Exception e) {
-            log.error(LOG_PREFIX + "환자 정보 JSON 변환 실패 - 구급일지 ID: {}, 에러: {}",
-                    request.getEmergencyReportId(), e.getMessage(), e);
-            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "환자 정보를 JSON으로 변환하는 데 실패했습니다.");
+        // 3. 병원 목록 조회
+        List<Hospital> hospitals = hospitalRepository.findByNameIn(request.getHospitalNames());
+
+        // 3. 요청된 병원 중 찾지 못한 병원이 있는지 확인
+        if (hospitals.size() != request.getHospitalNames().size()) {
+            log.warn(LOG_PREFIX + "일부 병원을 찾을 수 없습니다 - 요청: {}, 찾은 개수: {}",
+                    request.getHospitalNames().size(), hospitals.size());
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND,
+                    "요청한 병원 중 일부를 찾을 수 없습니다.");
         }
 
-        // 4. AI API 호출
-        AiRecommendationRequest aiRequest = AiRecommendationRequest.builder()
-                .patientCondition(patientConditionJson)
-                .latitude(request.getLatitude())
-                .longitude(request.getLongitude())
-                .radius(request.getRadius())
-                .build();
-
-        AiRecommendationResponse aiResponse;
-        try {
-            log.info(LOG_PREFIX + "AI API 호출 시작 - URL: {}", aiRecommendationApiUrl);
-            aiResponse = restTemplate.postForObject(aiRecommendationApiUrl, aiRequest, AiRecommendationResponse.class);
-
-            if (aiResponse == null || !aiResponse.getSuccess()) {
-                log.error(LOG_PREFIX + "AI API 호출 실패 - 응답이 null이거나 success가 false입니다.");
-                throw new CustomException(ErrorCode.EXTERNAL_API_ERROR, "AI 추천 API 호출에 실패했습니다.");
-            }
-
-            log.info(LOG_PREFIX + "AI API 호출 성공 - 추천 병원 수: {}, 전체 병원 수: {}",
-                    aiResponse.getRecommendedHospitals().size(), aiResponse.getTotalHospitalsFound());
-
-            // AI 추론 정보 로그 출력
-            if (aiResponse.getGptReasoning() != null) {
-                log.info(LOG_PREFIX + "AI 추론 정보: {}", aiResponse.getGptReasoning());
-            }
-            if (aiResponse.getReasoningTime() != null) {
-                log.info(LOG_PREFIX + "AI 추론 시간: {}초", aiResponse.getReasoningTime());
-            }
-            if (aiResponse.getHospitalsDetail() != null) {
-                log.info(LOG_PREFIX + "병원 상세 정보: {}", aiResponse.getHospitalsDetail());
-            }
-        } catch (Exception e) {
-            log.error(LOG_PREFIX + "AI API 호출 중 예외 발생 - 에러: {}", e.getMessage(), e);
-            throw new CustomException(ErrorCode.EXTERNAL_API_ERROR, "AI 추천 API 호출 중 오류가 발생했습니다: " + e.getMessage());
-        }
-
-        // 5. recommended_hospitals로 병원 조회
-        List<String> recommendedHospitalNames = aiResponse.getRecommendedHospitals();
-        if (recommendedHospitalNames == null || recommendedHospitalNames.isEmpty()) {
-            log.warn(LOG_PREFIX + "추천된 병원이 없습니다 - 구급일지 ID: {}", request.getEmergencyReportId());
-            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND, "추천된 병원이 없습니다.");
-        }
-
-        List<Hospital> hospitals = hospitalRepository.findByNameIn(recommendedHospitalNames);
-
-        // 6. 요청된 병원 중 찾지 못한 병원이 있는지 확인
-        if (hospitals.size() != recommendedHospitalNames.size()) {
-            log.warn(LOG_PREFIX + "일부 추천 병원을 찾을 수 없습니다 - 추천: {}, 찾은 개수: {}",
-                    recommendedHospitalNames.size(), hospitals.size());
-            // 찾은 병원만 사용하도록 계속 진행
-        }
-
-        // 7. HospitalSelection 생성 및 저장
+        // 4. HospitalSelection 생성 및 저장
         List<HospitalSelection> selections = new ArrayList<>();
         for (Hospital hospital : hospitals) {
             HospitalSelection selection = HospitalSelection.builder()
@@ -150,7 +98,7 @@ public class HospitalService {
             HospitalSelection savedSelection = hospitalSelectionRepository.save(selection);
             selections.add(savedSelection);
 
-            // 8. 각 병원에게 웹소켓으로 요청 메시지 전송 (환자 정보 포함)
+            // 5. 각 병원에게 웹소켓으로 요청 메시지 전송 (환자 정보 포함)
             String topic = "/topic/hospital." + hospital.getId();
             HospitalRequestMessage message = HospitalRequestMessage.of(
                     savedSelection.getId(),
@@ -174,7 +122,7 @@ public class HospitalService {
         log.info(LOG_PREFIX + "병원 이송 요청 생성 완료 - 구급일지 ID: {}, 요청 병원 수: {}",
                 request.getEmergencyReportId(), selections.size());
 
-        // 9. 응답 생성
+        // 6. 응답 생성
         return HospitalSelectionResponse.from(request.getEmergencyReportId(), selections);
     }
 
@@ -641,5 +589,150 @@ public class HospitalService {
 
         // 4. 응답 생성
         return HospitalSelectionStatusResponse.of(emergencyReportId, hospitalStatuses);
+    }
+
+    /**
+     * AI 기반 병원 추천 및 이송 요청 생성
+     *
+     * @param emergencyReportId 구급일지 ID
+     * @param latitude 위도
+     * @param longitude 경도
+     * @param radius 반경 (미터)
+     * @return AI 추천 병원 목록 및 병원 이송 요청 결과
+     */
+    @Transactional
+    public AiHospitalRecommendationResponse getAiHospitalRecommendation(
+            Long emergencyReportId,
+            Double latitude,
+            Double longitude,
+            Integer radius
+    ) {
+        log.info(LOG_PREFIX + "AI 병원 추천 및 이송 요청 시작 - 구급일지 ID: {}, 위도: {}, 경도: {}, 반경: {}",
+                emergencyReportId, latitude, longitude, radius);
+
+        // 1. 구급일지 조회
+        EmergencyReport emergencyReport = emergencyReportRepository.findById(emergencyReportId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
+
+        // 2. 환자 정보 조회
+        Optional<PatientInfo> patientInfoOptional = patientInfoRepository.findById(emergencyReportId);
+        PatientInfoDto patientInfoDto = patientInfoOptional.map(PatientInfoDto::from).orElse(null);
+
+        if (patientInfoDto != null) {
+            log.info(LOG_PREFIX + "환자 정보 조회 성공 - 구급일지 ID: {}, 나이: {}, 성별: {}",
+                    patientInfoDto.getEmergencyReportId(), patientInfoDto.getAge(), patientInfoDto.getGender());
+        } else {
+            log.warn(LOG_PREFIX + "환자 정보가 없습니다 - 구급일지 ID: {}", emergencyReportId);
+        }
+
+        // 3. 환자 정보를 JSON 문자열로 변환
+        String patientConditionJson;
+        try {
+            patientConditionJson = objectMapper.writeValueAsString(patientInfoDto);
+            log.info(LOG_PREFIX + "환자 정보 JSON 변환 완료 - 구급일지 ID: {}", emergencyReportId);
+        } catch (Exception e) {
+            log.error(LOG_PREFIX + "환자 정보 JSON 변환 실패 - 구급일지 ID: {}, 에러: {}",
+                    emergencyReportId, e.getMessage(), e);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "환자 정보를 JSON으로 변환하는 데 실패했습니다.");
+        }
+
+        // 4. AI API 호출
+        AiRecommendationRequest aiRequest = AiRecommendationRequest.builder()
+                .patientCondition(patientConditionJson)
+                .latitude(latitude)
+                .longitude(longitude)
+                .radius(radius)
+                .build();
+
+        AiRecommendationResponse aiResponse;
+        try {
+            String aiRecommendationUrl = aiServerBaseUrl + "/api/emergency/recommend";
+            log.info(LOG_PREFIX + "AI API 호출 시작 - URL: {}", aiRecommendationUrl);
+            aiResponse = restTemplate.postForObject(aiRecommendationUrl, aiRequest, AiRecommendationResponse.class);
+
+            if (aiResponse == null || !aiResponse.getSuccess()) {
+                log.error(LOG_PREFIX + "AI API 호출 실패 - 응답이 null이거나 success가 false입니다.");
+                throw new CustomException(ErrorCode.EXTERNAL_API_ERROR, "AI 추천 API 호출에 실패했습니다.");
+            }
+
+            log.info(LOG_PREFIX + "AI API 호출 성공 - 추천 병원 수: {}, 전체 병원 수: {}",
+                    aiResponse.getRecommendedHospitals().size(), aiResponse.getTotalHospitalsFound());
+
+            // AI 추론 정보 로그 출력
+            if (aiResponse.getGptReasoning() != null) {
+                log.info(LOG_PREFIX + "AI 추론 정보: {}", aiResponse.getGptReasoning());
+            }
+            if (aiResponse.getReasoningTime() != null) {
+                log.info(LOG_PREFIX + "AI 추론 시간: {}초", aiResponse.getReasoningTime());
+            }
+            if (aiResponse.getHospitalsDetail() != null) {
+                log.info(LOG_PREFIX + "병원 상세 정보: {}", aiResponse.getHospitalsDetail());
+            }
+        } catch (Exception e) {
+            log.error(LOG_PREFIX + "AI API 호출 중 예외 발생 - 에러: {}", e.getMessage(), e);
+            throw new CustomException(ErrorCode.EXTERNAL_API_ERROR, "AI 추천 API 호출 중 오류가 발생했습니다: " + e.getMessage());
+        }
+
+        // 5. recommended_hospitals로 병원 조회
+        List<String> recommendedHospitalNames = aiResponse.getRecommendedHospitals();
+        if (recommendedHospitalNames == null || recommendedHospitalNames.isEmpty()) {
+            log.warn(LOG_PREFIX + "추천된 병원이 없습니다 - 구급일지 ID: {}", emergencyReportId);
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND, "추천된 병원이 없습니다.");
+        }
+
+        List<Hospital> hospitals = hospitalRepository.findByNameIn(recommendedHospitalNames);
+
+        // 6. 요청된 병원 중 찾지 못한 병원이 있는지 확인
+        if (hospitals.isEmpty()) {
+            log.warn(LOG_PREFIX + "추천된 병원을 DB에서 찾을 수 없습니다 - 구급일지 ID: {}", emergencyReportId);
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND, "추천된 병원을 찾을 수 없습니다.");
+        }
+
+        if (hospitals.size() != recommendedHospitalNames.size()) {
+            log.warn(LOG_PREFIX + "일부 추천 병원을 찾을 수 없습니다 - 추천: {}, 찾은 개수: {}",
+                    recommendedHospitalNames.size(), hospitals.size());
+            // 찾은 병원만 사용하도록 계속 진행
+        }
+
+        // 7. HospitalSelection 생성 및 저장
+        List<HospitalSelection> selections = new ArrayList<>();
+        for (Hospital hospital : hospitals) {
+            HospitalSelection selection = HospitalSelection.builder()
+                    .emergencyReport(emergencyReport)
+                    .hospital(hospital)
+                    .status(HospitalSelectionStatus.PENDING)
+                    .build();
+            HospitalSelection savedSelection = hospitalSelectionRepository.save(selection);
+            selections.add(savedSelection);
+
+            // 8. 각 병원에게 웹소켓으로 요청 메시지 전송 (환자 정보 포함)
+            String topic = "/topic/hospital." + hospital.getId();
+            HospitalRequestMessage message = HospitalRequestMessage.of(
+                    savedSelection.getId(),
+                    emergencyReportId,
+                    patientInfoDto
+            );
+
+            log.info(LOG_PREFIX + "웹소켓 메시지 전송 시작 - 병원 ID: {}, 토픽: {}, 환자 정보 포함: {}",
+                    hospital.getId(), topic, (patientInfoDto != null));
+
+            try {
+                messagingTemplate.convertAndSend(topic, message);
+                log.info(LOG_PREFIX + "웹소켓 메시지 전송 성공 - 병원 ID: {}, 병원명: {}, 토픽: {}",
+                        hospital.getId(), hospital.getName(), topic);
+            } catch (Exception e) {
+                log.error(LOG_PREFIX + "웹소켓 메시지 전송 실패 - 병원 ID: {}, 에러: {}",
+                        hospital.getId(), e.getMessage(), e);
+            }
+        }
+
+        log.info(LOG_PREFIX + "AI 병원 추천 및 이송 요청 완료 - 구급일지 ID: {}, 추천 병원 수: {}, 요청 병원 수: {}",
+                emergencyReportId, aiResponse.getRecommendedHospitals().size(), selections.size());
+
+        // 9. HospitalSelectionResponse 생성
+        HospitalSelectionResponse selectionResponse = HospitalSelectionResponse.from(emergencyReportId, selections);
+
+        // 10. 통합 응답 생성
+        return AiHospitalRecommendationResponse.of(emergencyReportId, aiResponse, selectionResponse);
     }
 }

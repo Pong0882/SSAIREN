@@ -74,6 +74,7 @@ public class SecurityConfig {
 
                         // 병원 선택 요청 관련 (더 구체적인 패턴 먼저)
                         .requestMatchers("/api/hospital-selection/request").hasRole(ROLE_PARAMEDIC)  // ������ ������
+                        .requestMatchers("/api/hospital-selection/ai-recommendation").hasRole(ROLE_PARAMEDIC)  // AI 병원 추천
                         .requestMatchers("/api/hospital-selection/**").hasRole("HOSPITAL")  // 요청 응답
 
                         // 병원 전용 엔드포인트

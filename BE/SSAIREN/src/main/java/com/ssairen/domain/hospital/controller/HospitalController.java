@@ -175,4 +175,21 @@ public class HospitalController implements HospitalApi {
                 ApiResponse.success(response, "병원 선택 상태를 조회했습니다.")
         );
     }
+
+    @Override
+    @PostMapping("/hospital-selection/ai-recommendation")
+    public ResponseEntity<ApiResponse<AiHospitalRecommendationResponse>> getAiHospitalRecommendation(
+            @Valid @RequestBody HospitalAiRecommendationRequest request
+    ) {
+        AiHospitalRecommendationResponse response = hospitalService.getAiHospitalRecommendation(
+                request.getEmergencyReportId(),
+                request.getLatitude(),
+                request.getLongitude(),
+                request.getRadius()
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(response, "AI 기반 병원 추천 및 이송 요청이 완료되었습니다.")
+        );
+    }
 }
