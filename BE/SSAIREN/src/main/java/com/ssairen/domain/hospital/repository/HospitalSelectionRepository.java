@@ -121,6 +121,49 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     );
 
     /**
+     * 특정 병원의 환자 전체 개수 조회 (필터 + 기간)
+     *
+     * @param hospitalId 병원 ID
+     * @param statuses 필터링할 상태 목록
+     * @param startDateTime 시작 날짜 (null이면 전체 기간)
+     */
+    @Query(value = "SELECT COUNT(*) FROM hospital_selection hs " +
+            "WHERE hs.hospital_id = :hospitalId " +
+            "AND hs.status IN (:statuses) " +
+            "AND hs.response_at >= COALESCE(:startDateTime, '1900-01-01'::timestamp)",
+            nativeQuery = true)
+    long countPatientsByHospitalIdAndStatusesAndDateRange(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("statuses") List<String> statuses,
+            @Param("startDateTime") LocalDateTime startDateTime
+    );
+
+    /**
+     * 특정 병원의 환자 목록 조회 (페이지네이션 + 필터 + 기간)
+     * EmergencyReport Fetch Join은 별도 쿼리로 처리
+     *
+     * @param hospitalId 병원 ID
+     * @param statuses 필터링할 상태 목록 (ACCEPTED, ARRIVED)
+     * @param startDateTime 시작 날짜 (null이면 전체 기간)
+     * @param offset 시작 위치 (페이지 * 크기)
+     * @param limit 페이지 크기
+     */
+    @Query(value = "SELECT * FROM hospital_selection hs " +
+            "WHERE hs.hospital_id = :hospitalId " +
+            "AND hs.status IN (:statuses) " +
+            "AND hs.response_at >= COALESCE(:startDateTime, '1900-01-01'::timestamp) " +
+            "ORDER BY hs.response_at DESC " +
+            "LIMIT :limit OFFSET :offset",
+            nativeQuery = true)
+    List<HospitalSelection> findPatientsByHospitalIdWithPaginationAndDateRange(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("statuses") List<String> statuses,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("offset") int offset,
+            @Param("limit") int limit
+    );
+
+    /**
      * 병원이 특정 환자를 수용했는지 확인 (ACCEPTED 또는 ARRIVED 상태)
      */
     @Query("SELECT COUNT(hs) > 0 FROM HospitalSelection hs " +

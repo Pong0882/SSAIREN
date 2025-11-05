@@ -150,6 +150,10 @@ public interface HospitalApi {
                     "**status 파라미터 설명:**\n" +
                     "- `all`: ACCEPTED(내원 대기) + ARRIVED(내원 완료) 모두 조회 (기본값)\n" +
                     "- `accepted`: ACCEPTED(내원 대기) 상태만 조회\n\n" +
+                    "**dateRange 파라미터 설명:**\n" +
+                    "- `all`: 전체 기간 (기본값)\n" +
+                    "- `week`: 최근 일주일\n" +
+                    "- `month`: 최근 한달\n\n" +
                     "**페이지네이션 예시:**\n" +
                     "- 1페이지 (1-10번): `page=0&size=10`\n" +
                     "- 2페이지 (11-20번): `page=1&size=10`\n" +
@@ -181,6 +185,8 @@ public interface HospitalApi {
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "페이지 크기는 1 이상이어야 합니다.") @Max(value = 100, message = "페이지 크기는 100 이하여야 합니다.") int size,
             @Parameter(description = "상태 필터 (all: 전체, accepted: 내원 대기만)", example = "all")
             @RequestParam(defaultValue = "all") String status,
+            @Parameter(description = "기간 필터 (all: 전체, week: 최근 일주일, month: 최근 한달)", example = "all")
+            @RequestParam(defaultValue = "all") String dateRange,
             @Parameter(hidden = true)
             @AuthenticationPrincipal CustomUserPrincipal principal
     );
