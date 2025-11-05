@@ -12,7 +12,12 @@ import {
   Modal,
 } from "@/components";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { fetchPatientsApi, fetchPatientDetailApi, completePatientArrivalApi, type PatientDetailResponse } from "@/features/patients/api/patientApi";
+import {
+  fetchPatientsApi,
+  fetchPatientDetailApi,
+  completePatientArrivalApi,
+  type PatientDetailResponse,
+} from "@/features/patients/api/patientApi";
 import type { Patient } from "@/features/patients/types/patient.types";
 
 export default function PatientListPage() {
@@ -27,8 +32,11 @@ export default function PatientListPage() {
 
   // 상세 정보 모달 상태
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<PatientDetailResponse["data"] | null>(null);
-  const [selectedPatientStatus, setSelectedPatientStatus] = useState<string>("");
+  const [selectedPatient, setSelectedPatient] = useState<
+    PatientDetailResponse["data"] | null
+  >(null);
+  const [selectedPatientStatus, setSelectedPatientStatus] =
+    useState<string>("");
   const [detailLoading, setDetailLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -51,7 +59,6 @@ export default function PatientListPage() {
       });
 
       setPatients(result.patients);
-      console.log("patients", patients);
       setTotalPages(result.totalPages);
     } catch (err) {
       setError(
@@ -78,10 +85,23 @@ export default function PatientListPage() {
       fetchPatients();
     };
 
+    const handlePatientRequestHandled = () => {
+      console.log("✅ PatientListPage: 요청 처리 완료, 테이블 새로고침");
+      fetchPatients();
+    };
+
     window.addEventListener("newPatientRequest", handleNewPatientRequest);
+    window.addEventListener(
+      "patientRequestHandled",
+      handlePatientRequestHandled
+    );
 
     return () => {
       window.removeEventListener("newPatientRequest", handleNewPatientRequest);
+      window.removeEventListener(
+        "patientRequestHandled",
+        handlePatientRequestHandled
+      );
     };
   }, [fetchPatients]);
 
@@ -100,7 +120,10 @@ export default function PatientListPage() {
     setSelectedPatientStatus(patient.status); // 환자 상태 저장
 
     try {
-      const response = await fetchPatientDetailApi(user.id, patient.emergencyReportId);
+      const response = await fetchPatientDetailApi(
+        user.id,
+        patient.emergencyReportId
+      );
       setSelectedPatient(response.data);
     } catch (err) {
       console.error("환자 상세 정보 조회 실패:", err);
@@ -117,6 +140,8 @@ export default function PatientListPage() {
     setSelectedPatient(null);
     setSelectedPatientStatus("");
     setIsExpanded(false);
+    // 모달이 닫힐 때 테이블 새로고침
+    fetchPatients();
   };
 
   // 내원완료 처리
@@ -126,7 +151,10 @@ export default function PatientListPage() {
     try {
       console.log("🏥 내원완료 버튼 클릭:", selectedPatient.emergencyReportId);
 
-      const result = await completePatientArrivalApi(user.id, selectedPatient.emergencyReportId);
+      const result = await completePatientArrivalApi(
+        user.id,
+        selectedPatient.emergencyReportId
+      );
 
       console.log("🏥 내원완료 성공:", result);
 
@@ -142,14 +170,23 @@ export default function PatientListPage() {
   };
 
   // recordTime을 문자열로 포맷하는 헬퍼 함수
-  const formatRecordTime = (recordTime: Patient["recordTime"]) => {
-    if (typeof recordTime === "string") return recordTime;
+  const formatRecordTime = (recordTime: Patient["recordTime"] | string) => {
+    // 문자열인 경우
+    if (typeof recordTime === "string") {
+      // "2025-11-05T09:20:00" 형식인 경우 "T"를 공백으로 변경
+      return recordTime.replace("T", " ");
+    }
 
-    const { hour, minute, second } = recordTime;
-    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(
-      2,
-      "0"
-    )}:${String(second).padStart(2, "0")}`;
+    // 객체인 경우
+    if (recordTime && typeof recordTime === "object" && "hour" in recordTime) {
+      const { hour, minute, second } = recordTime;
+      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(
+        2,
+        "0"
+      )}:${String(second).padStart(2, "0")}`;
+    }
+
+    return "-";
   };
 
   return (
@@ -313,7 +350,8 @@ export default function PatientListPage() {
                     시간 <span className="text-danger-500">*</span>
                   </label>
                   <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
-                    {selectedPatient.recordTime}
+                    {selectedPatient.recordTime?.replace("T", " ") ||
+                      selectedPatient.recordTime}
                   </div>
                 </div>
                 <div>
@@ -457,7 +495,8 @@ export default function PatientListPage() {
                       발병 시간 <span className="text-danger-500">*</span>
                     </label>
                     <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
-                      {selectedPatient.onsetTime}
+                      {selectedPatient.onsetTime?.replace("T", " ") ||
+                        selectedPatient.onsetTime}
                     </div>
                   </div>
                   <div>
@@ -465,7 +504,8 @@ export default function PatientListPage() {
                       LNT <span className="text-danger-500">*</span>
                     </label>
                     <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
-                      {selectedPatient.lnt}
+                      {selectedPatient.lnt?.replace("T", " ") ||
+                        selectedPatient.lnt}
                     </div>
                   </div>
                 </div>

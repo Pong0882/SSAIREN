@@ -157,6 +157,8 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
       setIsModalOpen(false);
       setCurrentIndex(0);
       setRequestQueue([]);
+      // 모달이 닫힐 때 테이블 새로고침 이벤트 발생
+      window.dispatchEvent(new CustomEvent("patientRequestHandled"));
       return;
     }
 
@@ -166,6 +168,8 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     }
 
     setRequestQueue(newQueue);
+    // 요청 처리 시 테이블 새로고침 이벤트 발생
+    window.dispatchEvent(new CustomEvent("patientRequestHandled"));
   };
 
   // 모든 요청 닫기
@@ -359,11 +363,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
                         시간 <span className="text-danger-500">*</span>
                       </label>
                       <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
-                        {currentRequest.patientInfo?.recordTime
-                          ?.split("T")[1]
-                          ?.substring(0, 5) ||
-                          currentRequest.patientInfo?.recordTime ||
-                          "-"}
+                        {currentRequest.patientInfo?.recordTime?.replace("T", " ") || "-"}
                       </div>
                     </div>
                     <div>
@@ -510,7 +510,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
                           발병 시간 <span className="text-danger-500">*</span>
                         </label>
                         <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
-                          {currentRequest.patientInfo?.onsetTime || "09:55"}
+                          {currentRequest.patientInfo?.onsetTime?.replace("T", " ") || currentRequest.patientInfo?.onsetTime || "-"}
                         </div>
                       </div>
                       <div>
@@ -518,7 +518,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
                           LNT <span className="text-danger-500">*</span>
                         </label>
                         <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
-                          {currentRequest.patientInfo?.lnt || "09:55"}
+                          {currentRequest.patientInfo?.lnt?.replace("T", " ") || currentRequest.patientInfo?.lnt || "-"}
                         </div>
                       </div>
                     </div>
