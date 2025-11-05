@@ -27,6 +27,8 @@ export const useAuthStore = create<AuthState>()(
 
       // 로그인 성공 시 인증 정보 저장 (TokenResponse에서 User 객체 추출)
       setAuth: (tokenResponse) => {
+        console.log('🔐 [authStore] setAuth 호출됨:', tokenResponse);
+
         const user: User = {
           id: tokenResponse.userId,
           username: tokenResponse.username,
@@ -37,12 +39,16 @@ export const useAuthStore = create<AuthState>()(
           officialName: tokenResponse.officialName // 병원 공식 명칭
         }
 
+        console.log('👤 [authStore] 생성된 user 객체:', user);
+
         set({
           user,
           accessToken: tokenResponse.accessToken,
           refreshToken: tokenResponse.refreshToken,
           isAuthenticated: true,
         })
+
+        console.log('✅ [authStore] 상태 업데이트 완료');
       },
 
       // 로그아웃 시 인증 정보 초기화
