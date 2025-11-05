@@ -43,7 +43,7 @@ public class OpenApiConfig {
                                 "5. 'Authorize' 클릭\n\n" +
                                 "**테스트 계정:**\n" +
                                 "- 구급대원: `userType=PARAMEDIC`, `username=20240001`, `password=Password123!`\n" +
-                                "- 병원: `userType=HOSPITAL`, `username=서울대병원`, `password=Password123!`"))
+                                "- 병원: `userType=HOSPITAL`, `username=서울대`, `password=Password123!`"))
                 .servers(List.of(
                         new Server()
                                 .url("https://api.ssairen.site")
