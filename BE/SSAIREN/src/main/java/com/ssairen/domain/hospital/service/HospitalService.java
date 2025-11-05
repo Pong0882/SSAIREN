@@ -171,6 +171,15 @@ public class HospitalService {
         // 5. ACCEPTED 상태인 경우, 같은 EmergencyReport의 다른 HospitalSelection들을 COMPLETED로 변경
         if (request.getStatus() == HospitalSelectionStatus.ACCEPTED) {
             Long emergencyReportId = selection.getEmergencyReport().getId();
+
+            // 5-1. COMPLETED로 변경할 다른 선택들 조회 (웹소켓 메시지 전송을 위해)
+            List<HospitalSelection> otherSelections = hospitalSelectionRepository
+                    .findByEmergencyReportIdAndStatusNotIn(
+                            emergencyReportId,
+                            hospitalSelectionId
+                    );
+
+            // 5-2. 상태를 COMPLETED로 변경
             int updatedCount = hospitalSelectionRepository.updateOtherSelectionsToCompleted(
                     emergencyReportId,
                     hospitalSelectionId,
@@ -180,6 +189,29 @@ public class HospitalService {
 
             log.info(LOG_PREFIX + "다른 병원 요청 완료 처리 - 구급일지 ID: {}, 완료 처리된 요청 수: {}",
                     emergencyReportId, updatedCount);
+
+            // 5-3. 거절된 병원들에게 웹소켓으로 COMPLETED 메시지 전송
+            for (HospitalSelection otherSelection : otherSelections) {
+                Integer otherHospitalId = otherSelection.getHospital().getId();
+                String topic = "/topic/hospital." + otherHospitalId;
+
+                HospitalCompletedMessage completedMessage = HospitalCompletedMessage.of(
+                        otherSelection.getId(),
+                        emergencyReportId
+                );
+
+                log.info(LOG_PREFIX + "웹소켓 COMPLETED 메시지 전송 시작 - 병원 ID: {}, 토픽: {}, 선택 ID: {}",
+                        otherHospitalId, topic, otherSelection.getId());
+
+                try {
+                    messagingTemplate.convertAndSend(topic, completedMessage);
+                    log.info(LOG_PREFIX + "✅ 웹소켓 COMPLETED 메시지 전송 성공 - 병원 ID: {}, 토픽: {}",
+                            otherHospitalId, topic);
+                } catch (Exception e) {
+                    log.error(LOG_PREFIX + "❌ 웹소켓 COMPLETED 메시지 전송 실패 - 병원 ID: {}, 에러: {}",
+                            otherHospitalId, e.getMessage(), e);
+                }
+            }
         }
 
         // 6. 저장
@@ -386,8 +418,8 @@ public class HospitalService {
             }
         }
 
-        log.info(LOG_PREFIX + "수용한 환자 목록 조회 완료 (페이지네이션) - 병원 ID: {}, 반환 개수: {}, 전체: {}",
-                hospitalId, acceptedPatients.size(), totalElements);
+        log.info(LOG_PREFIX + "수용한 환자 목록 조회 완료 (페이지네이션) - 병원 ID: {}, 현재 페이지 반환: {}개, 전체 환자 수: {}개, 페이지: {}/{}",
+                hospitalId, acceptedPatients.size(), totalElements, page + 1, (int) Math.ceil((double) totalElements / size));
 
         // 7. PageResponse 생성 및 반환
         return PageResponse.of(acceptedPatients, page, size, totalElements);

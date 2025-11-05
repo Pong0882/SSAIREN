@@ -64,13 +64,14 @@ public class SecurityConfig {
                         // WebSocket 엔드포인트 허용
                         .requestMatchers("/ws/**").permitAll()
 
-                        // 출동 지령 관련 (로그인 불필요 - 119 시스템에서 호출)
-                        .requestMatchers("/api/dispatches/**").permitAll()
+                        // 출동 지령 생성 (로그인 불필요 - 119 시스템에서 호출)
+                        .requestMatchers("/api/dispatches").permitAll()
 
                         // 구급대원 전용 엔드포인트
                         .requestMatchers("/api/paramedics/**").hasRole(ROLE_PARAMEDIC)
-                        .requestMatchers("/api/emergency/**").hasRole(ROLE_PARAMEDIC)  // ������������ ������
-                        .requestMatchers("/api/dispatches/**").hasRole(ROLE_PARAMEDIC)  // ������ ������ ������
+                        .requestMatchers("/api/emergency/**").hasRole(ROLE_PARAMEDIC)  // 구급일지 관련
+                        .requestMatchers("/api/dispatches/**").hasRole(ROLE_PARAMEDIC)  // 출동 지령 조회/수정
+                        .requestMatchers("/api/patient-info/**").hasRole(ROLE_PARAMEDIC)  // 환자 정보 관리
 
                         // 병원 선택 요청 관련 (더 구체적인 패턴 먼저)
                         .requestMatchers("/api/hospital-selection/request").hasRole(ROLE_PARAMEDIC)  // ������ ������

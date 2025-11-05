@@ -82,6 +82,8 @@ ErrorCode {
     INVALID_HOSPITAL_SELECTION_STATUS(HttpStatus.BAD_REQUEST, "INVALID_HOSPITAL_SELECTION_STATUS", "유효하지 않은 병원 선택 상태입니다."),
     NO_AVAILABLE_HOSPITALS(HttpStatus.NOT_FOUND, "NO_AVAILABLE_HOSPITALS", "이송 가능한 병원이 없습니다."),
     UNAUTHORIZED_HOSPITAL_RESPONSE(HttpStatus.FORBIDDEN, "UNAUTHORIZED_HOSPITAL_RESPONSE", "이 요청에 응답할 권한이 없습니다."),
+    PATIENT_INFO_NOT_FOUND(HttpStatus.NOT_FOUND, "PATIENT_INFO_NOT_FOUND", "환자 정보를 찾을 수 없습니다."),
+    PATIENT_INFO_ALREADY_EXISTS(HttpStatus.CONFLICT, "PATIENT_INFO_ALREADY_EXISTS", "해당 구급일지에 대한 환자 정보가 이미 존재합니다."),
 
     // ============================================
     // Vital Signs (8000번대)

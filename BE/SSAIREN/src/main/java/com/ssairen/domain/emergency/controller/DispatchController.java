@@ -6,10 +6,11 @@ import com.ssairen.domain.emergency.dto.DispatchListQueryRequest;
 import com.ssairen.domain.emergency.dto.DispatchListResponse;
 import com.ssairen.domain.emergency.service.DispatchService;
 import com.ssairen.global.dto.ApiResponse;
+import com.ssairen.global.security.dto.CustomUserPrincipal;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,12 +33,12 @@ public class DispatchController implements DispatchApi {
     }
 
     @Override
-    @GetMapping("/{fire_state_id}")
+    @GetMapping("/fire-state")
     public ResponseEntity<ApiResponse<DispatchListResponse>> getDispatchList(
-            @PathVariable("fire_state_id") @Positive(message = "소방서 ID는 양의 정수여야 합니다.") Integer fireStateId,
-            @Valid @ModelAttribute DispatchListQueryRequest request
+            @Valid @ModelAttribute DispatchListQueryRequest request,
+            @AuthenticationPrincipal CustomUserPrincipal principal
     ) {
-        DispatchListResponse response = dispatchService.getDispatchList(fireStateId, request);
+        DispatchListResponse response = dispatchService.getDispatchList(principal.getId(), request);
         return ResponseEntity.ok(ApiResponse.success(response, "출동 목록 조회가 완료되었습니다."));
     }
 }

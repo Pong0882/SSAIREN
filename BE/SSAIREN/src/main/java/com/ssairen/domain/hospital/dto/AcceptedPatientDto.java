@@ -5,6 +5,7 @@ import com.ssairen.domain.hospital.entity.PatientInfo;
 import com.ssairen.domain.hospital.enums.HospitalSelectionStatus;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
@@ -24,7 +25,7 @@ public class AcceptedPatientDto {
     // 환자 정보
     private String gender;                      // 성별 (M/F)
     private Integer age;                        // 나이
-    private LocalTime recordTime;               // 기록 시간
+    private LocalDateTime recordTime;               // 기록 시간
     private String chiefComplaint;              // 주 호소
     private String mentalStatus;                // 의식 상태 (ALERT, VERBAL, PAIN, UNRESPONSIVE)
 

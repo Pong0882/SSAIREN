@@ -5,7 +5,9 @@ import com.ssairen.domain.emergency.entity.Dispatch;
 import com.ssairen.domain.emergency.mapper.DispatchMapper;
 import com.ssairen.domain.emergency.repository.DispatchRepository;
 import com.ssairen.domain.firestation.entity.FireState;
+import com.ssairen.domain.firestation.entity.Paramedic;
 import com.ssairen.domain.firestation.repository.FireStateRepository;
+import com.ssairen.domain.firestation.repository.ParamedicRepository;
 import com.ssairen.global.exception.CustomException;
 import com.ssairen.global.exception.ErrorCode;
 import com.ssairen.global.utils.CursorUtils;
@@ -26,6 +28,7 @@ public class DispatchServiceImpl implements DispatchService {
 
     private final DispatchRepository dispatchRepository;
     private final FireStateRepository fireStateRepository;
+    private final ParamedicRepository paramedicRepository;
     private final DispatchMapper dispatchMapper;
 
     /**
@@ -54,14 +57,18 @@ public class DispatchServiceImpl implements DispatchService {
     /**
      * 소방서 전체 출동 목록 조회
      *
-     * @param fireStateId 소방서 ID
+     * @param paramedicId 구급대원 ID
      * @param request     조회 조건 (커서, 페이지 크기)
      * @return 출동 목록 응답 DTO
      */
     @Override
-    public DispatchListResponse getDispatchList(Integer fireStateId, DispatchListQueryRequest request) {
-        // 소방서 존재 여부 확인
-        FireState fireState = fireStateRepository.findById(fireStateId)
+    public DispatchListResponse getDispatchList(Integer paramedicId, DispatchListQueryRequest request) {
+        // 구급대원 조회
+        Paramedic paramedic = paramedicRepository.findById(paramedicId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PARAMEDIC_NOT_FOUND));
+
+        // 구급대원이 소속된 소방서 조회
+        FireState fireState = fireStateRepository.findById(paramedic.getFireState().getId())
                 .orElseThrow(() -> new CustomException(ErrorCode.FIRE_STATE_NOT_FOUND));
 
         // 커서 디코딩
@@ -69,7 +76,7 @@ public class DispatchServiceImpl implements DispatchService {
 
         // 데이터 조회 (limit + 1개 조회하여 다음 페이지 존재 여부 확인)
         List<Dispatch> dispatches = dispatchRepository.findByFireStateIdWithFilters(
-                fireStateId,
+                fireState.getId(),
                 cursorId,
                 request.limit() + 1
         );
