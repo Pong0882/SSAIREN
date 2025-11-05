@@ -18,9 +18,9 @@ public interface DispatchService {
     /**
      * 소방서 전체 출동 목록 조회
      *
-     * @param fireStateId 소방서 ID
+     * @param paramedicId 구급대원 ID
      * @param request     조회 조건 (커서, 페이지 크기)
      * @return 출동 목록 응답 DTO
      */
-    DispatchListResponse getDispatchList(Integer fireStateId, DispatchListQueryRequest request);
+    DispatchListResponse getDispatchList(Integer paramedicId, DispatchListQueryRequest request);
 }

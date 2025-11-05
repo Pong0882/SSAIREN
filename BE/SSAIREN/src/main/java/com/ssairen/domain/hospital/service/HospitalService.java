@@ -16,9 +16,12 @@ import com.ssairen.global.exception.CustomException;
 import com.ssairen.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -41,6 +44,11 @@ public class HospitalService {
     private final EmergencyReportRepository emergencyReportRepository;
     private final PatientInfoRepository patientInfoRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
+    @Value("${ai.server.base-url:http://localhost:8000}")
+    private String aiServerBaseUrl;
 
     /**
      * 병원 이송 요청 생성
@@ -103,10 +111,10 @@ public class HospitalService {
 
             try {
                 messagingTemplate.convertAndSend(topic, message);
-                log.info(LOG_PREFIX + "✅ 웹소켓 메시지 전송 성공 - 병원 ID: {}, 토픽: {}",
-                        hospital.getId(), topic);
+                log.info(LOG_PREFIX + "웹소켓 메시지 전송 성공 - 병원 ID: {}, 병원명: {}, 토픽: {}",
+                        hospital.getId(), hospital.getName(), topic);
             } catch (Exception e) {
-                log.error(LOG_PREFIX + "❌ 웹소켓 메시지 전송 실패 - 병원 ID: {}, 에러: {}",
+                log.error(LOG_PREFIX + "웹소켓 메시지 전송 실패 - 병원 ID: {}, 에러: {}",
                         hospital.getId(), e.getMessage(), e);
             }
         }
@@ -163,6 +171,15 @@ public class HospitalService {
         // 5. ACCEPTED 상태인 경우, 같은 EmergencyReport의 다른 HospitalSelection들을 COMPLETED로 변경
         if (request.getStatus() == HospitalSelectionStatus.ACCEPTED) {
             Long emergencyReportId = selection.getEmergencyReport().getId();
+
+            // 5-1. COMPLETED로 변경할 다른 선택들 조회 (웹소켓 메시지 전송을 위해)
+            List<HospitalSelection> otherSelections = hospitalSelectionRepository
+                    .findByEmergencyReportIdAndStatusNotIn(
+                            emergencyReportId,
+                            hospitalSelectionId
+                    );
+
+            // 5-2. 상태를 COMPLETED로 변경
             int updatedCount = hospitalSelectionRepository.updateOtherSelectionsToCompleted(
                     emergencyReportId,
                     hospitalSelectionId,
@@ -172,6 +189,29 @@ public class HospitalService {
 
             log.info(LOG_PREFIX + "다른 병원 요청 완료 처리 - 구급일지 ID: {}, 완료 처리된 요청 수: {}",
                     emergencyReportId, updatedCount);
+
+            // 5-3. 거절된 병원들에게 웹소켓으로 COMPLETED 메시지 전송
+            for (HospitalSelection otherSelection : otherSelections) {
+                Integer otherHospitalId = otherSelection.getHospital().getId();
+                String topic = "/topic/hospital." + otherHospitalId;
+
+                HospitalCompletedMessage completedMessage = HospitalCompletedMessage.of(
+                        otherSelection.getId(),
+                        emergencyReportId
+                );
+
+                log.info(LOG_PREFIX + "웹소켓 COMPLETED 메시지 전송 시작 - 병원 ID: {}, 토픽: {}, 선택 ID: {}",
+                        otherHospitalId, topic, otherSelection.getId());
+
+                try {
+                    messagingTemplate.convertAndSend(topic, completedMessage);
+                    log.info(LOG_PREFIX + "✅ 웹소켓 COMPLETED 메시지 전송 성공 - 병원 ID: {}, 토픽: {}",
+                            otherHospitalId, topic);
+                } catch (Exception e) {
+                    log.error(LOG_PREFIX + "❌ 웹소켓 COMPLETED 메시지 전송 실패 - 병원 ID: {}, 에러: {}",
+                            otherHospitalId, e.getMessage(), e);
+                }
+            }
         }
 
         // 6. 저장
@@ -378,8 +418,8 @@ public class HospitalService {
             }
         }
 
-        log.info(LOG_PREFIX + "수용한 환자 목록 조회 완료 (페이지네이션) - 병원 ID: {}, 반환 개수: {}, 전체: {}",
-                hospitalId, acceptedPatients.size(), totalElements);
+        log.info(LOG_PREFIX + "수용한 환자 목록 조회 완료 (페이지네이션) - 병원 ID: {}, 현재 페이지 반환: {}개, 전체 환자 수: {}개, 페이지: {}/{}",
+                hospitalId, acceptedPatients.size(), totalElements, page + 1, (int) Math.ceil((double) totalElements / size));
 
         // 7. PageResponse 생성 및 반환
         return PageResponse.of(acceptedPatients, page, size, totalElements);
@@ -581,5 +621,150 @@ public class HospitalService {
 
         // 4. 응답 생성
         return HospitalSelectionStatusResponse.of(emergencyReportId, hospitalStatuses);
+    }
+
+    /**
+     * AI 기반 병원 추천 및 이송 요청 생성
+     *
+     * @param emergencyReportId 구급일지 ID
+     * @param latitude 위도
+     * @param longitude 경도
+     * @param radius 반경 (미터)
+     * @return AI 추천 병원 목록 및 병원 이송 요청 결과
+     */
+    @Transactional
+    public AiHospitalRecommendationResponse getAiHospitalRecommendation(
+            Long emergencyReportId,
+            Double latitude,
+            Double longitude,
+            Integer radius
+    ) {
+        log.info(LOG_PREFIX + "AI 병원 추천 및 이송 요청 시작 - 구급일지 ID: {}, 위도: {}, 경도: {}, 반경: {}",
+                emergencyReportId, latitude, longitude, radius);
+
+        // 1. 구급일지 조회
+        EmergencyReport emergencyReport = emergencyReportRepository.findById(emergencyReportId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
+
+        // 2. 환자 정보 조회
+        Optional<PatientInfo> patientInfoOptional = patientInfoRepository.findById(emergencyReportId);
+        PatientInfoDto patientInfoDto = patientInfoOptional.map(PatientInfoDto::from).orElse(null);
+
+        if (patientInfoDto != null) {
+            log.info(LOG_PREFIX + "환자 정보 조회 성공 - 구급일지 ID: {}, 나이: {}, 성별: {}",
+                    patientInfoDto.getEmergencyReportId(), patientInfoDto.getAge(), patientInfoDto.getGender());
+        } else {
+            log.warn(LOG_PREFIX + "환자 정보가 없습니다 - 구급일지 ID: {}", emergencyReportId);
+        }
+
+        // 3. 환자 정보를 JSON 문자열로 변환
+        String patientConditionJson;
+        try {
+            patientConditionJson = objectMapper.writeValueAsString(patientInfoDto);
+            log.info(LOG_PREFIX + "환자 정보 JSON 변환 완료 - 구급일지 ID: {}", emergencyReportId);
+        } catch (Exception e) {
+            log.error(LOG_PREFIX + "환자 정보 JSON 변환 실패 - 구급일지 ID: {}, 에러: {}",
+                    emergencyReportId, e.getMessage(), e);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "환자 정보를 JSON으로 변환하는 데 실패했습니다.");
+        }
+
+        // 4. AI API 호출
+        AiRecommendationRequest aiRequest = AiRecommendationRequest.builder()
+                .patientCondition(patientConditionJson)
+                .latitude(latitude)
+                .longitude(longitude)
+                .radius(radius)
+                .build();
+
+        AiRecommendationResponse aiResponse;
+        try {
+            String aiRecommendationUrl = aiServerBaseUrl + "/api/emergency/recommend";
+            log.info(LOG_PREFIX + "AI API 호출 시작 - URL: {}", aiRecommendationUrl);
+            aiResponse = restTemplate.postForObject(aiRecommendationUrl, aiRequest, AiRecommendationResponse.class);
+
+            if (aiResponse == null || !aiResponse.getSuccess()) {
+                log.error(LOG_PREFIX + "AI API 호출 실패 - 응답이 null이거나 success가 false입니다.");
+                throw new CustomException(ErrorCode.EXTERNAL_API_ERROR, "AI 추천 API 호출에 실패했습니다.");
+            }
+
+            log.info(LOG_PREFIX + "AI API 호출 성공 - 추천 병원 수: {}, 전체 병원 수: {}",
+                    aiResponse.getRecommendedHospitals().size(), aiResponse.getTotalHospitalsFound());
+
+            // AI 추론 정보 로그 출력
+            if (aiResponse.getGptReasoning() != null) {
+                log.info(LOG_PREFIX + "AI 추론 정보: {}", aiResponse.getGptReasoning());
+            }
+            if (aiResponse.getReasoningTime() != null) {
+                log.info(LOG_PREFIX + "AI 추론 시간: {}초", aiResponse.getReasoningTime());
+            }
+            if (aiResponse.getHospitalsDetail() != null) {
+                log.info(LOG_PREFIX + "병원 상세 정보: {}", aiResponse.getHospitalsDetail());
+            }
+        } catch (Exception e) {
+            log.error(LOG_PREFIX + "AI API 호출 중 예외 발생 - 에러: {}", e.getMessage(), e);
+            throw new CustomException(ErrorCode.EXTERNAL_API_ERROR, "AI 추천 API 호출 중 오류가 발생했습니다: " + e.getMessage());
+        }
+
+        // 5. recommended_hospitals로 병원 조회
+        List<String> recommendedHospitalNames = aiResponse.getRecommendedHospitals();
+        if (recommendedHospitalNames == null || recommendedHospitalNames.isEmpty()) {
+            log.warn(LOG_PREFIX + "추천된 병원이 없습니다 - 구급일지 ID: {}", emergencyReportId);
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND, "추천된 병원이 없습니다.");
+        }
+
+        List<Hospital> hospitals = hospitalRepository.findByNameIn(recommendedHospitalNames);
+
+        // 6. 요청된 병원 중 찾지 못한 병원이 있는지 확인
+        if (hospitals.isEmpty()) {
+            log.warn(LOG_PREFIX + "추천된 병원을 DB에서 찾을 수 없습니다 - 구급일지 ID: {}", emergencyReportId);
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND, "추천된 병원을 찾을 수 없습니다.");
+        }
+
+        if (hospitals.size() != recommendedHospitalNames.size()) {
+            log.warn(LOG_PREFIX + "일부 추천 병원을 찾을 수 없습니다 - 추천: {}, 찾은 개수: {}",
+                    recommendedHospitalNames.size(), hospitals.size());
+            // 찾은 병원만 사용하도록 계속 진행
+        }
+
+        // 7. HospitalSelection 생성 및 저장
+        List<HospitalSelection> selections = new ArrayList<>();
+        for (Hospital hospital : hospitals) {
+            HospitalSelection selection = HospitalSelection.builder()
+                    .emergencyReport(emergencyReport)
+                    .hospital(hospital)
+                    .status(HospitalSelectionStatus.PENDING)
+                    .build();
+            HospitalSelection savedSelection = hospitalSelectionRepository.save(selection);
+            selections.add(savedSelection);
+
+            // 8. 각 병원에게 웹소켓으로 요청 메시지 전송 (환자 정보 포함)
+            String topic = "/topic/hospital." + hospital.getId();
+            HospitalRequestMessage message = HospitalRequestMessage.of(
+                    savedSelection.getId(),
+                    emergencyReportId,
+                    patientInfoDto
+            );
+
+            log.info(LOG_PREFIX + "웹소켓 메시지 전송 시작 - 병원 ID: {}, 토픽: {}, 환자 정보 포함: {}",
+                    hospital.getId(), topic, (patientInfoDto != null));
+
+            try {
+                messagingTemplate.convertAndSend(topic, message);
+                log.info(LOG_PREFIX + "웹소켓 메시지 전송 성공 - 병원 ID: {}, 병원명: {}, 토픽: {}",
+                        hospital.getId(), hospital.getName(), topic);
+            } catch (Exception e) {
+                log.error(LOG_PREFIX + "웹소켓 메시지 전송 실패 - 병원 ID: {}, 에러: {}",
+                        hospital.getId(), e.getMessage(), e);
+            }
+        }
+
+        log.info(LOG_PREFIX + "AI 병원 추천 및 이송 요청 완료 - 구급일지 ID: {}, 추천 병원 수: {}, 요청 병원 수: {}",
+                emergencyReportId, aiResponse.getRecommendedHospitals().size(), selections.size());
+
+        // 9. HospitalSelectionResponse 생성
+        HospitalSelectionResponse selectionResponse = HospitalSelectionResponse.from(emergencyReportId, selections);
+
+        // 10. 통합 응답 생성
+        return AiHospitalRecommendationResponse.of(emergencyReportId, aiResponse, selectionResponse);
     }
 }

@@ -2,26 +2,27 @@ package com.ssairen.domain.emergency.controller;
 
 import com.ssairen.config.swagger.annotation.ApiInternalServerError;
 import com.ssairen.config.swagger.annotation.ApiUnauthorizedError;
-import com.ssairen.domain.emergency.dto.EmergencyReportCreateRequest;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
 import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
 import com.ssairen.domain.emergency.enums.ReportSectionType;
 import com.ssairen.global.dto.ApiResponse;
+import com.ssairen.global.security.dto.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -30,26 +31,8 @@ public interface EmergencyReportApi {
 
     @Operation(
             summary = "구급일지 생성",
-            description = "출동지령에 구급대원을 배정하고 구급일지를 생성합니다."
+            description = "현재 로그인한 구급대원을 출동지령에 배정하고 구급일지를 생성합니다."
 //            security = @SecurityRequirement(name = "Bearer Authentication")
-    )
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "구급일지 생성 요청",
-            required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation =EmergencyReportCreateRequest.class),
-                    examples = @ExampleObject(
-                            name = "구급일지 생성 요청 예시",
-                            value = """
-                                    {
-                                        "dispatchId": 1,
-                                        "paramedicId": 1,
-                                        "fireStateId": 1
-                                    }
-                                    """
-                    )
-            )
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
@@ -158,14 +141,16 @@ public interface EmergencyReportApi {
     )
     @ApiUnauthorizedError
     @ApiInternalServerError
-    @PostMapping
+    @PostMapping("/{dispatch_id}")
     ResponseEntity<? extends ApiResponse> createEmergencyReport(
-            @Valid @RequestBody EmergencyReportCreateRequest request
+            @Parameter(description = "출동지령 ID", required = true, example = "1")
+            @PathVariable("dispatch_id") @Positive(message = "출동지령 ID는 양의 정수여야 합니다.") Long dispatchId,
+            @AuthenticationPrincipal CustomUserPrincipal principal
     );
 
     @Operation(
-            summary = "특정 구급대원 보고서 조회",
-            description = "특정 구급대원이 작성한 모든 보고서를 조회합니다."
+            summary = "내 보고서 조회",
+            description = "현재 로그인한 구급대원이 작성한 모든 보고서를 조회합니다."
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
@@ -275,10 +260,9 @@ public interface EmergencyReportApi {
     )
     @ApiUnauthorizedError
     @ApiInternalServerError
-    @GetMapping("/{paramedicId}")
+    @GetMapping("/me")
     ResponseEntity<ApiResponse<ParamedicEmergencyReportResponse>> getEmergencyReportsByParamedic(
-            @Parameter(description = "구급대원 ID", required = true, example = "1")
-            @PathVariable("paramedicId") @Positive(message = "구급대원 ID는 양의 정수여야 합니다.") Integer paramedicId
+            @AuthenticationPrincipal CustomUserPrincipal principal
     );
 
     @Operation(
@@ -770,7 +754,8 @@ public interface EmergencyReportApi {
             @Parameter(description = "구급일지 ID", required = true, example = "5")
             @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
             @Parameter(description = "섹션 유형", required = true, example = "PATIENT_INFO")
-            @PathVariable("type") com.ssairen.domain.emergency.enums.ReportSectionType type
+            @PathVariable("type") com.ssairen.domain.emergency.enums.ReportSectionType type,
+            @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal com.ssairen.global.security.dto.CustomUserPrincipal principal
     );
 
     @Operation(
@@ -1294,12 +1279,13 @@ public interface EmergencyReportApi {
             @Parameter(description = "구급일지 ID", required = true, example = "5")
             @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
             @Parameter(description = "섹션 유형", required = true, example = "PATIENT_INFO")
-            @PathVariable("type") com.ssairen.domain.emergency.enums.ReportSectionType type
+            @PathVariable("type") com.ssairen.domain.emergency.enums.ReportSectionType type,
+            @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal com.ssairen.global.security.dto.CustomUserPrincipal principal
     );
 
     @Operation(
-            summary = "특정 소방서 보고서 조회",
-            description = "특정 소방서의 모든 구급일지를 조회합니다."
+            summary = "소속 소방서 보고서 조회",
+            description = "현재 로그인한 구급대원이 소속된 소방서의 모든 구급일지를 조회합니다."
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
@@ -1379,10 +1365,9 @@ public interface EmergencyReportApi {
     )
     @ApiUnauthorizedError
     @ApiInternalServerError
-    @GetMapping("/fire-state/{fireStateId}")
+    @GetMapping("/fire-state")
     ResponseEntity<? extends ApiResponse> getEmergencyReportsByFireState(
-            @Parameter(description = "소방서 ID", required = true, example = "1")
-            @PathVariable("fireStateId") @Positive(message = "소방서 ID는 양의 정수여야 합니다.") Integer fireStateId
+            @AuthenticationPrincipal CustomUserPrincipal principal
     );
 
     @Operation(
@@ -2341,6 +2326,7 @@ public interface EmergencyReportApi {
             @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
             @Parameter(description = "섹션 유형", required = true, example = "PATIENT_INFO")
             @PathVariable("type") ReportSectionType type,
-            @Valid @RequestBody com.ssairen.domain.emergency.dto.ReportSectionUpdateRequest request
+            @Valid @RequestBody com.ssairen.domain.emergency.dto.ReportSectionUpdateRequest request,
+            @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal com.ssairen.global.security.dto.CustomUserPrincipal principal
     );
 }
