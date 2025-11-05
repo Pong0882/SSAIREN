@@ -1,6 +1,7 @@
 package com.ssairen.domain.hospital.controller;
 
 import com.ssairen.domain.hospital.dto.*;
+import com.ssairen.domain.hospital.enums.DateRangeFilter;
 import com.ssairen.domain.hospital.enums.PatientFilterType;
 import com.ssairen.domain.hospital.service.HospitalService;
 import com.ssairen.global.dto.ApiResponse;
@@ -90,6 +91,7 @@ public class HospitalController implements HospitalApi {
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "페이지 번호는 0 이상이어야 합니다.") int page,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "페이지 크기는 1 이상이어야 합니다.") @Max(value = 100, message = "페이지 크기는 100 이하여야 합니다.") int size,
             @RequestParam(defaultValue = "all") String status,
+            @RequestParam(defaultValue = "all") String dateRange,
             @AuthenticationPrincipal CustomUserPrincipal principal
     ) {
         // status 파라미터를 PatientFilterType으로 변환
@@ -101,12 +103,22 @@ public class HospitalController implements HospitalApi {
                     "status는 'all' 또는 'accepted'만 가능합니다.");
         }
 
+        // dateRange 파라미터를 DateRangeFilter로 변환
+        DateRangeFilter dateRangeFilter;
+        try {
+            dateRangeFilter = DateRangeFilter.valueOf(dateRange.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE,
+                    "dateRange는 'all', 'week', 'month'만 가능합니다.");
+        }
+
         PageResponse<AcceptedPatientDto> patients = hospitalService.getAcceptedPatientsWithPagination(
                 hospitalId,
                 principal.getId(),
                 page,
                 size,
-                filterType
+                filterType,
+                dateRangeFilter
         );
 
         return ResponseEntity.ok(

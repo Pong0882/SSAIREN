@@ -6,6 +6,7 @@ import com.ssairen.domain.hospital.dto.*;
 import com.ssairen.domain.hospital.entity.Hospital;
 import com.ssairen.domain.hospital.entity.HospitalSelection;
 import com.ssairen.domain.hospital.entity.PatientInfo;
+import com.ssairen.domain.hospital.enums.DateRangeFilter;
 import com.ssairen.domain.hospital.enums.HospitalSelectionStatus;
 import com.ssairen.domain.hospital.enums.PatientFilterType;
 import com.ssairen.domain.hospital.repository.HospitalRepository;
@@ -354,6 +355,7 @@ public class HospitalService {
      * @param page 페이지 번호 (0부터 시작)
      * @param size 페이지당 데이터 개수
      * @param filterType 필터 타입 (ALL: ACCEPTED+ARRIVED, ACCEPTED: ACCEPTED만)
+     * @param dateRangeFilter 기간 필터 (ALL: 전체, WEEK: 최근 일주일, MONTH: 최근 한달)
      * @return 페이지네이션된 환자 목록
      */
     @Transactional(readOnly = true)
@@ -362,10 +364,11 @@ public class HospitalService {
             Integer currentHospitalId,
             int page,
             int size,
-            PatientFilterType filterType
+            PatientFilterType filterType,
+            DateRangeFilter dateRangeFilter
     ) {
-        log.info(LOG_PREFIX + "수용한 환자 목록 조회 시작 (페이지네이션) - 병원 ID: {}, page: {}, size: {}, filter: {}",
-                hospitalId, page, size, filterType);
+        log.info(LOG_PREFIX + "수용한 환자 목록 조회 시작 (페이지네이션) - 병원 ID: {}, page: {}, size: {}, filter: {}, dateRange: {}",
+                hospitalId, page, size, filterType, dateRangeFilter);
 
         // 1. 권한 검증: 본인의 환자만 조회 가능
         if (!hospitalId.equals(currentHospitalId)) {
@@ -382,16 +385,24 @@ public class HospitalService {
         // 3. 필터에 따른 상태 목록 가져오기
         List<HospitalSelectionStatus> statuses = filterType.getStatuses();
 
-        // 4. 전체 데이터 개수 조회
+        // 3-1. Enum을 String으로 변환 (Native Query용)
+        List<String> statusStrings = statuses.stream()
+                .map(Enum::name)
+                .toList();
+
+        // 4. 기간 필터에 따른 시작 날짜 계산
+        LocalDateTime startDateTime = dateRangeFilter.getStartDateTime();
+
+        // 5. 전체 데이터 개수 조회 (기간 필터 적용)
         long totalElements = hospitalSelectionRepository
-                .countPatientsByHospitalIdAndStatuses(hospitalId, statuses);
+                .countPatientsByHospitalIdAndStatusesAndDateRange(hospitalId, statusStrings, startDateTime);
 
-        log.info(LOG_PREFIX + "전체 환자 수 - 병원 ID: {}, 개수: {}", hospitalId, totalElements);
+        log.info(LOG_PREFIX + "전체 환자 수 - 병원 ID: {}, 개수: {}, 시작일시: {}", hospitalId, totalElements, startDateTime);
 
-        // 5. 페이지네이션된 데이터 조회
+        // 6. 페이지네이션된 데이터 조회 (기간 필터 적용)
         int offset = page * size;
         List<HospitalSelection> selections = hospitalSelectionRepository
-                .findPatientsByHospitalIdWithPagination(hospitalId, statuses, offset, size);
+                .findPatientsByHospitalIdWithPaginationAndDateRange(hospitalId, statusStrings, startDateTime, offset, size);
 
         log.info(LOG_PREFIX + "페이지네이션 데이터 조회 완료 - 병원 ID: {}, 조회 개수: {}",
                 hospitalId, selections.size());
