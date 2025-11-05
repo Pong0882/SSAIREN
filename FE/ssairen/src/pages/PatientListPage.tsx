@@ -23,6 +23,7 @@ import type { Patient } from "@/features/patients/types/patient.types";
 export default function PatientListPage() {
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<"all" | "waiting">("all");
+  const [dateRange, setDateRange] = useState<"all" | "week" | "month">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -56,7 +57,10 @@ export default function PatientListPage() {
         page: currentPage,
         size: itemsPerPage,
         status: activeTab === "all" ? "ALL" : "ACCEPTED",
+        dateRange: dateRange,
       });
+
+      console.log("result ", result);
 
       setPatients(result.patients);
       setTotalPages(result.totalPages);
@@ -70,7 +74,7 @@ export default function PatientListPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, currentPage, itemsPerPage, activeTab]);
+  }, [user?.id, currentPage, itemsPerPage, activeTab, dateRange]);
 
   // 페이지 로드 시 & 탭/페이지 변경 시 데이터 가져오기
   useEffect(() => {
@@ -108,6 +112,11 @@ export default function PatientListPage() {
   const handleTabChange = (tab: "all" | "waiting") => {
     setActiveTab(tab);
     setCurrentPage(1); // 탭 변경 시 첫 페이지로
+  };
+
+  const handleDateRangeChange = (range: "all" | "week" | "month") => {
+    setDateRange(range);
+    setCurrentPage(1); // 날짜 범위 변경 시 첫 페이지로
   };
 
   // 환자 행 클릭 핸들러
@@ -198,7 +207,8 @@ export default function PatientListPage() {
       <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 min-h-0">
         <div className="max-w-7xl mx-auto w-full flex flex-col h-full">
           {/* 탭 버튼 */}
-          <div className="mb-4 sm:mb-6 flex-shrink-0">
+          <div className="mb-4 sm:mb-6 flex-shrink-0 flex items-center justify-between gap-4">
+            {/* 내원 상태 탭 (왼쪽) */}
             <Tabs>
               <TabButton
                 active={activeTab === "all"}
@@ -213,6 +223,40 @@ export default function PatientListPage() {
                 내원 대기
               </TabButton>
             </Tabs>
+
+            {/* 날짜 범위 탭 (오른쪽) - 작은 버튼 */}
+            <div className="flex gap-2">
+              <button
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  dateRange === "all"
+                    ? "bg-secondary-500 text-white"
+                    : "bg-white text-neutral-700 hover:bg-neutral-100"
+                }`}
+                onClick={() => handleDateRangeChange("all")}
+              >
+                전체
+              </button>
+              <button
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  dateRange === "week"
+                    ? "bg-secondary-500 text-white"
+                    : "bg-white text-neutral-700 hover:bg-neutral-100"
+                }`}
+                onClick={() => handleDateRangeChange("week")}
+              >
+                최근 일주일
+              </button>
+              <button
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  dateRange === "month"
+                    ? "bg-secondary-500 text-white"
+                    : "bg-white text-neutral-700 hover:bg-neutral-100"
+                }`}
+                onClick={() => handleDateRangeChange("month")}
+              >
+                최근 한 달
+              </button>
+            </div>
           </div>
           {/* 테이블 */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden flex-1">
