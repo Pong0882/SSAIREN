@@ -4,7 +4,7 @@ import com.ssairen.domain.hospital.entity.PatientInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 /**
  * 환자 정보 응답 DTO
@@ -20,8 +20,8 @@ public record PatientInfoResponse(
         @Schema(description = "나이", example = "45")
         Integer age,
 
-        @Schema(description = "기록 시간", example = "14:30:00")
-        LocalTime recordTime,
+        @Schema(description = "기록 시간", example = "2025-01-15T14:30:00")
+        LocalDateTime recordTime,
 
         @Schema(description = "의식 상태", example = "ALERT")
         PatientInfo.MentalStatus mentalStatus,
@@ -50,11 +50,11 @@ public record PatientInfoResponse(
         @Schema(description = "과거력", example = "고혈압, 당뇨")
         String hx,
 
-        @Schema(description = "발병 시간", example = "14:00:00")
-        LocalTime onsetTime,
+        @Schema(description = "발병 시간", example = "2025-01-15T14:00:00")
+        LocalDateTime onsetTime,
 
-        @Schema(description = "LNT", example = "13:30:00")
-        LocalTime lnt
+        @Schema(description = "LNT", example = "2025-01-15T13:30:00")
+        LocalDateTime lnt
 ) {
     public static PatientInfoResponse from(PatientInfo patientInfo) {
         return new PatientInfoResponse(

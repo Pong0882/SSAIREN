@@ -7,7 +7,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "patient_info")
@@ -35,7 +35,7 @@ public class PatientInfo extends BaseEntity {
     private Integer age;               // 나이
 
     @Column(name = "record_time")
-    private LocalTime recordTime;
+    private LocalDateTime recordTime;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "mental_status", nullable = false, length = 20)
@@ -67,10 +67,10 @@ public class PatientInfo extends BaseEntity {
     private String hx;                 // 과거력
 
     @Column(name = "onset_time")
-    private LocalTime onsetTime;       // 발병 시간
+    private LocalDateTime onsetTime;   // 발병 시간
 
     @Column(name = "lnt")
-    private LocalTime lnt;  // LNT
+    private LocalDateTime lnt;         // LNT
 
 
     // ── ENUM 정의 ────────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ public class PatientInfo extends BaseEntity {
     public void updatePatientInfo(
             Gender gender,
             Integer age,
-            LocalTime recordTime,
+            LocalDateTime recordTime,
             MentalStatus mentalStatus,
             String chiefComplaint,
             Integer hr,
@@ -98,8 +98,8 @@ public class PatientInfo extends BaseEntity {
             BigDecimal bt,
             Boolean hasGuardian,
             String hx,
-            LocalTime onsetTime,
-            LocalTime lnt
+            LocalDateTime onsetTime,
+            LocalDateTime lnt
     ) {
         this.gender = gender;
         this.age = age;

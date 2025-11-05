@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
@@ -25,7 +26,7 @@ public class UpdatePatientInfoRequest {
     @Max(value = 150, message = "나이는 150 이하여야 합니다.")
     private Integer age;                        // 나이
 
-    private LocalTime recordTime;               // 기록 시간
+    private LocalDateTime recordTime;               // 기록 시간
 
     @NotNull(message = "의식 상태는 필수입니다.")
     @Pattern(regexp = "^(ALERT|VERBAL|PAIN|UNRESPONSIVE)$", message = "의식 상태는 ALERT, VERBAL, PAIN, UNRESPONSIVE 중 하나여야 합니다.")
@@ -59,7 +60,7 @@ public class UpdatePatientInfoRequest {
 
     private String hx;                          // 과거력
 
-    private LocalTime onsetTime;                // 발병 시간
+    private LocalDateTime onsetTime;                // 발병 시간
 
-    private LocalTime lnt;                      // LNT
+    private LocalDateTime lnt;                      // LNT
 }
