@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 /**
  * 환자 정보 생성 요청 DTO
@@ -30,8 +30,8 @@ public record PatientInfoCreateRequest(
         @Schema(description = "나이", example = "45")
         Integer age,
 
-        @Schema(description = "기록 시간", example = "14:30:00")
-        LocalTime recordTime,
+        @Schema(description = "기록 시간", example = "2025-01-15T14:30:00")
+        LocalDateTime recordTime,
 
         @NotNull(message = "의식 상태는 필수 입력 항목입니다.")
         @Schema(description = "의식 상태 (ALERT/VERBAL/PAIN/UNRESPONSIVE)", example = "ALERT")
@@ -72,10 +72,10 @@ public record PatientInfoCreateRequest(
         @Schema(description = "과거력", example = "고혈압, 당뇨")
         String hx,
 
-        @Schema(description = "발병 시간", example = "14:00:00")
-        LocalTime onsetTime,
+        @Schema(description = "발병 시간", example = "2025-01-15T14:00:00")
+        LocalDateTime onsetTime,
 
-        @Schema(description = "LNT (Last Normal Time)", example = "13:30:00")
-        LocalTime lnt
+        @Schema(description = "LNT (Last Normal Time)", example = "2025-01-15T13:30:00")
+        LocalDateTime lnt
 ) {
 }
