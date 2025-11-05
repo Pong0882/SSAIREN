@@ -148,7 +148,7 @@ def recommend_hospitals_with_gpt(
     model: str = "gpt-4.1-2025-04-14"
 ) -> Dict[str, Any]:
     """
-    GPT를 사용하여 환자 상태에 적합한 병원 추천
+    GPT를 사용하여 병원 추천 및 상세 설명 제공
 
     Args:
         patient_condition: 환자 상태 정보
@@ -157,8 +157,8 @@ def recommend_hospitals_with_gpt(
 
     Returns:
         Dict: {
-            "recommended_hospitals": List[str],  # 추천 병원 이름 리스트
-            "reasoning": str  # 추천 이유
+            "recommended_hospitals": List[str],  # 추천 가능한 병원 이름 리스트
+            "reasoning": str  # 상위 5개 우선순위 + 제외 병원 이유 설명
         }
     """
     client = get_openai_client()
@@ -169,7 +169,7 @@ def recommend_hospitals_with_gpt(
     # 프롬프트 생성
     prompt = f"""당신은 응급 의료 전문가입니다.
 
-**임무**: 환자의 상태를 분석하고 주변 응급실 중에서 가장 적합한 병원들을 추천하세요.
+**임무**: 환자 상태를 분석하고 추천 가능한 병원들을 선정한 후, 상위 5개의 우선순위와 이유, 그리고 제외된 병원들의 간단한 제외 이유를 설명하세요.
 
 **환자 상태 정보**:
 {patient_condition}
@@ -177,7 +177,7 @@ def recommend_hospitals_with_gpt(
 **주변 응급실 목록**:
 {hospitals_text}
 
-**추천 기준**:
+**평가 기준**:
 1. 환자 상태에 필요한 시설/장비가 있는지
 2. 병상 여부 (가능한 병상이 있는지)
 3. 거리 (가까울수록 좋음)
@@ -186,15 +186,15 @@ def recommend_hospitals_with_gpt(
 
 **출력 형식** (반드시 JSON 형식으로 출력):
 {{
-  "recommended_hospitals": ["병원1 이름", "병원2 이름", "병원3 이름"],
-  "reasoning": "추천 이유를 상세히 설명"
+  "recommended_hospitals": ["병원1 emergencyRoomNickname", "병원2", "병원3", ...],
+  "reasoning": "### 추천 병원 우선순위\\n\\n1순위: 병원명 (거리) - 추천 이유\\n2순위: 병원명 (거리) - 추천 이유\\n...\\n\\n### 제외된 병원\\n\\n- 병원명: 제외 이유\\n- 병원명: 제외 이유\\n..."
 }}
 
-**중요**:
-- "recommended_hospitals"에는 위 목록에 있는 병원의 "emergencyRoomNickname"만 정확히 입력
-- 최소 1개, 최대 3개의 병원을 추천
-- 병상이 없거나 진료 불가인 병원은 제외
-- 반드시 순수 JSON만 출력하세요 (코드 블록이나 설명 금지)"""
+**중요 사항**:
+- recommended_hospitals: 추천 가능한 **모든 병원 이름**을 배열로 (emergencyRoomNickname 사용)
+- reasoning: 마크다운 형식으로 상위 5개 우선순위와 이유를 설명하고, 제외된 병원들의 간단한 이유도 포함
+- hospital_name은 위 목록의 "emergencyRoomNickname"과 정확히 일치
+- 반드시 순수 JSON만 출력 (코드 블록 금지)"""
 
     try:
         print(f"\n[GPT 추천] 환자 상태 분석 및 병원 추천 시작...")
@@ -232,9 +232,15 @@ def recommend_hospitals_with_gpt(
         # JSON 파싱
         result = json.loads(content)
 
-        print(f"\n[GPT 추천] 추천 완료:")
-        print(f"[GPT 추천] 추천 병원: {', '.join(result.get('recommended_hospitals', []))}")
-        print(f"[GPT 추천] 추천 이유: {result.get('reasoning', 'N/A')[:200]}...\n")
+        print(f"\n[GPT 추천] 평가 완료:")
+
+        # 추천 병원 출력
+        recommended = result.get('recommended_hospitals', [])
+        if recommended:
+            print(f"[GPT 추천] 추천 가능한 병원: {len(recommended)}개")
+            print(f"[GPT 추천] 병원 목록: {', '.join(recommended[:5])}...")
+
+        print(f"[GPT 추천] 설명: {result.get('reasoning', 'N/A')[:200]}...\n")
 
         return result
 
@@ -265,10 +271,9 @@ def recommend_emergency_hospitals(
     Returns:
         Dict: {
             "success": bool,
-            "recommended_hospitals": List[str],
+            "recommended_hospitals": List[str],  # 추천 가능한 병원 이름 리스트
             "total_hospitals_found": int,
-            "hospitals_detail": List[Dict],
-            "gpt_reasoning": str,
+            "gpt_reasoning": str,  # 상위 5개 우선순위 + 제외 병원 이유
             "error_message": str (실패 시)
         }
     """
@@ -284,7 +289,6 @@ def recommend_emergency_hospitals(
                 "success": False,
                 "recommended_hospitals": [],
                 "total_hospitals_found": 0,
-                "hospitals_detail": [],
                 "gpt_reasoning": None,
                 "error_message": "주변에 응급실을 찾을 수 없습니다."
             }
@@ -297,7 +301,6 @@ def recommend_emergency_hospitals(
             "success": True,
             "recommended_hospitals": gpt_result.get("recommended_hospitals", []),
             "total_hospitals_found": len(hospitals),
-            "hospitals_detail": hospitals,
             "gpt_reasoning": gpt_result.get("reasoning", ""),
             "error_message": None
         }
@@ -308,7 +311,6 @@ def recommend_emergency_hospitals(
             "success": False,
             "recommended_hospitals": [],
             "total_hospitals_found": 0,
-            "hospitals_detail": [],
             "gpt_reasoning": None,
             "error_message": str(e)
         }

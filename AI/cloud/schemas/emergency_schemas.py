@@ -42,8 +42,7 @@ class HospitalInfo(BaseModel):
 class EmergencyRecommendationResponse(BaseModel):
     """응급실 추천 응답"""
     success: bool = Field(..., description="요청 성공 여부")
-    recommended_hospitals: List[str] = Field(..., description="추천 병원 이름 리스트")
+    recommended_hospitals: List[str] = Field(..., description="추천 가능한 병원 이름 리스트")
     total_hospitals_found: int = Field(..., description="검색된 총 병원 수")
-    hospitals_detail: Optional[List[Dict[str, Any]]] = Field(None, description="병원 상세 정보")
-    gpt_reasoning: Optional[str] = Field(None, description="GPT 추천 이유")
+    gpt_reasoning: Optional[str] = Field(None, description="상위 5개 우선순위 추천 이유 + 제외된 병원 이유")
     error_message: Optional[str] = Field(None, description="오류 메시지 (실패 시)")
