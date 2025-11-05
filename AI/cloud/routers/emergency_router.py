@@ -30,8 +30,7 @@ async def recommend_hospitals(request: EmergencyRecommendationRequest):
             "success": bool,
             "recommended_hospitals": ["병원1", "병원2", ...],
             "total_hospitals_found": int,
-            "hospitals_detail": [...],
-            "gpt_reasoning": "추천 이유",
+            "gpt_reasoning": "상위 5개 우선순위 추천 이유 + 제외된 병원 이유",
             "error_message": "오류 메시지 (실패 시)"
         }
     """
@@ -48,12 +47,11 @@ async def recommend_hospitals(request: EmergencyRecommendationRequest):
             radius=request.radius
         )
 
-        # 응답 생성 (병원 정보는 Dict 그대로 반환)
+        # 응답 생성
         return EmergencyRecommendationResponse(
             success=result["success"],
             recommended_hospitals=result["recommended_hospitals"],
             total_hospitals_found=result["total_hospitals_found"],
-            hospitals_detail=result.get("hospitals_detail"),
             gpt_reasoning=result.get("gpt_reasoning"),
             error_message=result.get("error_message")
         )
