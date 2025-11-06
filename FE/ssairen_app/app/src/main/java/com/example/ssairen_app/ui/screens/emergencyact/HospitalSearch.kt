@@ -25,15 +25,15 @@ data class HospitalData(
     val id: Int,
     val name: String,
     val distance: String,
-    val phone: String,
+    val phoneNumber: String,
     val status: HospitalStatus
 )
 
 enum class HospitalStatus(val displayName: String, val color: Color) {
-    REQUESTING("요청중", Color(0xFF999999)),
+    PENDING("요청중", Color(0xFF999999)),
     ACCEPTED("수용 가능", Color(0xFF34c759)),
     REJECTED("거절", Color(0xFFff3b30)),
-    CALL_REQUIRED("전화 요망", Color(0xFFffcc00))
+    CALLREQUEST("전화 요망", Color(0xFFffcc00))
 }
 
 // ==========================================
@@ -51,11 +51,11 @@ fun HospitalSearch(
     // 병원 추가 로직 (랜덤 간격으로 추가)
     LaunchedEffect(Unit) {
         val dummyHospitals = listOf(
-            HospitalData(1, "OO 병원", "1.4 km", "010-5555-5555", HospitalStatus.REQUESTING),
-            HospitalData(2, "OO 병원", "3 km", "010-5555-5555", HospitalStatus.REQUESTING),
-            HospitalData(3, "OO 병원", "2.6 km", "010-5555-5555", HospitalStatus.REQUESTING),
-            HospitalData(4, "OO 병원", "5 km", "010-5555-5555", HospitalStatus.REQUESTING),
-            HospitalData(5, "OO 병원", "7 km", "010-5555-5555", HospitalStatus.REQUESTING),
+            HospitalData(1, "OO 병원", "1.4 km", "010-5555-5555", HospitalStatus.PENDING),
+            HospitalData(2, "OO 병원", "3 km", "010-5555-5555", HospitalStatus.PENDING),
+            HospitalData(3, "OO 병원", "2.6 km", "010-5555-5555", HospitalStatus.PENDING),
+            HospitalData(4, "OO 병원", "5 km", "010-5555-5555", HospitalStatus.PENDING),
+            HospitalData(5, "OO 병원", "7 km", "010-5555-5555", HospitalStatus.PENDING),
         )
 
         // 0.5초~1.5초 랜덤 간격으로 병원 추가
@@ -73,7 +73,7 @@ fun HospitalSearch(
             val statusOptions = listOf(
                 HospitalStatus.ACCEPTED,
                 HospitalStatus.REJECTED,
-                HospitalStatus.CALL_REQUIRED
+                HospitalStatus.CALLREQUEST
             )
             hospital.copy(status = statusOptions.random())
         }
@@ -270,7 +270,7 @@ private fun HospitalCard(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = "전화번호 ${hospital.phone}",
+                    text = "전화번호 ${hospital.phoneNumber}",
                     color = Color(0xFF999999),
                     fontSize = 14.sp
                 )
