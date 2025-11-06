@@ -14,9 +14,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ssairen_app.ui.components.ClickableDarkCard
 import com.example.ssairen_app.ui.context.rememberDispatchState
+import com.example.ssairen_app.ui.navigation.ReportNavigationBar
 
 @Composable
-fun ReportHome() {
+fun ReportHome(
+    onNavigateToActivityLog: () -> Unit = {}  // ✅ 이름 변경: ActivityLog로 이동
+) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val dispatchState = rememberDispatchState()
 
@@ -38,6 +41,10 @@ fun ReportHome() {
             ),
             onDismiss = {
                 dispatchState.closeDispatchModal()
+            },
+            onCreateNewReport = {
+                dispatchState.closeDispatchModal()
+                onNavigateToActivityLog()  // ✅ ActivityLog로 이동 (환자정보 화면)
             }
         )
     }
@@ -58,30 +65,11 @@ fun ReportHome() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 네비게이션 버튼
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            TabButton(
-                text = "내 보고서",
-                isSelected = selectedTab == 0,
-                onClick = { selectedTab = 0 },
-                modifier = Modifier.weight(1f)
-            )
-            TabButton(
-                text = "출동지령 내역",
-                isSelected = selectedTab == 1,
-                onClick = { selectedTab = 1 },
-                modifier = Modifier.weight(1f)
-            )
-            TabButton(
-                text = "관내 보고서 검색",
-                isSelected = selectedTab == 2,
-                onClick = { selectedTab = 2 },
-                modifier = Modifier.weight(1f)
-            )
-        }
+        // ReportNavigationBar 사용
+        ReportNavigationBar(
+            selectedTab = selectedTab,
+            onTabSelected = { selectedTab = it }
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -123,35 +111,6 @@ private fun ReportListContent() {
                 }
             )
         }
-    }
-}
-
-@Composable
-private fun TabButton(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFF3b7cff) else Color.Transparent,
-            contentColor = if (isSelected) Color.White else Color(0xFF999999)
-        ),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (isSelected) Color(0xFF3b7cff) else Color(0xFF4a4a4a)
-        ),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
-    ) {
-        Text(
-            text = text,
-            fontSize = 13.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
-        )
     }
 }
 
