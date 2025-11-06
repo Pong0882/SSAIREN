@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -181,6 +182,7 @@ class MainActivity : ComponentActivity() {
         }
 
         heartRate = hr
+        // HR 재정비 완료 시 플래그 해제
         if (isHrReactivating) isHrReactivating = false
     }
 
@@ -204,6 +206,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun togglePeriodicSpo2Measurement() {
+        // 1분 간격 자동 반복 측정
         if (isPeriodicSpo2Active) stopPeriodicSpo2Measurement() else startPeriodicSpo2Measurement()
     }
 
@@ -251,6 +254,7 @@ class MainActivity : ComponentActivity() {
         try { spo2Tracker?.unsetEventListener() } catch (_: Exception) { }
 
         if (!message.isNullOrBlank()) {
+            // 오류 메시지가 있으면 표시
             statusMessage = message
             if (shouldRetry && isPeriodicSpo2Active) {
                 lifecycleScope.launch {
@@ -261,11 +265,19 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        } else statusMessage = ""
-
-        // SpO2 동안 끊겼을 수 있는 HR 리스너 재개
-        isHrReactivating = true
-        startHrTracking()
+            // 오류 발생 시 HR 재정비 안 함 (오류 메시지 유지)
+        } else {
+            // 정상 완료된 경우에만 HR 센서 재정비
+            statusMessage = ""
+            lifecycleScope.launch {
+                isHrReactivating = true
+                statusMessage = "심박수 센서 재정비 중..."
+                // 약 10초 대기 (SDK가 자동으로 센서 복구할 시간)
+                delay(10000)
+                isHrReactivating = false
+                statusMessage = ""
+            }
+        }
     }
 
     private fun getErrorMessage(status: Int): String = when (status) {
@@ -281,12 +293,12 @@ class MainActivity : ComponentActivity() {
         // 1) 실시간 메시지 (String)
         val payload = hr.toString().toByteArray(StandardCharsets.UTF_8)
         nodeClient.connectedNodes.addOnSuccessListener { nodes ->
-                nodes.forEach { node ->
-                    messageClient.sendMessage(node.id, HR_MSG_PATH, payload)
-                        .addOnSuccessListener { Log.d(TAG, "HR msg -> ${node.displayName}") }
-                        .addOnFailureListener { e -> Log.e(TAG, "HR msg FAILED -> ${node.displayName}", e) }
-                }
+            nodes.forEach { node ->
+                messageClient.sendMessage(node.id, HR_MSG_PATH, payload)
+                    .addOnSuccessListener { Log.d(TAG, "HR msg -> ${node.displayName}") }
+                    .addOnFailureListener { e -> Log.e(TAG, "HR msg FAILED -> ${node.displayName}", e) }
             }
+        }
 
         // 2) DataItem (Float)
         val req = PutDataMapRequest.create(HR_DATA_PATH).apply {
@@ -349,51 +361,93 @@ private fun HealthMeasureScreen(
         if (granted) onPermissionGranted() else permissionLauncher.launch(Manifest.permission.BODY_SENSORS)
     }
 
+    // 📱 전체 화면 레이아웃 (중앙 정렬된 세로 배치)
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .fillMaxSize()              // 화면 전체 크기
+            .background(androidx.compose.ui.graphics.Color(0xFF0A1929))  // 파란 배경
+            .padding(16.dp),            // 화면 가장자리 여백
+        verticalArrangement = Arrangement.Center,      // 세로 중앙 정렬
+        horizontalAlignment = Alignment.CenterHorizontally  // 가로 중앙 정렬
     ) {
-        if (isMeasuring) {
-            CircularProgressIndicator()
-            Spacer(Modifier.height(12.dp))
-            Text("SpO₂ 측정 중…")
-        } else {
-            Button(onClick = onTogglePeriodicSpo2Click, enabled = hasPermission) {
-                Text(if (isPeriodicActive) "Stop Periodic SpO₂" else "Start Periodic SpO₂")
-            }
-        }
+        Spacer(Modifier.height(8.dp))
 
-        Spacer(Modifier.height(16.dp))
-
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 🎯 화면 중간: 센서 데이터 표시 영역
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         when {
+            // 🚫 케이스 1: 센서 권한이 없을 때
             !hasPermission -> {
                 Text("센서 권한을 허용해 주세요.", textAlign = TextAlign.Center)
             }
+
+            // ✅ 케이스 2: 센서가 정상적으로 사용 가능할 때 (메인 화면)
             hasSensorCapability -> {
+                // ❤️ 심박수(Heart Rate) 표시 영역
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (isHrReactivating) {
-                        Text("BPM: --")
-                        Spacer(Modifier.width(8.dp))
+                        // HR 센서 재활성화 중: "BPM: " + 작은 로딩 스피너
+                        Text("BPM: ", style = MaterialTheme.typography.title1)
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                     } else {
-                        Text(if (heartRate > 0) "$heartRate BPM" else "BPM: --")
+                        // HR 정상 측정 중: "72 BPM" 형식으로 표시
+                        Text(
+                            text = if (heartRate > 0) "$heartRate BPM" else "BPM: --",
+                            style = MaterialTheme.typography.title1
+                        )
                     }
                 }
-                Text(if (spo2 > 0) "SpO₂: ${spo2}%" else "SpO₂: --")
 
+                // 💧 산소포화도(SpO2) 표시 영역
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isMeasuring) {
+                        // 측정 중일 때: "SpO₂: " + 스피너
+                        Text("SpO₂: ", style = MaterialTheme.typography.title1)
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                    } else {
+                        // 측정 안 할 때: "SpO₂: 98%" 또는 "SpO₂: --" 형식으로 표시
+                        Text(
+                            text = if (spo2 > 0) "SpO₂: ${spo2}%" else "SpO₂: --",
+                            style = MaterialTheme.typography.title1
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                // 🔘 조용한 시작/중지 버튼 (하단에 작게)
+                Button(
+                    onClick = onTogglePeriodicSpo2Click,
+                    enabled = hasPermission,
+                    modifier = Modifier
+                        .height(32.dp)  // 버튼 높이 작게
+                        .width(80.dp),  // 버튼 너비 작게
+                    colors = androidx.wear.compose.material.ButtonDefaults.buttonColors(
+                        backgroundColor = MaterialTheme.colors.surface.copy(alpha = 0.3f)  // 반투명 배경
+                    )
+                ) {
+                    Text(
+                        text = if (isPeriodicActive) "중지" else "시작",
+                        style = MaterialTheme.typography.body2
+                    )
+                }
+
+                // 📢 상태 메시지 영역 (SpO2 측정 관련 메시지 표시)
                 if (statusMessage.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = statusMessage,
-                        color = if (statusMessage.contains("오류")) MaterialTheme.colors.error
-                        else MaterialTheme.colors.onSurface,
-                        textAlign = TextAlign.Center
+                        color = if (statusMessage.contains("오류") || statusMessage.contains("착용") || statusMessage.contains("움직임"))
+                            MaterialTheme.colors.error
+                        else
+                            MaterialTheme.colors.onSurface,
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.body2
                     )
                 }
             }
+
+            // ⏳ 케이스 3: 센서 초기화 중일 때
             else -> {
                 Text("센서를 초기화하는 중입니다…", textAlign = TextAlign.Center)
             }
