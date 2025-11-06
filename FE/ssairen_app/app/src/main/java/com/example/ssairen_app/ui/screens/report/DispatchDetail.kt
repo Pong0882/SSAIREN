@@ -38,7 +38,8 @@ data class DispatchDetailData(
 @Composable
 fun DispatchDetail(
     dispatchData: DispatchDetailData,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onCreateNewReport: () -> Unit = {}  // ⬅️ 추가
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -145,7 +146,7 @@ fun DispatchDetail(
 
                 // 새 일지 등록 버튼
                 Button(
-                    onClick = onDismiss,
+                    onClick = onCreateNewReport,  // ⬅️ 변경 (onDismiss → onCreateNewReport)
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
