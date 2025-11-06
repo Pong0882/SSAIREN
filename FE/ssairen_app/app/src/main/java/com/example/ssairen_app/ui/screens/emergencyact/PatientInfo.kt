@@ -5,38 +5,45 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField // ✅ import 추가
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle // ✅ import 추가
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign // ✅ import 추가
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ssairen_app.ui.components.MainButton
+import com.example.ssairen_app.viewmodel.ActivityLogData
+import com.example.ssairen_app.viewmodel.LogViewModel
+import com.example.ssairen_app.viewmodel.PatientInfoData  // ✅ import 유지
 
 @Composable
 fun PatientInfo(
-    viewModel: LogViewModel,  // ✅ LogViewModel로 변경
+    viewModel: LogViewModel,
     data: ActivityLogData
 ) {
-    // ✅ ViewModel 데이터로 초기화
-    var reporterPhone by remember { mutableStateOf(data.reporterPhone) }
-    var selectedReportMethod by remember { mutableStateOf(data.reportMethod) }
-    var patientName by remember { mutableStateOf(data.patientName) }
-    var selectedGender by remember { mutableStateOf(data.patientGender) }
-    var birthYear by remember { mutableStateOf(data.birthYear) }
-    var birthMonth by remember { mutableStateOf(data.birthMonth) }
-    var birthDay by remember { mutableStateOf(data.birthDay) }
-    var patientAge by remember { mutableStateOf(data.patientAge) }
-    var patientAddress by remember { mutableStateOf(data.patientAddress) }
-    var guardianName by remember { mutableStateOf(data.guardianName) }
-    var guardianRelation by remember { mutableStateOf(data.guardianRelation) }
-    var guardianPhone by remember { mutableStateOf(data.guardianPhone) }
+    // ✅ ViewModel 데이터로 초기화 (data.patientInfo 경로 사용)
+    var reporterPhone by remember { mutableStateOf(data.patientInfo.reporterPhone) }
+    var selectedReportMethod by remember { mutableStateOf(data.patientInfo.reportMethod) }
+    var patientName by remember { mutableStateOf(data.patientInfo.patientName) }
+    var selectedGender by remember { mutableStateOf(data.patientInfo.patientGender) }
+    var birthYear by remember { mutableStateOf(data.patientInfo.birthYear) }
+    var birthMonth by remember { mutableStateOf(data.patientInfo.birthMonth) }
+    var birthDay by remember { mutableStateOf(data.patientInfo.birthDay) }
+    var patientAge by remember { mutableStateOf(data.patientInfo.patientAge) }
+    var patientAddress by remember { mutableStateOf(data.patientInfo.patientAddress) }
+    var guardianName by remember { mutableStateOf(data.patientInfo.guardianName) }
+    var guardianRelation by remember { mutableStateOf(data.patientInfo.guardianRelation) }
+    var guardianPhone by remember { mutableStateOf(data.patientInfo.guardianPhone) }
 
-    // ✅ 자동 저장 함수
+    // ✅ 자동 저장 함수 (PatientInfoData 객체로 묶어서 전달)
     fun saveData() {
-        viewModel.updatePatientInfo(
+        val patientInfoData = PatientInfoData(
             reporterPhone = reporterPhone,
             reportMethod = selectedReportMethod,
             patientName = patientName,
@@ -50,6 +57,7 @@ fun PatientInfo(
             guardianRelation = guardianRelation,
             guardianPhone = guardianPhone
         )
+        viewModel.updatePatientInfo(patientInfoData)
     }
 
     Column(
@@ -90,7 +98,7 @@ fun PatientInfo(
                         value = reporterPhone,
                         onValueChange = {
                             reporterPhone = it
-                            saveData()
+                            saveData()  // ✅ 자동 저장
                         },
                         modifier = Modifier.weight(1f)
                     )
@@ -110,7 +118,7 @@ fun PatientInfo(
                             MainButton(
                                 onClick = {
                                     selectedReportMethod = "일반전화"
-                                    saveData()
+                                    saveData()  // ✅ 자동 저장
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -124,7 +132,7 @@ fun PatientInfo(
                             MainButton(
                                 onClick = {
                                     selectedReportMethod = "유선전화"
-                                    saveData()
+                                    saveData()  // ✅ 자동 저장
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -138,7 +146,7 @@ fun PatientInfo(
                             MainButton(
                                 onClick = {
                                     selectedReportMethod = "기타"
-                                    saveData()
+                                    saveData()  // ✅ 자동 저장
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -163,7 +171,7 @@ fun PatientInfo(
                         value = patientName,
                         onValueChange = {
                             patientName = it
-                            saveData()
+                            saveData()  // ✅ 자동 저장
                         },
                         modifier = Modifier.weight(1f)
                     )
@@ -183,7 +191,7 @@ fun PatientInfo(
                             MainButton(
                                 onClick = {
                                     selectedGender = "남성"
-                                    saveData()
+                                    saveData()  // ✅ 자동 저장
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -197,7 +205,7 @@ fun PatientInfo(
                             MainButton(
                                 onClick = {
                                     selectedGender = "여성"
-                                    saveData()
+                                    saveData()  // ✅ 자동 저장
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -212,7 +220,7 @@ fun PatientInfo(
                     }
                 }
 
-                // 생년월일 (년/월/일) + 나이
+                // ✅ 생년월일 (년/월/일) + 나이 (세 고정)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -231,23 +239,33 @@ fun PatientInfo(
                         ) {
                             // 년
                             Column(modifier = Modifier.weight(1f)) {
-                                androidx.compose.foundation.text.BasicTextField(
-                                    value = birthYear,
-                                    onValueChange = {
-                                        birthYear = it
-                                        saveData()
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 4.dp),
-                                    textStyle = androidx.compose.ui.text.TextStyle(
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    BasicTextField(
+                                        value = birthYear,
+                                        onValueChange = {
+                                            birthYear = it
+                                            saveData()  // ✅ 자동 저장
+                                        },
+                                        modifier = Modifier.padding(bottom = 4.dp),
+                                        textStyle = TextStyle(
+                                            color = Color.White,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Normal,
+                                            textAlign = TextAlign.End
+                                        ),
+                                        singleLine = true
+                                    )
+                                    Text(
+                                        text = "년",
                                         color = Color.White,
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.Normal,
-                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                    ),
-                                    singleLine = true
-                                )
+                                        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                                    )
+                                }
                                 HorizontalDivider(
                                     color = Color(0xFF4a4a4a),
                                     thickness = 1.dp
@@ -256,23 +274,33 @@ fun PatientInfo(
 
                             // 월
                             Column(modifier = Modifier.weight(1f)) {
-                                androidx.compose.foundation.text.BasicTextField(
-                                    value = birthMonth,
-                                    onValueChange = {
-                                        birthMonth = it
-                                        saveData()
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 4.dp),
-                                    textStyle = androidx.compose.ui.text.TextStyle(
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    BasicTextField(
+                                        value = birthMonth,
+                                        onValueChange = {
+                                            birthMonth = it
+                                            saveData()  // ✅ 자동 저장
+                                        },
+                                        modifier = Modifier.padding(bottom = 4.dp),
+                                        textStyle = TextStyle(
+                                            color = Color.White,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Normal,
+                                            textAlign = TextAlign.End
+                                        ),
+                                        singleLine = true
+                                    )
+                                    Text(
+                                        text = "월",
                                         color = Color.White,
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.Normal,
-                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                    ),
-                                    singleLine = true
-                                )
+                                        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                                    )
+                                }
                                 HorizontalDivider(
                                     color = Color(0xFF4a4a4a),
                                     thickness = 1.dp
@@ -281,23 +309,33 @@ fun PatientInfo(
 
                             // 일
                             Column(modifier = Modifier.weight(1f)) {
-                                androidx.compose.foundation.text.BasicTextField(
-                                    value = birthDay,
-                                    onValueChange = {
-                                        birthDay = it
-                                        saveData()
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 4.dp),
-                                    textStyle = androidx.compose.ui.text.TextStyle(
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    BasicTextField(
+                                        value = birthDay,
+                                        onValueChange = {
+                                            birthDay = it
+                                            saveData()  // ✅ 자동 저장
+                                        },
+                                        modifier = Modifier.padding(bottom = 4.dp),
+                                        textStyle = TextStyle(
+                                            color = Color.White,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Normal,
+                                            textAlign = TextAlign.End
+                                        ),
+                                        singleLine = true
+                                    )
+                                    Text(
+                                        text = "일",
                                         color = Color.White,
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.Normal,
-                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                    ),
-                                    singleLine = true
-                                )
+                                        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                                    )
+                                }
                                 HorizontalDivider(
                                     color = Color(0xFF4a4a4a),
                                     thickness = 1.dp
@@ -306,24 +344,56 @@ fun PatientInfo(
                         }
                     }
 
-                    UnderlineInputField(
-                        label = "나이",
-                        value = patientAge,
-                        onValueChange = {
-                            patientAge = it
-                            saveData()
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
+                    // 나이 (세 고정)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "나이",
+                            color = Color(0xFF999999),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            BasicTextField(
+                                value = patientAge,
+                                onValueChange = {
+                                    patientAge = it
+                                    saveData()  // ✅ 자동 저장
+                                },
+                                modifier = Modifier.padding(bottom = 4.dp),
+                                textStyle = TextStyle(
+                                    color = Color.White,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    textAlign = TextAlign.End
+                                ),
+                                singleLine = true
+                            )
+                            Text(
+                                text = "세",
+                                color = Color.White,
+                                fontSize = 15.sp,
+                                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                            )
+                        }
+                        HorizontalDivider(
+                            color = Color(0xFF4a4a4a),
+                            thickness = 1.dp
+                        )
+                    }
                 }
 
-                // 환자주소
+                // 환자주소 (한 줄)
                 UnderlineInputField(
                     label = "환자주소",
                     value = patientAddress,
                     onValueChange = {
                         patientAddress = it
-                        saveData()
+                        saveData()  // ✅ 자동 저장
                     }
                 )
 
@@ -343,7 +413,7 @@ fun PatientInfo(
                         value = guardianName,
                         onValueChange = {
                             guardianName = it
-                            saveData()
+                            saveData()  // ✅ 자동 저장
                         },
                         modifier = Modifier.weight(1f)
                     )
@@ -352,7 +422,7 @@ fun PatientInfo(
                         value = guardianRelation,
                         onValueChange = {
                             guardianRelation = it
-                            saveData()
+                            saveData()  // ✅ 자동 저장
                         },
                         modifier = Modifier.weight(1f)
                     )
@@ -364,7 +434,7 @@ fun PatientInfo(
                     value = guardianPhone,
                     onValueChange = {
                         guardianPhone = it
-                        saveData()
+                        saveData()  // ✅ 자동 저장
                     }
                 )
             }
@@ -373,7 +443,7 @@ fun PatientInfo(
 }
 
 // ==========================================
-// 밑줄 스타일 입력 필드 컴포넌트
+// 밑줄 스타일 입력 필드 컴포넌트 (오른쪽 정렬 기본값)
 // ==========================================
 @Composable
 private fun UnderlineInputField(
@@ -381,7 +451,7 @@ private fun UnderlineInputField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    textAlign: androidx.compose.ui.text.style.TextAlign = androidx.compose.ui.text.style.TextAlign.End
+    textAlign: TextAlign = TextAlign.End // ✅ 오른쪽 정렬 기본값
 ) {
     Column(modifier = modifier) {
         Text(
@@ -392,13 +462,13 @@ private fun UnderlineInputField(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        androidx.compose.foundation.text.BasicTextField(
+        BasicTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 4.dp),
-            textStyle = androidx.compose.ui.text.TextStyle(
+            textStyle = TextStyle(
                 color = Color.White,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Normal,

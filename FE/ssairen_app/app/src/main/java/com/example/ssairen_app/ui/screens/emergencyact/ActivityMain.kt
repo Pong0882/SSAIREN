@@ -27,7 +27,11 @@ import com.example.ssairen_app.ui.wear.WearDataViewModel
 
 @Composable
 fun ActivityMain(
-    onNavigateToActivityLog: () -> Unit = {}
+    onNavigateToActivityLog: () -> Unit = {},
+    onNavigateToPatientInfo: () -> Unit = {},      // ✅ 추가
+    onNavigateToPatientType: () -> Unit = {},      // ✅ 추가
+    onNavigateToPatientEva: () -> Unit = {},       // ✅ 추가
+    onNavigateToFirstAid: () -> Unit = {}          // ✅ 추가
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -46,7 +50,11 @@ fun ActivityMain(
         ) {
             when (selectedTab) {
                 0 -> HomeContent(
-                    onNavigateToActivityLog = onNavigateToActivityLog
+                    onNavigateToActivityLog = onNavigateToActivityLog,
+                    onNavigateToPatientInfo = onNavigateToPatientInfo,      // ✅ 전달
+                    onNavigateToPatientType = onNavigateToPatientType,      // ✅ 전달
+                    onNavigateToPatientEva = onNavigateToPatientEva,        // ✅ 전달
+                    onNavigateToFirstAid = onNavigateToFirstAid             // ✅ 전달
                 )
                 1 -> Text("구급활동일지 화면", color = Color.White)
                 2 -> Text("요약 화면", color = Color.White)
@@ -70,7 +78,11 @@ fun ActivityMain(
 
 @Composable
 private fun HomeContent(
-    onNavigateToActivityLog: () -> Unit = {}
+    onNavigateToActivityLog: () -> Unit = {},
+    onNavigateToPatientInfo: () -> Unit = {},      // ✅ 추가
+    onNavigateToPatientType: () -> Unit = {},      // ✅ 추가
+    onNavigateToPatientEva: () -> Unit = {},       // ✅ 추가
+    onNavigateToFirstAid: () -> Unit = {}          // ✅ 추가
 ) {
     var isRecording by remember { mutableStateOf(false) }  // ✅ 녹음 상태
 
@@ -217,9 +229,9 @@ private fun HomeContent(
                 modifier = Modifier.width(140.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 환자정보 버튼
+                // ✅ 0. 환자정보 버튼
                 MainButton(
-                    onClick = onNavigateToActivityLog,
+                    onClick = onNavigateToPatientInfo,  // ✅ 수정
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -239,8 +251,9 @@ private fun HomeContent(
                     )
                 }
 
+                // ✅ 3. 환자평가 버튼
                 MainButton(
-                    onClick = { /* 환자평가 화면으로 이동 */ },
+                    onClick = onNavigateToPatientEva,  // ✅ 수정
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -302,8 +315,9 @@ private fun HomeContent(
                     )
                 }
 
+                // ✅ 2. 환자 발생 유형 버튼
                 MainButton(
-                    onClick = { /* 환자 발생 유형 화면으로 이동 */ },
+                    onClick = onNavigateToPatientType,  // ✅ 수정
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -323,8 +337,9 @@ private fun HomeContent(
                     )
                 }
 
+                // ✅ 4. 응급처치 버튼
                 MainButton(
-                    onClick = { /* 응급처치 화면으로 이동 */ },
+                    onClick = onNavigateToFirstAid,  // ✅ 수정
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
