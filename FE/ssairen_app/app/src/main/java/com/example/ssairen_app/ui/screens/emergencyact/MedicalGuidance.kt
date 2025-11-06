@@ -80,7 +80,9 @@ fun MedicalGuidance(
                     TextField(
                         value = requestTime,
                         onValueChange = { requestTime = it },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(36.dp),
                         placeholder = {
                             Text(
                                 text = "00:00",
@@ -168,7 +170,9 @@ fun MedicalGuidance(
                     TextField(
                         value = doctorName,
                         onValueChange = { doctorName = it },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(36.dp),
                         placeholder = {
                             Text(
                                 text = "성명 서술",
@@ -235,7 +239,7 @@ fun MedicalGuidance(
 
                 MultiSelectButtonGroup(
                     options = listOf(
-                        "N/S", "D/W", "NTG", "귀관저혈성제", "에피네프린", "아미오다론", "기타 서술"
+                        "N/S", "D/W", "NTG", "기관지확장제", "에피네프린", "아미오다론", "기타 서술"
                     ),
                     selectedOptions = selectedMedication,
                     onOptionsChanged = { selectedMedication = it },
