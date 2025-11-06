@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ssairen_app"
 include(":app")
+include(":wear")
