@@ -256,6 +256,8 @@ class MainActivity : ComponentActivity() {
         if (!message.isNullOrBlank()) {
             // 오류 메시지가 있으면 표시
             statusMessage = message
+            sendStatusMessage(message, isError = true)  // 📤 앱에 에러 메시지 전송
+
             if (shouldRetry && isPeriodicSpo2Active) {
                 lifecycleScope.launch {
                     delay(SPO2_RETRY_DELAY_MS)
@@ -272,21 +274,37 @@ class MainActivity : ComponentActivity() {
             lifecycleScope.launch {
                 isHrReactivating = true
                 statusMessage = "심박수 센서 재정비 중..."
+                sendStatusMessage("센서 재정비 중", isError = false)  // 📤 앱에 재정비 상태 전송
+
                 // 약 10초 대기 (SDK가 자동으로 센서 복구할 시간)
                 delay(10000)
                 isHrReactivating = false
                 statusMessage = ""
+                sendStatusMessage("", isError = false)  // 📤 상태 메시지 클리어
             }
         }
     }
 
     private fun getErrorMessage(status: Int): String = when (status) {
-        -1, -2, -3, -4, -6 -> "측정 오류. 손목에 밀착 착용하고 움직임을 줄여주세요."
-        -5 -> "워치를 손목에 착용하고 다시 시도해 주세요."
-        else -> "알 수 없는 오류(코드: $status)"
+        -1, -2, -3, -4, -6 -> "측정 실패\n워치 밀착 확인"
+        -5 -> "손목 착용 확인"
+        else -> "측정 오류"
     }
 
     // ========= 데이터 전송 =========
+
+    /** 상태 메시지 전송 (SpO2 에러, HR 재정비 등) */
+    private fun sendStatusMessage(message: String, isError: Boolean = false) {
+        val path = if (isError) "/status_error" else "/status_info"
+        val payload = message.toByteArray(StandardCharsets.UTF_8)
+        nodeClient.connectedNodes.addOnSuccessListener { nodes ->
+            nodes.forEach { node ->
+                messageClient.sendMessage(node.id, path, payload)
+                    .addOnSuccessListener { Log.d(TAG, "📤 상태 메시지 전송: $message") }
+                    .addOnFailureListener { e -> Log.e(TAG, "상태 메시지 전송 실패", e) }
+            }
+        }
+    }
 
     /** 실시간 심박수 전송: 메시지(실시간) + DataItem(백업/초기값) */
     private fun sendHeartRate(hr: Int) {
