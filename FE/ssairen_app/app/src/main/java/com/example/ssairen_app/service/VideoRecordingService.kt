@@ -39,8 +39,8 @@ class VideoRecordingService : LifecycleService() {
         private const val NOTIFICATION_CHANNEL_NAME = "비디오 녹화"
         private const val NOTIFICATION_ID = 1001
 
-        // 자동 분할 주기: 7분 (FHD 1920x1080 @ 6Mbps 기준 약 315MB)
-        private const val MAX_RECORDING_DURATION_MILLIS = 7 * 60 * 1000L
+        // 자동 분할 주기: 8분 (FHD 1920x1080 @ 6Mbps 기준 약 360MB)
+        private const val MAX_RECORDING_DURATION_MILLIS = 8 * 60 * 1000L
 
         const val ACTION_START_RECORDING = "ACTION_START_RECORDING"
         const val ACTION_STOP_RECORDING = "ACTION_STOP_RECORDING"
@@ -228,7 +228,7 @@ class VideoRecordingService : LifecycleService() {
                             FallbackStrategy.higherQualityOrLowerThan(Quality.FHD)
                         )
                     )
-                    // 비트레이트 제한 (6 Mbps = 약 45MB/분, 7분 = 315MB)
+                    // 비트레이트 제한 (6 Mbps = 약 45MB/분, 8분 = 360MB)
                     .setTargetVideoEncodingBitRate(6_000_000)  // 6 Mbps
                     .build()
 
@@ -266,7 +266,7 @@ class VideoRecordingService : LifecycleService() {
                                         onRecordingStarted?.invoke()
                                     }
 
-                                    // 7분 후 자동 재시작 타이머
+                                    // 8분 후 자동 재시작 타이머
                                     startAutoRestartTimer()
                                 }
                                 is VideoRecordEvent.Finalize -> {
@@ -373,7 +373,7 @@ class VideoRecordingService : LifecycleService() {
     }
 
     /**
-     * 7분 후 자동으로 다음 파트 녹화 시작
+     * 8분 후 자동으로 다음 파트 녹화 시작
      */
     private fun startAutoRestartTimer() {
         // 이전 타이머 취소
@@ -437,8 +437,8 @@ class VideoRecordingService : LifecycleService() {
                         successCount++
                         Log.d(TAG, "Upload successful [${index + 1}/$totalFiles]: ${uploadResult.fileName}")
 
-                        // 업로드 성공 후 로컬 파일 삭제 (선택적)
-                        // apiVideoUploader.deleteLocalFile(file)
+                        // 업로드 성공 후 로컬 파일 삭제
+                        apiVideoUploader.deleteLocalFile(file)
                     }.onFailure { error ->
                         failCount++
                         Log.e(TAG, "Upload failed [${index + 1}/$totalFiles]: ${file.name}", error)

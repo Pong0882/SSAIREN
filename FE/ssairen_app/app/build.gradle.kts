@@ -54,6 +54,25 @@ dependencies {
     // Wearable Data Layer API for communication with wear module
     implementation("com.google.android.gms:play-services-wearable:18.2.0")
 
+    // BodyCam: CameraX
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.video)
+
+    // BodyCam: Lifecycle Service
+    implementation(libs.androidx.lifecycle.service)
+
+    // BodyCam: Retrofit & OkHttp
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    implementation(libs.gson)
+
+    // BodyCam: Coroutines
+    implementation(libs.kotlinx.coroutines.android)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

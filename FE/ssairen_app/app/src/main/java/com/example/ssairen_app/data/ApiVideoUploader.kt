@@ -105,8 +105,14 @@ class ApiVideoUploader {
      */
     suspend fun testConnection(): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            // JWT 토큰 확인
-            if (RetrofitClient.jwtToken.isNullOrEmpty()) {
+            // JWT 토큰 확인 (TokenManager 사용)
+            val token = try {
+                RetrofitClient.getTokenManager().getAccessToken()
+            } catch (e: Exception) {
+                null
+            }
+
+            if (token.isNullOrEmpty()) {
                 Log.e(TAG, "JWT token is not set")
                 Result.failure(Exception("인증 토큰이 설정되지 않았습니다."))
             } else {
@@ -139,6 +145,75 @@ class ApiVideoUploader {
         } catch (e: Exception) {
             Log.e(TAG, "Error deleting file", e)
             false
+        }
+    }
+
+    /**
+     * 로컬에 저장된 모든 미업로드 비디오 파일을 스캔하고 업로드
+     * 로그인 성공 시 자동으로 호출됩니다.
+     *
+     * @param context Android Context
+     * @param onProgress 전체 진행률 콜백 (현재/전체)
+     * @return 업로드 결과 (성공 개수, 실패 개수)
+     */
+    suspend fun uploadPendingVideos(
+        context: android.content.Context,
+        onProgress: ((Int, Int) -> Unit)? = null
+    ): Result<Pair<Int, Int>> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Starting pending videos upload...")
+
+            // 로컬 저장소에서 모든 .mp4 파일 스캔
+            val outputDir = context.getExternalFilesDir(null) ?: context.filesDir
+            val videoFiles = mutableListOf<File>()
+
+            // 재귀적으로 모든 mp4 파일 찾기
+            fun scanDirectory(dir: File) {
+                dir.listFiles()?.forEach { file ->
+                    when {
+                        file.isDirectory -> scanDirectory(file)
+                        file.extension.equals("mp4", ignoreCase = true) -> {
+                            videoFiles.add(file)
+                        }
+                    }
+                }
+            }
+            scanDirectory(outputDir)
+
+            if (videoFiles.isEmpty()) {
+                Log.d(TAG, "No pending videos to upload")
+                return@withContext Result.success(0 to 0)
+            }
+
+            Log.d(TAG, "Found ${videoFiles.size} video files to upload")
+
+            var successCount = 0
+            var failCount = 0
+
+            videoFiles.forEachIndexed { index, file ->
+                onProgress?.invoke(index + 1, videoFiles.size)
+                Log.d(TAG, "Uploading [${index + 1}/${videoFiles.size}]: ${file.name}")
+
+                val result = uploadVideo(file)
+
+                result.onSuccess { uploadResult ->
+                    successCount++
+                    Log.d(TAG, "Upload successful [${index + 1}/${videoFiles.size}]: ${uploadResult.fileName}")
+
+                    // 업로드 성공 후 로컬 파일 삭제
+                    deleteLocalFile(file)
+                }.onFailure { error ->
+                    failCount++
+                    Log.e(TAG, "Upload failed [${index + 1}/${videoFiles.size}]: ${file.name}", error)
+                }
+            }
+
+            Log.d(TAG, "Pending videos upload completed: success=$successCount, fail=$failCount")
+            Result.success(successCount to failCount)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error uploading pending videos", e)
+            Result.failure(e)
         }
     }
 }
