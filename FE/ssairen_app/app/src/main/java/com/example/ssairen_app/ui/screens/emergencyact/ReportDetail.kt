@@ -3,6 +3,7 @@ package com.example.ssairen_app.ui.screens.emergencyact
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -29,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ssairen_app.viewmodel.LogViewModel
 
 
 // ==========================================
@@ -104,21 +106,16 @@ fun ReportDetail(
 
                 IconButton(
                     onClick = {
-                        val currentList = paramedics
-                        val newList = currentList.toMutableList().apply {
-                            add(1, CrewMemberData())
-                        }
-                        paramedics = newList
+                        paramedics = paramedics + CrewMemberData()
                     },
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(Color(0xFF3b7cff), CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "구급대원 추가",
-                        tint = Color.White,
-                        modifier = Modifier
-                            .background(Color(0xFF3b7cff), CircleShape)
-                            .padding(4.dp)
+                        tint = Color.White
                     )
                 }
             }
@@ -195,34 +192,89 @@ fun ReportDetail(
                         .padding(16.dp)
                 )
 
-                TextField(
-                    value = if (selfTransportSignature.isEmpty()) "서명 또는 인" else "서명 완료",
-                    onValueChange = {},
-                    modifier = Modifier.fillMaxWidth(),
-                    readOnly = true,
-                    colors = TextFieldDefaults.colors(
-                        disabledContainerColor = Color.Transparent,
-                        disabledTextColor = Color(0xFF999999),
-                        disabledIndicatorColor = Color(0xFF3a3a3a),
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color(0xFF999999),
-                        focusedIndicatorColor = Color(0xFF3a3a3a),
-                        unfocusedIndicatorColor = Color(0xFF3a3a3a),
-                    ),
-                    textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-                    interactionSource = remember { MutableInteractionSource() }
-                        .also { interactionSource ->
-                            LaunchedEffect(interactionSource) {
-                                interactionSource.interactions.collect {
-                                    if (it is PressInteraction.Release) {
-                                        showSelfTransportSignatureDialog = true
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.33f)
+                            .height(60.dp)
+                            .background(Color.Transparent)
+                            .clickable { showSelfTransportSignatureDialog = true }
+                    ) {
+                        // 하단 테두리
+                        Canvas(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .align(Alignment.BottomCenter)
+                        ) {
+                            drawLine(
+                                color = Color(0xFF3a3a3a),
+                                start = Offset(0f, 0f),
+                                end = Offset(size.width, 0f),
+                                strokeWidth = 2f
+                            )
+                        }
+
+                        if (selfTransportSignature.isEmpty()) {
+                            // 서명이 없을 때 텍스트 표시
+                            Text(
+                                text = "서명 또는 인",
+                                color = Color(0xFF999999),
+                                fontSize = 14.sp,
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .padding(bottom = 8.dp)
+                            )
+                        } else {
+                            // 서명이 있을 때 Canvas로 서명 표시
+                            Canvas(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(bottom = 8.dp)
+                            ) {
+                                if (selfTransportSignature.size > 1) {
+                                    val pathData = Path()
+
+                                    // 서명 좌표의 범위를 구해서 스케일링
+                                    val minX = selfTransportSignature.minOfOrNull { it.x } ?: 0f
+                                    val maxX = selfTransportSignature.maxOfOrNull { it.x } ?: size.width
+                                    val minY = selfTransportSignature.minOfOrNull { it.y } ?: 0f
+                                    val maxY = selfTransportSignature.maxOfOrNull { it.y } ?: size.height
+
+                                    val scaleX = if (maxX - minX > 0) size.width / (maxX - minX) else 1f
+                                    val scaleY = if (maxY - minY > 0) size.height / (maxY - minY) else 1f
+                                    val scale = minOf(scaleX, scaleY) * 0.8f
+
+                                    val offsetX = (size.width - (maxX - minX) * scale) / 2f
+                                    val offsetY = (size.height - (maxY - minY) * scale) / 2f
+
+                                    val scaledPoints = selfTransportSignature.map { offset ->
+                                        Offset(
+                                            x = (offset.x - minX) * scale + offsetX,
+                                            y = (offset.y - minY) * scale + offsetY
+                                        )
                                     }
+
+                                    pathData.moveTo(scaledPoints.first().x, scaledPoints.first().y)
+                                    scaledPoints.drop(1).forEach { offset ->
+                                        pathData.lineTo(offset.x, offset.y)
+                                    }
+
+                                    drawPath(
+                                        path = pathData,
+                                        color = Color.White,
+                                        style = Stroke(width = 3f)
+                                    )
                                 }
                             }
                         }
-                )
+                    }
+                }
             }
         }
 
@@ -434,15 +486,12 @@ private fun CrewMemberSection(
     val qualifications = listOf("1급", "2급", "간호사", "구급교육", "기타")
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (title == "구급대원") {
-            Text(
-                text = title,
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
-
+        Text(
+            text = title,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium
+        )
 
         // 성명 + 계급(p)
         Row(
@@ -572,36 +621,89 @@ private fun CrewMemberSection(
         }
 
         // 서명 또는 인
-        TextField(
-            value = if (crewMember.signature.isEmpty()) "서명 또는 인" else "서명 완료",
-            onValueChange = {},
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp),
-            readOnly = true,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color(0xFF999999),
-                disabledTextColor = Color(0xFF999999),
-                focusedIndicatorColor = Color(0xFF3a3a3a),
-                unfocusedIndicatorColor = Color(0xFF3a3a3a),
-                disabledIndicatorColor = Color(0xFF3a3a3a)
-            ),
-            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-            interactionSource = remember { MutableInteractionSource() }
-                .also { interactionSource ->
-                    LaunchedEffect(interactionSource) {
-                        interactionSource.interactions.collect {
-                            if (it is PressInteraction.Release) {
-                                onSignatureClick()
+                .padding(top = 4.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.33f)
+                    .height(60.dp)
+                    .background(Color.Transparent)
+                    .clickable { onSignatureClick() }
+            ) {
+                // 하단 테두리
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .align(Alignment.BottomCenter)
+                ) {
+                    drawLine(
+                        color = Color(0xFF3a3a3a),
+                        start = Offset(0f, 0f),
+                        end = Offset(size.width, 0f),
+                        strokeWidth = 2f
+                    )
+                }
+
+                if (crewMember.signature.isEmpty()) {
+                    // 서명이 없을 때 텍스트 표시
+                    Text(
+                        text = "서명 또는 인",
+                        color = Color(0xFF999999),
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(bottom = 8.dp)
+                    )
+                } else {
+                    // 서명이 있을 때 Canvas로 서명 표시
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 8.dp)
+                    ) {
+                        if (crewMember.signature.size > 1) {
+                            val pathData = Path()
+
+                            // 서명 좌표의 범위를 구해서 스케일링
+                            val minX = crewMember.signature.minOfOrNull { it.x } ?: 0f
+                            val maxX = crewMember.signature.maxOfOrNull { it.x } ?: size.width
+                            val minY = crewMember.signature.minOfOrNull { it.y } ?: 0f
+                            val maxY = crewMember.signature.maxOfOrNull { it.y } ?: size.height
+
+                            val scaleX = if (maxX - minX > 0) size.width / (maxX - minX) else 1f
+                            val scaleY = if (maxY - minY > 0) size.height / (maxY - minY) else 1f
+                            val scale = minOf(scaleX, scaleY) * 0.8f
+
+                            val offsetX = (size.width - (maxX - minX) * scale) / 2f
+                            val offsetY = (size.height - (maxY - minY) * scale) / 2f
+
+                            val scaledPoints = crewMember.signature.map { offset ->
+                                Offset(
+                                    x = (offset.x - minX) * scale + offsetX,
+                                    y = (offset.y - minY) * scale + offsetY
+                                )
                             }
+
+                            pathData.moveTo(scaledPoints.first().x, scaledPoints.first().y)
+                            scaledPoints.drop(1).forEach { offset ->
+                                pathData.lineTo(offset.x, offset.y)
+                            }
+
+                            drawPath(
+                                path = pathData,
+                                color = Color.White,
+                                style = Stroke(width = 3f)
+                            )
                         }
                     }
                 }
-        )
+            }
+        }
     }
 }
 
