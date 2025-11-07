@@ -22,7 +22,7 @@ public record LoginRequest(
 
         @Schema(
                 description = "사용자명 (구급대원: 학번, 병원: 병원명)",
-                example = "20240001",
+                example = "20240007",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
         @NotBlank(message = "사용자명은 필수입니다")

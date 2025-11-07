@@ -5,6 +5,7 @@ import com.ssairen.domain.emergency.dto.FireStateEmergencyReportsResponse;
 import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
 import com.ssairen.domain.emergency.entity.Dispatch;
 import com.ssairen.domain.emergency.entity.EmergencyReport;
+import com.ssairen.domain.emergency.enums.ReportSectionType;
 import com.ssairen.domain.emergency.mapper.EmergencyReportMapper;
 import com.ssairen.domain.emergency.repository.DispatchRepository;
 import com.ssairen.domain.emergency.repository.EmergencyReportRepository;
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,6 +36,7 @@ public class EmergencyReportServiceImpl implements EmergencyReportService {
     private final FireStateRepository fireStateRepository;
     private final EmergencyReportValidator emergencyReportValidator;
     private final EmergencyReportMapper emergencyReportMapper;
+    private final ReportSectionService reportSectionService;
 
     /**
      * 구급일지 생성 (출동 배정)
@@ -72,8 +75,33 @@ public class EmergencyReportServiceImpl implements EmergencyReportService {
         log.info("구급일지 생성 완료 - 구급일지 ID: {}, 출동지령 ID: {}, 구급대원: {}, 소방서 ID: {}",
                 savedReport.getId(), dispatch.getId(), paramedic.getName(), fireState.getId());
 
-        // 4. 응답 DTO 변환
+        // 4. 모든 상세섹션 생성 (SUMMATION 제외)
+        createAllReportSections(savedReport.getId(), paramedicId);
+
+        // 5. 응답 DTO 변환
         return emergencyReportMapper.toEmergencyReportCreateResponse(savedReport);
+    }
+
+    /**
+     * 구급일지의 모든 상세섹션 생성 (SUMMATION 제외)
+     *
+     * @param emergencyReportId 구급일지 ID
+     * @param paramedicId       구급대원 ID
+     */
+    private void createAllReportSections(Long emergencyReportId, Integer paramedicId) {
+        // ReportSectionType의 모든 타입 가져오기
+        List<ReportSectionType> allTypes = Arrays.asList(ReportSectionType.values());
+
+        log.info("구급일지 상세섹션 생성 시작 - 구급일지 ID: {}, 생성할 섹션 수: {}",
+                emergencyReportId, allTypes.size());
+
+        for (ReportSectionType type : allTypes) {
+            reportSectionService.createReportSection(emergencyReportId, type, paramedicId);
+            log.debug("섹션 생성 완료 - 타입: {}", type);
+        }
+
+        log.info("구급일지 상세섹션 생성 완료 - 구급일지 ID: {}, 생성: {}개",
+                emergencyReportId, allTypes.size());
     }
 
     /**

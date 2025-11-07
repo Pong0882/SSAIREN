@@ -5,6 +5,8 @@ import com.ssairen.global.annotation.ExcludeFromLogging;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 /**
  * 병원 엔티티
  */
@@ -29,4 +31,16 @@ public class Hospital extends BaseEntity {
     @ExcludeFromLogging
     @Column(name = "password", nullable = false, length = 100)
     private String password;
+
+    @Column(name = "latitude", precision = 10, scale = 7)
+    private BigDecimal latitude;
+
+    @Column(name = "longitude", precision = 10, scale = 7)
+    private BigDecimal longitude;
+
+    @Column(name = "phone_number", length = 20)
+    private String phoneNumber;
+
+    @Column(name = "address", length = 255)
+    private String address;
 }
