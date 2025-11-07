@@ -7,60 +7,59 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ssairen_app.viewmodel.AuthViewModel
+import com.example.ssairen_app.viewmodel.LoginState
 
 @Composable
 fun Login(
     onLoginSuccess: () -> Unit = {},
-    onForgotPassword: () -> Unit = {}
+    onForgotPassword: () -> Unit = {},
+    viewModel: AuthViewModel = viewModel()  // ⭐ ViewModel 추가
 ) {
     var userId by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
 
-    // TODO: ViewModel 연결 (나중에)
-    /*
-    val context = LocalContext.current
-    val viewModel: LoginViewModel = viewModel(
-        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                @Suppress("UNCHECKED_CAST")
-                return LoginViewModel(context) as T
-            }
-        }
-    )
+    // ⭐ ViewModel 상태 관찰
+    val loginState by viewModel.loginState.observeAsState(LoginState.Idle)
+    val isLoggedIn by viewModel.isLoggedIn.observeAsState(false)
 
-    val loginState by viewModel.loginState.collectAsState()
-
-    // 자동 로그인 체크
+    // ⭐ 자동 로그인 체크
     LaunchedEffect(Unit) {
-        if (viewModel.checkAutoLogin()) {
+        if (isLoggedIn) {
             onLoginSuccess()
         }
     }
 
-    // 로그인 성공 시
-    LaunchedEffect(loginState.isSuccess) {
-        if (loginState.isSuccess) {
+    // ⭐ 로그인 성공 시 화면 이동
+    LaunchedEffect(loginState) {
+        if (loginState is LoginState.Success) {
             onLoginSuccess()
         }
     }
 
-    // 에러 메시지 표시
-    LaunchedEffect(loginState.errorMessage) {
-        loginState.errorMessage?.let { message ->
-            println("❌ 로그인 에러: $message")
+    // ⭐ 로딩 상태
+    val isLoading = loginState is LoginState.Loading
+
+    // ⭐ 에러 메시지 표시
+    var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    LaunchedEffect(loginState) {
+        if (loginState is LoginState.Error) {
+            errorMessage = (loginState as LoginState.Error).message
+            showError = true
         }
     }
-    */
 
     Box(
         modifier = Modifier
@@ -71,7 +70,8 @@ fun Login(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 40.dp),
+                .padding(horizontal = 32.dp)
+                .widthIn(max = 400.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -84,7 +84,7 @@ fun Login(
                 modifier = Modifier.padding(bottom = 60.dp)
             )
 
-            // ID 입력 필드
+            // ID 입력 필드 (학번)
             OutlinedTextField(
                 value = userId,
                 onValueChange = { userId = it },
@@ -93,7 +93,7 @@ fun Login(
                     .height(56.dp),
                 placeholder = {
                     Text(
-                        text = "ID",
+                        text = "학번",
                         color = Color(0xFF666666),
                         fontSize = 14.sp
                     )
@@ -145,29 +145,46 @@ fun Login(
                 enabled = !isLoading
             )
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // ⭐ 에러 메시지 표시
+            if (showError) {
+                Text(
+                    text = errorMessage,
+                    color = Color(0xFFFF6B6B),
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 로그인하기 버튼
+            // 로그인하기 버튼 (항상 보이도록 수정)
             Button(
                 onClick = {
-                    isLoading = true
-
-                    // TODO: ViewModel 로그인 호출 (나중에)
-                    // viewModel.login(userId, password)
-
-                    // 임시: 바로 로그인 성공 처리
-                    isLoading = false
-                    onLoginSuccess()
+                    if (userId.isNotEmpty() && password.isNotEmpty()) {
+                        showError = false
+                        viewModel.login(userId, password)
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
+                    .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3b7cff),
-                    contentColor = Color.White
+                    containerColor = if (userId.isNotEmpty() && password.isNotEmpty()) {
+                        Color(0xFF2F67FF)
+                    } else {
+                        Color(0xFF2F67FF).copy(alpha = 0.5f)
+                    },
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFF2F67FF).copy(alpha = 0.5f),
+                    disabledContentColor = Color.White.copy(alpha = 0.7f)
                 ),
                 shape = RoundedCornerShape(8.dp),
-                enabled = !isLoading && userId.isNotEmpty() && password.isNotEmpty()
+                enabled = !isLoading
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
@@ -186,17 +203,20 @@ fun Login(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 비밀번호 찾기
-            TextButton(
-                onClick = onForgotPassword,
-                modifier = Modifier.fillMaxWidth()
+            // 비밀번호 찾기 (오른쪽 정렬)
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.CenterEnd
             ) {
-                Text(
-                    text = "비밀번호 찾기",
-                    color = Color(0xFF999999),
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center
-                )
+                TextButton(
+                    onClick = onForgotPassword
+                ) {
+                    Text(
+                        text = "비밀번호 찾기",
+                        color = Color(0xFF999999),
+                        fontSize = 14.sp
+                    )
+                }
             }
         }
     }
