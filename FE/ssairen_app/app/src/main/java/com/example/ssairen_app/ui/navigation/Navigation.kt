@@ -1,3 +1,4 @@
+//Navigation.kt
 package com.example.ssairen_app.ui.navigation
 
 import androidx.compose.foundation.layout.*
@@ -77,21 +78,21 @@ fun ActivityLogNavigationBar(
                 isSelected = selectedTab == 1,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "신고접수")
+                Text(text = "구급출동")
             }
             ActivityButton(
                 onClick = { onTabSelected(2) },
                 isSelected = selectedTab == 2,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "출동정보")
+                Text(text = "환자발생유형")
             }
             ActivityButton(
                 onClick = { onTabSelected(3) },
                 isSelected = selectedTab == 3,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "현장활동")
+                Text(text = "환자평가")
             }
         }
 
@@ -105,28 +106,28 @@ fun ActivityLogNavigationBar(
                 isSelected = selectedTab == 4,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "이송정보")
+                Text(text = "응급처치")
             }
             ActivityButton(
                 onClick = { onTabSelected(5) },
                 isSelected = selectedTab == 5,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "병원정보")
+                Text(text = "의료지도")
             }
             ActivityButton(
                 onClick = { onTabSelected(6) },
                 isSelected = selectedTab == 6,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "귀소정보")
+                Text(text = "환자이송")
             }
             ActivityButton(
                 onClick = { onTabSelected(7) },
                 isSelected = selectedTab == 7,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "특이사항")
+                Text(text = "세부상황표")
             }
         }
     }

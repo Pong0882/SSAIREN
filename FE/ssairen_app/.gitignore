@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Wear module
+wear/.gradle/
+wear/.idea/
+wear/build/
+wear/local.properties
