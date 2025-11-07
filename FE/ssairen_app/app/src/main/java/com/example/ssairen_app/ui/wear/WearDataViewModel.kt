@@ -17,6 +17,7 @@ class WearDataViewModel(application: Application) : AndroidViewModel(application
 
     companion object {
         private const val TAG = "WearDataViewModel"
+        private const val MAX_HISTORY_SIZE = 50 // 최대 50개 데이터 포인트
 
         // Singleton 인스턴스 (Service에서 접근용)
         private var instance: WearDataViewModel? = null
@@ -34,6 +35,10 @@ class WearDataViewModel(application: Application) : AndroidViewModel(application
     // ========= 심박수 상태 =========
     private val _heartRate = MutableStateFlow(0)
     val heartRate: StateFlow<Int> = _heartRate.asStateFlow()
+
+    // ========= 심박수 히스토리 (그래프용) =========
+    private val _heartRateHistory = MutableStateFlow<List<Int>>(emptyList())
+    val heartRateHistory: StateFlow<List<Int>> = _heartRateHistory.asStateFlow()
 
     // ========= 산소포화도 상태 =========
     private val _spo2 = MutableStateFlow(0)
@@ -74,6 +79,21 @@ class WearDataViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             _heartRate.value = hr
             _lastUpdateTime.value = System.currentTimeMillis()
+
+            // 히스토리에 추가 (0보다 큰 값만)
+            if (hr > 0) {
+                val currentHistory = _heartRateHistory.value.toMutableList()
+                currentHistory.add(hr)
+
+                // 최대 개수 초과 시 가장 오래된 데이터 제거
+                if (currentHistory.size > MAX_HISTORY_SIZE) {
+                    currentHistory.removeAt(0)
+                }
+
+                _heartRateHistory.value = currentHistory
+                Log.d(TAG, "📊 히스토리 업데이트: ${currentHistory.size}개 데이터 포인트")
+            }
+
             Log.d(TAG, "✅ StateFlow 업데이트 완료: heartRate = ${_heartRate.value}")
         }
     }
