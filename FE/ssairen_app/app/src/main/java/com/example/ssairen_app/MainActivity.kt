@@ -12,10 +12,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.ssairen_app.ui.context.DispatchProvider
 import com.example.ssairen_app.ui.screens.report.ReportHome
 import com.example.ssairen_app.ui.screens.emergencyact.ActivityMain
-import com.example.ssairen_app.ui.screens.emergencyact.ActivityLogHome  // ✅ 추가
+import com.example.ssairen_app.ui.screens.emergencyact.ActivityLogHome
+import com.example.ssairen_app.ui.screens.Summation
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,8 +45,8 @@ fun AppNavigation() {
     ) {
         composable("report_home") {
             ReportHome(
-                onNavigateToActivityLog = {  // ✅ 이름 변경
-                    navController.navigate("activity_log")  // ✅ activity_log로 이동
+                onNavigateToActivityLog = {
+                    navController.navigate("activity_log/0") // ✅ 수정
                 }
             )
         }
@@ -52,22 +54,58 @@ fun AppNavigation() {
         composable("activity_main") {
             ActivityMain(
                 onNavigateToActivityLog = {
-                    navController.navigate("activity_log")  // ✅ 구급활동일지로 이동
+                    navController.navigate("activity_log/0") // ✅ 수정
+                },
+                onNavigateToPatientInfo = {
+                    navController.navigate("activity_log/0")
+                },
+                onNavigateToPatientType = {
+                    navController.navigate("activity_log/2")
+                },
+                onNavigateToPatientEva = {
+                    navController.navigate("activity_log/3")
+                },
+                onNavigateToFirstAid = {
+                    navController.navigate("activity_log/4")
                 }
             )
         }
 
-        // ✅ 구급활동일지 화면 추가
-        composable("activity_log") {
+        // ✅ 구급활동일지 화면 (정의는 올바름)
+        composable(
+            route = "activity_log/{tab}",
+            arguments = listOf(navArgument("tab") { defaultValue = 0 })
+        ) { backStackEntry ->
+            val tabIndex = backStackEntry.arguments?.getInt("tab") ?: 0
             ActivityLogHome(
-                initialTab = 0,  // 0 = 환자정보
+                initialTab = tabIndex,
                 onNavigateBack = {
-                    navController.popBackStack()  // 뒤로가기
+                    navController.popBackStack()
                 },
                 onNavigateToHome = {
-                    navController.navigate("activity_main") {  // ✅ 홈으로 이동
-                        popUpTo("activity_log") { inclusive = true }
+                    navController.navigate("activity_main") {
+                        popUpTo("activity_log/{tab}") { inclusive = true }
                     }
+                },
+                onNavigateToSummation = {
+                    navController.navigate("summation")
+                }
+            )
+        }
+
+        // ✅ 요약본 화면
+        composable("summation") {
+            Summation(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToHome = {
+                    navController.navigate("activity_main") {
+                        popUpTo("summation") { inclusive = true }
+                    }
+                },
+                onNavigateToActivityLog = {
+                    navController.navigate("activity_log/0") // ✅ 수정
                 }
             )
         }

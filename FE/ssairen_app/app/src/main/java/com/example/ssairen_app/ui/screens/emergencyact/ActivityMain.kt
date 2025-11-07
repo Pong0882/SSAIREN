@@ -16,13 +16,22 @@ import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import android.util.Log
+import androidx.compose.ui.text.style.TextAlign
 import com.example.ssairen_app.ui.components.DarkCard
 import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.ui.components.MainButton
+import com.example.ssairen_app.ui.wear.WearDataViewModel
 
 @Composable
 fun ActivityMain(
-    onNavigateToActivityLog: () -> Unit = {}
+    onNavigateToActivityLog: () -> Unit = {},
+    onNavigateToPatientInfo: () -> Unit = {},      // ✅ 추가
+    onNavigateToPatientType: () -> Unit = {},      // ✅ 추가
+    onNavigateToPatientEva: () -> Unit = {},       // ✅ 추가
+    onNavigateToFirstAid: () -> Unit = {}          // ✅ 추가
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -41,7 +50,11 @@ fun ActivityMain(
         ) {
             when (selectedTab) {
                 0 -> HomeContent(
-                    onNavigateToActivityLog = onNavigateToActivityLog
+                    onNavigateToActivityLog = onNavigateToActivityLog,
+                    onNavigateToPatientInfo = onNavigateToPatientInfo,      // ✅ 전달
+                    onNavigateToPatientType = onNavigateToPatientType,      // ✅ 전달
+                    onNavigateToPatientEva = onNavigateToPatientEva,        // ✅ 전달
+                    onNavigateToFirstAid = onNavigateToFirstAid             // ✅ 전달
                 )
                 1 -> Text("구급활동일지 화면", color = Color.White)
                 2 -> Text("요약 화면", color = Color.White)
@@ -65,9 +78,31 @@ fun ActivityMain(
 
 @Composable
 private fun HomeContent(
-    onNavigateToActivityLog: () -> Unit = {}
+    onNavigateToActivityLog: () -> Unit = {},
+    onNavigateToPatientInfo: () -> Unit = {},      // ✅ 추가
+    onNavigateToPatientType: () -> Unit = {},      // ✅ 추가
+    onNavigateToPatientEva: () -> Unit = {},       // ✅ 추가
+    onNavigateToFirstAid: () -> Unit = {}          // ✅ 추가
 ) {
     var isRecording by remember { mutableStateOf(false) }  // ✅ 녹음 상태
+
+    // ✅ Wear 데이터 ViewModel (Singleton 사용)
+    val context = LocalContext.current
+    val application = context.applicationContext as android.app.Application
+    val wearViewModel: WearDataViewModel = remember {
+        WearDataViewModel.getInstance(application)
+    }
+
+    Log.d("ActivityMain", "🎨 HomeContent Composable 렌더링")
+    Log.d("ActivityMain", "📱 ViewModel 인스턴스: $wearViewModel")
+
+    // ✅ Wear에서 전송된 실시간 데이터
+    val heartRate by wearViewModel.heartRate.collectAsState()
+    val spo2 by wearViewModel.spo2.collectAsState()
+    val spo2ErrorMessage by wearViewModel.spo2ErrorMessage.collectAsState()
+    val hrStatusMessage by wearViewModel.hrStatusMessage.collectAsState()
+
+    Log.d("ActivityMain", "📊 현재 UI에 표시되는 값 - HR: $heartRate, SpO2: $spo2, SpO2 에러: '$spo2ErrorMessage', HR 상태: '$hrStatusMessage'")
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -115,20 +150,24 @@ private fun HomeContent(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 심박수(맥박)
+                    // 심박수(맥박) - ✅ Wear에서 실시간 업데이트
                     StatCard(
                         title = "심박수(맥박)",
-                        value = "77",
+                        value = if (hrStatusMessage.isNotEmpty()) hrStatusMessage
+                               else if (heartRate > 0) "$heartRate bpm" else "--",
                         modifier = Modifier.weight(1f),
-                        valueColor = Color(0xFF00d9ff)
+                        valueColor = if (hrStatusMessage.isNotEmpty()) Color(0xFFFF9800) else Color(0xFF00d9ff),
+                        isStatusMessage = hrStatusMessage.isNotEmpty()
                     )
 
-                    // 산소포화도(SpO2)
+                    // 산소포화도(SpO2) - ✅ Wear에서 실시간 업데이트
                     StatCard(
                         title = "산소포화도(SpO2)",
-                        value = "98%",
+                        value = if (spo2ErrorMessage.isNotEmpty()) spo2ErrorMessage
+                               else if (spo2 > 0) "$spo2%" else "--",
                         modifier = Modifier.weight(1f),
-                        valueColor = Color(0xFF00d9ff)
+                        valueColor = if (spo2ErrorMessage.isNotEmpty()) Color(0xFFFF5252) else Color(0xFF00d9ff),
+                        isStatusMessage = spo2ErrorMessage.isNotEmpty()
                     )
                 }
 
@@ -190,9 +229,9 @@ private fun HomeContent(
                 modifier = Modifier.width(140.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 환자정보 버튼
+                // ✅ 0. 환자정보 버튼
                 MainButton(
-                    onClick = onNavigateToActivityLog,
+                    onClick = onNavigateToPatientInfo,  // ✅ 수정
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -212,8 +251,9 @@ private fun HomeContent(
                     )
                 }
 
+                // ✅ 3. 환자평가 버튼
                 MainButton(
-                    onClick = { /* 환자평가 화면으로 이동 */ },
+                    onClick = onNavigateToPatientEva,  // ✅ 수정
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -275,8 +315,9 @@ private fun HomeContent(
                     )
                 }
 
+                // ✅ 2. 환자 발생 유형 버튼
                 MainButton(
-                    onClick = { /* 환자 발생 유형 화면으로 이동 */ },
+                    onClick = onNavigateToPatientType,  // ✅ 수정
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -296,8 +337,9 @@ private fun HomeContent(
                     )
                 }
 
+                // ✅ 4. 응급처치 버튼
                 MainButton(
-                    onClick = { /* 응급처치 화면으로 이동 */ },
+                    onClick = onNavigateToFirstAid,  // ✅ 수정
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -371,15 +413,17 @@ private fun StatCard(
     title: String,
     value: String,
     valueColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isStatusMessage: Boolean = false
 ) {
     DarkCard(
-        modifier = modifier,
+        modifier = modifier.height(100.dp),  // 높이 고정
         cornerRadius = 8.dp
     ) {
         Column(
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = title,
@@ -387,11 +431,14 @@ private fun StatCard(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
             )
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = value,
                 color = valueColor,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = if (isStatusMessage) 12.sp else 32.sp,
+                fontWeight = if (isStatusMessage) FontWeight.Medium else FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = if (isStatusMessage) 2 else 1
             )
         }
     }

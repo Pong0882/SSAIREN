@@ -16,12 +16,15 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.ui.navigation.ActivityLogNavigationBar
 import com.example.ssairen_app.ui.navigation.EmergencyNav
+import com.example.ssairen_app.viewmodel.LogViewModel
+import com.example.ssairen_app.ui.screens.emergencyact.PatientType
 
 @Composable
 fun ActivityLogHome(
     initialTab: Int = 0,
     onNavigateBack: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
+    onNavigateToSummation: () -> Unit = {},  // ✅ 추가
     viewModel: LogViewModel = viewModel()
 ) {
     var selectedLogTab by remember { mutableIntStateOf(initialTab) }
@@ -81,7 +84,7 @@ fun ActivityLogHome(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 3. 내용 영역 - ✅ 파일명에 맞게 수정
+        // 3. 내용 영역
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -92,45 +95,36 @@ fun ActivityLogHome(
                     viewModel = viewModel,
                     data = activityLogData
                 )
-//                1 -> PatientEva(
-//                    viewModel = viewModel,
-//                    data = activityLogData
-//                )
-//                2 -> PatientTransport(
-//                    viewModel = viewModel,
-//                    data = activityLogData
-//                )
-//                3 -> DispatchSection(
-//                    viewModel = viewModel,
-//                    data = activityLogData
-//                )
-//                4 -> PatienType(
-//                    viewModel = viewModel,
-//                    data = activityLogData
-//                )
-//                5 -> FirstAid(
-//                    viewModel = viewModel,
-//                    data = activityLogData
-//                )
-//                6 -> MedicalGuidance(
-//                    viewModel = viewModel,
-//                    data = activityLogData
-//                )
-//                7 -> ReportDetail(
-//                    viewModel = viewModel,
-//                    data = activityLogData
-//                )
+                1 -> Text("구급출동", color = Color.White)  // TODO: DispatchSection()
+                2 -> PatientType(
+                    viewModel = viewModel,
+                    data = activityLogData
+                )
+                3 -> PatientEva(
+                    viewModel = viewModel,
+                    data = activityLogData
+                )
+                4 -> FirstAid(
+                    viewModel = viewModel,
+                    data = activityLogData
+                )
+                5 -> Text("의료지도", color = Color.White)  // TODO: MedicalGuidance()
+                6 -> Text("환자이송", color = Color.White)  // TODO: PatientTransport()
+                7 -> Text("세부상황표", color = Color.White)  // TODO: ReportDetail()
             }
         }
 
-        // 4. 하단 네비게이션
+        // 4. 하단 네비게이션 ✅ 수정
         EmergencyNav(
             selectedTab = selectedBottomTab,
             onTabSelected = {
                 selectedBottomTab = it
-                if (it == 0) {
-                    // viewModel.submitToDatabase()
-                    onNavigateToHome()
+                when (it) {
+                    0 -> onNavigateToHome()         // 홈
+                    1 -> { /* 현재 화면 유지 */ }  // 구급활동일지
+                    2 -> onNavigateToSummation()    // ✅ 요약
+                    3 -> { /* TODO: 메모 */ }
+                    4 -> { /* TODO: 병원이송 */ }
                 }
             }
         )
