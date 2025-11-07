@@ -105,9 +105,9 @@ class ApiVideoUploader {
      */
     suspend fun testConnection(): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            // JWT 토큰 확인 (TokenManager 사용)
+            // JWT 토큰 확인 (AuthManager 사용)
             val token = try {
-                RetrofitClient.getTokenManager().getAccessToken()
+                RetrofitClient.getAuthManager().getAccessToken()
             } catch (e: Exception) {
                 null
             }

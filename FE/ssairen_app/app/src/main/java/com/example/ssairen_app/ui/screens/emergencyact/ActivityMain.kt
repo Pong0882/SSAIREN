@@ -72,7 +72,7 @@ fun ActivityMain(
                 1 -> Text("구급활동일지 화면", color = Color.White)
                 2 -> Text("요약 화면", color = Color.White)
                 3 -> Text("메모 화면", color = Color.White)
-                4 -> Text("병원이송 화면", color = Color.White)
+                4 -> HospitalSearch()
             }
         }
 
@@ -107,11 +107,6 @@ private fun HomeContent(
     val application = context.applicationContext as android.app.Application
     val wearViewModel: WearDataViewModel = remember {
         WearDataViewModel.getInstance(application)
-    }
-
-    // RetrofitClient 초기화
-    LaunchedEffect(Unit) {
-        RetrofitClient.init(context)
     }
 
     // 비디오 서비스 연결

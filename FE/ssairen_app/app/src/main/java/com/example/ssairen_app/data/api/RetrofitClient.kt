@@ -2,7 +2,8 @@ package com.example.ssairen_app.data.api
 
 import android.content.Context
 import android.util.Log
-import com.example.ssairen_app.data.auth.TokenManager
+import com.example.ssairen_app.data.local.AuthManager
+import com.example.ssairen_app.data.model.request.LoginRequest
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Interceptor
@@ -18,7 +19,7 @@ import java.util.concurrent.TimeUnit
  *
  * 사용법:
  * 1. Application 또는 Activity에서 RetrofitClient.init(context) 호출
- * 2. 로그인 후 TokenManager로 토큰 저장
+ * 2. 로그인 후 AuthManager로 토큰 저장
  * 3. API 호출 시 자동으로 토큰이 헤더에 추가됨
  */
 object RetrofitClient {
@@ -33,28 +34,28 @@ object RetrofitClient {
     // private const val BASE_URL = "http://localhost:9090"
 
     /**
-     * TokenManager (로그인 정보 및 토큰 관리)
+     * AuthManager (로그인 정보 및 토큰 관리)
      */
-    private lateinit var tokenManager: TokenManager
+    private lateinit var authManager: AuthManager
 
     /**
      * 초기화 (Application 또는 Activity에서 호출 필요)
      */
     fun init(context: Context) {
-        if (!::tokenManager.isInitialized) {
-            tokenManager = TokenManager.getInstance(context)
-            Log.d(TAG, "RetrofitClient initialized with TokenManager")
+        if (!::authManager.isInitialized) {
+            authManager = AuthManager(context)
+            Log.d(TAG, "RetrofitClient initialized with AuthManager")
         }
     }
 
     /**
-     * TokenManager 인스턴스 반환 (외부에서 로그인 정보 저장 시 사용)
+     * AuthManager 인스턴스 반환 (외부에서 로그인 정보 저장 시 사용)
      */
-    fun getTokenManager(): TokenManager {
-        if (!::tokenManager.isInitialized) {
+    fun getAuthManager(): AuthManager {
+        if (!::authManager.isInitialized) {
             throw IllegalStateException("RetrofitClient not initialized. Call init(context) first.")
         }
-        return tokenManager
+        return authManager
     }
 
     /**
@@ -63,9 +64,9 @@ object RetrofitClient {
     private val authInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
 
-        // TokenManager에서 액세스 토큰 조회
-        val token = if (::tokenManager.isInitialized) {
-            tokenManager.getAccessToken()
+        // AuthManager에서 액세스 토큰 조회
+        val token = if (::authManager.isInitialized) {
+            authManager.getAccessToken()
         } else {
             null
         }
@@ -93,9 +94,9 @@ object RetrofitClient {
      * 401 응답을 받으면 자동으로 재로그인 시도
      */
     private val tokenAuthenticator = Authenticator { route: Route?, response: okhttp3.Response ->
-        // TokenManager가 초기화되지 않았으면 재시도 불가
-        if (!::tokenManager.isInitialized) {
-            Log.e(TAG, "TokenManager not initialized, cannot refresh token")
+        // AuthManager가 초기화되지 않았으면 재시도 불가
+        if (!::authManager.isInitialized) {
+            Log.e(TAG, "AuthManager not initialized, cannot refresh token")
             return@Authenticator null
         }
 
@@ -109,7 +110,7 @@ object RetrofitClient {
         Log.d(TAG, "Received 401, attempting to refresh token...")
 
         // 저장된 로그인 자격 증명 조회
-        val credentials = tokenManager.getLoginCredentials()
+        val credentials = authManager.getLoginCredentials()
         if (credentials == null) {
             Log.e(TAG, "No login credentials found, cannot refresh token")
             return@Authenticator null
@@ -131,17 +132,17 @@ object RetrofitClient {
 
                 val loginService = loginRetrofit.create(FileApiService::class.java)
                 val loginRequest = LoginRequest(
-                    credentials.userType,
-                    credentials.username,
-                    credentials.password
+                    userType = credentials.userType,
+                    username = credentials.username,
+                    password = credentials.password
                 )
                 val loginResponse = loginService.login(loginRequest)
 
                 if (loginResponse.isSuccessful && loginResponse.body()?.success == true) {
                     val tokenData = loginResponse.body()?.data
                     if (tokenData != null) {
-                        // TokenManager에 새 토큰 저장
-                        tokenManager.saveAccessToken(tokenData.accessToken)
+                        // AuthManager에 새 토큰 저장
+                        authManager.saveAccessToken(tokenData.accessToken)
                         Log.d(TAG, "Token refreshed successfully")
                         tokenData.accessToken
                     } else {

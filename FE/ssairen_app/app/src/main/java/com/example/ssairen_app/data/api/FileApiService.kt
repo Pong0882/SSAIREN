@@ -2,6 +2,7 @@ package com.example.ssairen_app.data.api
 
 import com.example.ssairen_app.data.dto.ApiResponse
 import com.example.ssairen_app.data.dto.FileUploadResponse
+import com.example.ssairen_app.data.model.request.LoginRequest
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body

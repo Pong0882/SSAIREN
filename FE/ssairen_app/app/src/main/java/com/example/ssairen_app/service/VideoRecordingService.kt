@@ -181,11 +181,11 @@ class VideoRecordingService : LifecycleService() {
 
             val dateFolder = dateFormat.format(sessionStartDate)
             val timeFolder = timeFormat.format(sessionStartDate)
-            // TokenManager에서 사용자 이름 조회
+            // AuthManager에서 사용자 이름 조회
             val userName = try {
-                com.example.ssairen_app.data.api.RetrofitClient.getTokenManager().getUserName()
+                com.example.ssairen_app.data.api.RetrofitClient.getAuthManager().getUserName()
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to get user name from TokenManager, using default", e)
+                Log.w(TAG, "Failed to get user name from AuthManager, using default", e)
                 "사용자"
             }
 
