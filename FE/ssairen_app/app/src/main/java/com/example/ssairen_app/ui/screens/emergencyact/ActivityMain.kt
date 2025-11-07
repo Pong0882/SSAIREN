@@ -1,6 +1,17 @@
 // ActivityMain.kt
 package com.example.ssairen_app.ui.screens.emergencyact
 
+import android.Manifest
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.IBinder
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -13,17 +24,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import android.util.Log
-import androidx.compose.ui.text.style.TextAlign
+import com.example.ssairen_app.data.api.RetrofitClient
+import com.example.ssairen_app.service.VideoRecordingService
 import com.example.ssairen_app.ui.components.DarkCard
-import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.ui.components.MainButton
 import com.example.ssairen_app.ui.components.HeartRateChart
+import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.ui.wear.WearDataViewModel
 
 @Composable
@@ -85,13 +98,122 @@ private fun HomeContent(
     onNavigateToPatientEva: () -> Unit = {},       // ✅ 추가
     onNavigateToFirstAid: () -> Unit = {}          // ✅ 추가
 ) {
-    var isRecording by remember { mutableStateOf(false) }  // ✅ 녹음 상태
+    var isAudioRecording by remember { mutableStateOf(false) }  // ✅ 오디오 녹음 상태
+    var isVideoRecording by remember { mutableStateOf(false) }  // ✅ 비디오 녹화 상태
+    var videoService by remember { mutableStateOf<VideoRecordingService?>(null) }
+    var isBound by remember { mutableStateOf(false) }
 
     // ✅ Wear 데이터 ViewModel (Singleton 사용)
     val context = LocalContext.current
     val application = context.applicationContext as android.app.Application
     val wearViewModel: WearDataViewModel = remember {
         WearDataViewModel.getInstance(application)
+    }
+
+    // 비디오 서비스 연결
+    val serviceConnection = remember {
+        object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                val binder = service as VideoRecordingService.LocalBinder
+                videoService = binder.getService()
+                isBound = true
+                Log.d("ActivityMain", "VideoRecordingService connected")
+
+                // 콜백 설정
+                videoService?.setRecordingCallbacks(
+                    onStarted = {
+                        isVideoRecording = true
+                        Log.d("ActivityMain", "Recording started")
+                    },
+                    onStopped = { file ->
+                        isVideoRecording = false
+                        Log.d("ActivityMain", "Recording stopped")
+                    },
+                    onError = { error ->
+                        Log.e("ActivityMain", "Recording error: $error")
+                    },
+                    onUploadComplete = { objectName ->
+                        Log.d("ActivityMain", "Upload complete: $objectName")
+                    },
+                    onProgress = { durationSeconds ->
+                        // 진행률 업데이트 (필요시)
+                    }
+                )
+
+                // 서비스 연결 시 현재 녹화 상태 확인
+                if (videoService?.isCurrentlyRecording() == true) {
+                    isVideoRecording = true
+                }
+            }
+
+            override fun onServiceDisconnected(name: ComponentName?) {
+                videoService = null
+                isBound = false
+                Log.d("ActivityMain", "VideoRecordingService disconnected")
+            }
+        }
+    }
+
+    // 화면 정리 시 서비스 언바인드
+    DisposableEffect(Unit) {
+        onDispose {
+            if (isBound) {
+                context.unbindService(serviceConnection)
+            }
+        }
+    }
+
+    // 필요한 권한 목록
+    val requiredPermissions = buildList {
+        add(Manifest.permission.CAMERA)
+        add(Manifest.permission.RECORD_AUDIO)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    // 권한 요청 런처
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.values.all { it }
+        if (allGranted) {
+            Log.d("ActivityMain", "All permissions granted")
+        } else {
+            Log.e("ActivityMain", "Permissions denied")
+        }
+    }
+
+    // 권한 확인 함수
+    fun checkPermissions(): Boolean {
+        return requiredPermissions.all { permission ->
+            ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    // 비디오 녹화 시작 함수
+    fun startVideoRecording() {
+        if (!checkPermissions()) {
+            permissionLauncher.launch(requiredPermissions.toTypedArray())
+            return
+        }
+
+        if (!isBound) {
+            // 서비스 바인딩
+            val intent = Intent(context, VideoRecordingService::class.java)
+            context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        }
+
+        // 서비스 시작 및 녹화 시작
+        val intent = Intent(context, VideoRecordingService::class.java).apply {
+            action = VideoRecordingService.ACTION_START_RECORDING
+        }
+        ContextCompat.startForegroundService(context, intent)
+    }
+
+    // 비디오 녹화 중지 함수
+    fun stopVideoRecording() {
+        videoService?.stopRecording()
     }
 
     Log.d("ActivityMain", "🎨 HomeContent Composable 렌더링")
@@ -167,7 +289,7 @@ private fun HomeContent(
                     )
                 }
 
-                // ✅ 카메라 + 녹음 버튼
+                // ✅ 바디캠 녹화 + 오디오 녹음 버튼
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -175,16 +297,25 @@ private fun HomeContent(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 카메라 버튼
+                    // ✅ 바디캠 녹화 버튼
                     IconButton(
-                        onClick = { /* 카메라 실행 */ },
+                        onClick = {
+                            if (isVideoRecording) {
+                                stopVideoRecording()
+                            } else {
+                                startVideoRecording()
+                            }
+                        },
                         modifier = Modifier
                             .size(56.dp)
-                            .background(Color(0xFF2a2a2a), CircleShape)
+                            .background(
+                                if (isVideoRecording) Color(0xFFff3b30) else Color(0xFF2a2a2a),
+                                CircleShape
+                            )
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.PhotoCamera,
-                            contentDescription = "카메라",
+                            imageVector = if (isVideoRecording) Icons.Filled.Stop else Icons.Filled.PhotoCamera,
+                            contentDescription = if (isVideoRecording) "녹화 중지" else "녹화 시작",
                             tint = Color.White,
                             modifier = Modifier.size(28.dp)
                         )
@@ -192,27 +323,27 @@ private fun HomeContent(
 
                     Spacer(modifier = Modifier.width(16.dp))
 
-                    // ✅ 녹음 버튼
+                    // ✅ 오디오 녹음 버튼
                     IconButton(
                         onClick = {
-                            isRecording = !isRecording
-                            // TODO: 녹음 시작/중지 로직
-                            if (isRecording) {
-                                println("🎤 녹음 시작")
+                            isAudioRecording = !isAudioRecording
+                            // TODO: 오디오 녹음 시작/중지 로직
+                            if (isAudioRecording) {
+                                Log.d("ActivityMain", "🎤 오디오 녹음 시작")
                             } else {
-                                println("⏹️ 녹음 중지")
+                                Log.d("ActivityMain", "⏹️ 오디오 녹음 중지")
                             }
                         },
                         modifier = Modifier
                             .size(56.dp)
                             .background(
-                                if (isRecording) Color(0xFFff3b30) else Color(0xFF2a2a2a),
+                                if (isAudioRecording) Color(0xFFff3b30) else Color(0xFF2a2a2a),
                                 CircleShape
                             )
                     ) {
                         Icon(
-                            imageVector = if (isRecording) Icons.Filled.Stop else Icons.Filled.Mic,
-                            contentDescription = if (isRecording) "녹음 중지" else "녹음 시작",
+                            imageVector = if (isAudioRecording) Icons.Filled.Stop else Icons.Filled.Mic,
+                            contentDescription = if (isAudioRecording) "녹음 중지" else "녹음 시작",
                             tint = Color.White,
                             modifier = Modifier.size(28.dp)
                         )
