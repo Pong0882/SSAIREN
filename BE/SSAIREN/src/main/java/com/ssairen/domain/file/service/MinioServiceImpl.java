@@ -72,11 +72,19 @@ public class MinioServiceImpl implements MinioService {
             String originalFileName = file.getOriginalFilename();
             String extension = getFileExtension(originalFileName);
 
-            // UUID 기반 고유 파일명 생성
-            String fileName = UUID.randomUUID().toString() + extension;
-
-            log.info("{} 파일 업로드 시작 - 원본명: {}, 저장명: {}, 크기: {} bytes",
-                    fileType, originalFileName, fileName, file.getSize());
+            // 파일명 결정: 경로가 포함된 경우(바디캠) 원본명 사용, 아니면 UUID
+            String fileName;
+            if (originalFileName != null && originalFileName.contains("/")) {
+                // 바디캠 영상: 날짜/시간/파일명 구조 유지
+                fileName = originalFileName;
+                log.info("{} 파일 업로드 시작 (경로 유지) - 원본명: {}, 크기: {} bytes",
+                        fileType, originalFileName, file.getSize());
+            } else {
+                // 일반 파일: UUID 기반 고유 파일명 생성
+                fileName = UUID.randomUUID().toString() + extension;
+                log.info("{} 파일 업로드 시작 - 원본명: {}, 저장명: {}, 크기: {} bytes",
+                        fileType, originalFileName, fileName, file.getSize());
+            }
 
             // MinIO에 파일 업로드
             try (InputStream inputStream = file.getInputStream()) {
