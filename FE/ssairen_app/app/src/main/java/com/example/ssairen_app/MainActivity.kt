@@ -145,6 +145,18 @@ fun AppNavigation() {
                 },
                 onNavigateToFirstAid = {
                     navController.navigate("activity_log/4")
+                },
+                onNavigateToDispatch = {
+                    navController.navigate("activity_log/1")
+                },
+                onNavigateToMedicalGuidance = {
+                    navController.navigate("activity_log/5")
+                },
+                onNavigateToPatientTransport = {
+                    navController.navigate("activity_log/6")
+                },
+                onNavigateToReportDetail = {
+                    navController.navigate("activity_log/7")
                 }
             )
         }

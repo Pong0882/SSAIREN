@@ -42,10 +42,14 @@ import com.example.ssairen_app.ui.wear.WearDataViewModel
 @Composable
 fun ActivityMain(
     onNavigateToActivityLog: () -> Unit = {},
-    onNavigateToPatientInfo: () -> Unit = {},      // ✅ 추가
-    onNavigateToPatientType: () -> Unit = {},      // ✅ 추가
-    onNavigateToPatientEva: () -> Unit = {},       // ✅ 추가
-    onNavigateToFirstAid: () -> Unit = {}          // ✅ 추가
+    onNavigateToPatientInfo: () -> Unit = {},
+    onNavigateToPatientType: () -> Unit = {},
+    onNavigateToPatientEva: () -> Unit = {},
+    onNavigateToFirstAid: () -> Unit = {},
+    onNavigateToDispatch: () -> Unit = {},
+    onNavigateToMedicalGuidance: () -> Unit = {},
+    onNavigateToPatientTransport: () -> Unit = {},
+    onNavigateToReportDetail: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -65,10 +69,14 @@ fun ActivityMain(
             when (selectedTab) {
                 0 -> HomeContent(
                     onNavigateToActivityLog = onNavigateToActivityLog,
-                    onNavigateToPatientInfo = onNavigateToPatientInfo,      // ✅ 전달
-                    onNavigateToPatientType = onNavigateToPatientType,      // ✅ 전달
-                    onNavigateToPatientEva = onNavigateToPatientEva,        // ✅ 전달
-                    onNavigateToFirstAid = onNavigateToFirstAid             // ✅ 전달
+                    onNavigateToPatientInfo = onNavigateToPatientInfo,
+                    onNavigateToPatientType = onNavigateToPatientType,
+                    onNavigateToPatientEva = onNavigateToPatientEva,
+                    onNavigateToFirstAid = onNavigateToFirstAid,
+                    onNavigateToDispatch = onNavigateToDispatch,
+                    onNavigateToMedicalGuidance = onNavigateToMedicalGuidance,
+                    onNavigateToPatientTransport = onNavigateToPatientTransport,
+                    onNavigateToReportDetail = onNavigateToReportDetail
                 )
                 1 -> Text("구급활동일지 화면", color = Color.White)
                 2 -> Text("요약 화면", color = Color.White)
@@ -93,10 +101,14 @@ fun ActivityMain(
 @Composable
 private fun HomeContent(
     onNavigateToActivityLog: () -> Unit = {},
-    onNavigateToPatientInfo: () -> Unit = {},      // ✅ 추가
-    onNavigateToPatientType: () -> Unit = {},      // ✅ 추가
-    onNavigateToPatientEva: () -> Unit = {},       // ✅ 추가
-    onNavigateToFirstAid: () -> Unit = {}          // ✅ 추가
+    onNavigateToPatientInfo: () -> Unit = {},
+    onNavigateToPatientType: () -> Unit = {},
+    onNavigateToPatientEva: () -> Unit = {},
+    onNavigateToFirstAid: () -> Unit = {},
+    onNavigateToDispatch: () -> Unit = {},
+    onNavigateToMedicalGuidance: () -> Unit = {},
+    onNavigateToPatientTransport: () -> Unit = {},
+    onNavigateToReportDetail: () -> Unit = {}
 ) {
     var isAudioRecording by remember { mutableStateOf(false) }  // ✅ 오디오 녹음 상태
     var isVideoRecording by remember { mutableStateOf(false) }  // ✅ 비디오 녹화 상태
@@ -356,9 +368,9 @@ private fun HomeContent(
                 modifier = Modifier.width(140.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // ✅ 0. 환자정보 버튼
+                // 1. 환자정보 버튼 → 탭 0
                 MainButton(
-                    onClick = onNavigateToPatientInfo,  // ✅ 수정
+                    onClick = onNavigateToPatientInfo,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -378,9 +390,9 @@ private fun HomeContent(
                     )
                 }
 
-                // ✅ 3. 환자평가 버튼
+                // 2. 환자평가 버튼 → 탭 3
                 MainButton(
-                    onClick = onNavigateToPatientEva,  // ✅ 수정
+                    onClick = onNavigateToPatientEva,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -400,8 +412,9 @@ private fun HomeContent(
                     )
                 }
 
+                // 3. 환자이송 버튼 → 탭 6
                 MainButton(
-                    onClick = { /* 환자처치 화면으로 이동 */ },
+                    onClick = onNavigateToPatientTransport,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -410,19 +423,20 @@ private fun HomeContent(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Favorite,
-                        contentDescription = "환자처치",
+                        contentDescription = "환자이송",
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "환자처치",
+                        text = "환자이송",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
 
+                // 4. 구급출동 버튼 → 탭 1
                 MainButton(
-                    onClick = { /* 구금조치 화면으로 이동 */ },
+                    onClick = onNavigateToDispatch,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -431,20 +445,20 @@ private fun HomeContent(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Lock,
-                        contentDescription = "구금조치",
+                        contentDescription = "구급출동",
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "구금조치",
+                        text = "구급출동",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
 
-                // ✅ 2. 환자 발생 유형 버튼
+                // 5. 환자 발생 유형 버튼 → 탭 2
                 MainButton(
-                    onClick = onNavigateToPatientType,  // ✅ 수정
+                    onClick = onNavigateToPatientType,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -464,9 +478,9 @@ private fun HomeContent(
                     )
                 }
 
-                // ✅ 4. 응급처치 버튼
+                // 6. 응급처치 버튼 → 탭 4
                 MainButton(
-                    onClick = onNavigateToFirstAid,  // ✅ 수정
+                    onClick = onNavigateToFirstAid,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -486,8 +500,9 @@ private fun HomeContent(
                     )
                 }
 
+                // 7. 의료지도 버튼 → 탭 5
                 MainButton(
-                    onClick = { /* 의료지도 화면으로 이동 */ },
+                    onClick = onNavigateToMedicalGuidance,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -507,8 +522,9 @@ private fun HomeContent(
                     )
                 }
 
+                // 8. 세부 상황정보 버튼 → 탭 7
                 MainButton(
-                    onClick = { /* 세부 상황정보 화면으로 이동 */ },
+                    onClick = onNavigateToReportDetail,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
