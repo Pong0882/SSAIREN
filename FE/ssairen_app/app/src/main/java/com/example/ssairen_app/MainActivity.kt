@@ -7,8 +7,11 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -18,6 +21,8 @@ import com.example.ssairen_app.ui.screens.report.ReportHome
 import com.example.ssairen_app.ui.screens.emergencyact.ActivityMain
 import com.example.ssairen_app.ui.screens.emergencyact.ActivityLogHome
 import com.example.ssairen_app.ui.screens.Summation
+import com.example.ssairen_app.ui.screens.Login  // ⭐ 추가
+import com.example.ssairen_app.viewmodel.AuthViewModel  // ⭐ 추가
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,10 +33,31 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Color(0xFF1a1a1a)
                 ) {
-                    AppNavigation()
+                    AppRoot()  // ⭐ 변경
                 }
             }
         }
+    }
+}
+
+// ⭐ 새로 추가: 로그인 분기 처리
+@Composable
+fun AppRoot(
+    viewModel: AuthViewModel = viewModel()
+) {
+    val isLoggedIn by viewModel.isLoggedIn.observeAsState(false)
+
+    if (isLoggedIn) {
+        // ✅ 로그인됨 → 메인 네비게이션
+        AppNavigation()
+    } else {
+        // ❌ 로그인 안됨 → 로그인 화면
+        Login(
+            onLoginSuccess = {
+                // 로그인 성공 시 자동으로 isLoggedIn이 true가 되어
+                // AppNavigation으로 전환됨
+            }
+        )
     }
 }
 
@@ -46,7 +72,7 @@ fun AppNavigation() {
         composable("report_home") {
             ReportHome(
                 onNavigateToActivityLog = {
-                    navController.navigate("activity_log/0") // ✅ 수정
+                    navController.navigate("activity_log/0")
                 }
             )
         }
@@ -54,7 +80,7 @@ fun AppNavigation() {
         composable("activity_main") {
             ActivityMain(
                 onNavigateToActivityLog = {
-                    navController.navigate("activity_log/0") // ✅ 수정
+                    navController.navigate("activity_log/0")
                 },
                 onNavigateToPatientInfo = {
                     navController.navigate("activity_log/0")
@@ -71,7 +97,6 @@ fun AppNavigation() {
             )
         }
 
-        // ✅ 구급활동일지 화면 (정의는 올바름)
         composable(
             route = "activity_log/{tab}",
             arguments = listOf(navArgument("tab") { defaultValue = 0 })
@@ -93,7 +118,6 @@ fun AppNavigation() {
             )
         }
 
-        // ✅ 요약본 화면
         composable("summation") {
             Summation(
                 onNavigateBack = {
@@ -105,7 +129,7 @@ fun AppNavigation() {
                     }
                 },
                 onNavigateToActivityLog = {
-                    navController.navigate("activity_log/0") // ✅ 수정
+                    navController.navigate("activity_log/0")
                 }
             )
         }
