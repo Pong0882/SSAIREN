@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.example.ssairen_app.ui.components.DarkCard
 import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.ui.components.MainButton
+import com.example.ssairen_app.ui.components.HeartRateChart
 import com.example.ssairen_app.ui.wear.WearDataViewModel
 
 @Composable
@@ -101,6 +102,7 @@ private fun HomeContent(
     val spo2 by wearViewModel.spo2.collectAsState()
     val spo2ErrorMessage by wearViewModel.spo2ErrorMessage.collectAsState()
     val hrStatusMessage by wearViewModel.hrStatusMessage.collectAsState()
+    val heartRateHistory by wearViewModel.heartRateHistory.collectAsState()
 
     Log.d("ActivityMain", "📊 현재 UI에 표시되는 값 - HR: $heartRate, SpO2: $spo2, SpO2 에러: '$spo2ErrorMessage', HR 상태: '$hrStatusMessage'")
 
@@ -133,16 +135,10 @@ private fun HomeContent(
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "차트 영역",
-                            color = Color(0xFF666666),
-                            fontSize = 14.sp
-                        )
-                    }
+                    HeartRateChart(
+                        heartRateHistory = heartRateHistory,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
 
                 // 통계 카드들
