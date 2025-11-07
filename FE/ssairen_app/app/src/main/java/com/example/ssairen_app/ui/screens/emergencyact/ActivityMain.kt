@@ -59,7 +59,7 @@ fun ActivityMain(
                 1 -> Text("구급활동일지 화면", color = Color.White)
                 2 -> Text("요약 화면", color = Color.White)
                 3 -> Text("메모 화면", color = Color.White)
-                4 -> Text("병원이송 화면", color = Color.White)
+                4 -> HospitalSearch()
             }
         }
 
