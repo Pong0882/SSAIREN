@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 배포 서버는 HTTPS를 사용하므로 cleartext 설정 불필요 -->
+    <!-- 로컬 테스트 시에만 아래 주석 해제 -->
+    <!--
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+    -->
+</network-security-config>

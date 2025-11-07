@@ -29,6 +29,7 @@ import com.example.ssairen_app.ui.screens.emergencyact.ActivityLogHome
 import com.example.ssairen_app.ui.screens.Summation
 import com.example.ssairen_app.ui.screens.Login  // ⭐ 추가
 import com.example.ssairen_app.viewmodel.AuthViewModel  // ⭐ 추가
+import com.example.ssairen_app.data.api.RetrofitClient  // ⭐ 바디캠 업로드용
 
 class MainActivity : ComponentActivity() {
 
@@ -49,6 +50,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // RetrofitClient 초기화 (바디캠 비디오 업로드용)
+        RetrofitClient.init(this)
 
         // Android 13 이상에서 알림 권한 요청
         requestNotificationPermission()

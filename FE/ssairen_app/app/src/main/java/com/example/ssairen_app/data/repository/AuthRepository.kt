@@ -1,12 +1,20 @@
 package com.example.ssairen_app.data.repository
 
+import android.content.Context
 import android.util.Log
+import com.example.ssairen_app.data.ApiVideoUploader
 import com.example.ssairen_app.data.api.RetrofitInstance
 import com.example.ssairen_app.data.local.AuthManager
 import com.example.ssairen_app.data.model.request.LoginRequest
 import com.example.ssairen_app.data.model.response.LoginData // <--- 2. LoginData 임포트
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class AuthRepository(private val authManager: AuthManager) {
+class AuthRepository(
+    private val authManager: AuthManager,
+    private val context: Context
+) {
 
     private val api = RetrofitInstance.apiService
 
@@ -41,18 +49,23 @@ class AuthRepository(private val authManager: AuthManager) {
                     // ✅ 로그인 성공
                     Log.d(TAG, "✅ 로그인 성공!")
                     Log.d(TAG, "Access Token: ${body.data.accessToken.take(20)}...")
-                    // <--- 5. paramedic 객체 없이 LoginData에서 바로 name 접근
                     Log.d(TAG, "Paramedic: ${body.data.name}")
 
                     // Access Token과 Refresh Token 모두 저장
                     authManager.saveLoginInfo(
-                        // <--- 6. LoginData에 정의한 username (또는 studentNumber) 필드 사용
                         userId = body.data.username,
+                        userName = body.data.name,
                         accessToken = body.data.accessToken,
-                        refreshToken = body.data.refreshToken
+                        refreshToken = body.data.refreshToken,
+                        loginUsername = studentNumber,
+                        loginPassword = password,
+                        loginUserType = "PARAMEDIC"
                     )
 
-                    // <--- 7. paramedic 객체 대신 LoginData 객체 전체를 성공 결과로 반환
+                    // 로그인 성공 시 로컬에 저장된 미업로드 비디오 자동 업로드 (백그라운드)
+                    uploadPendingVideosInBackground()
+
+                    // LoginData 객체 전체를 성공 결과로 반환
                     Result.success(body.data)
                 } else {
                     // ❌ success=false인 경우
@@ -120,5 +133,30 @@ class AuthRepository(private val authManager: AuthManager) {
     // 로그아웃
     fun logout() {
         authManager.logout()
+    }
+
+    /**
+     * 로컬에 저장된 미업로드 비디오 파일들을 백그라운드로 자동 업로드
+     */
+    private fun uploadPendingVideosInBackground() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                Log.d(TAG, "Starting pending videos upload after login...")
+
+                val uploader = ApiVideoUploader()
+                val result = uploader.uploadPendingVideos(context) { current, total ->
+                    Log.d(TAG, "Uploading pending videos: $current/$total")
+                }
+
+                result.onSuccess { (success, fail) ->
+                    Log.d(TAG, "Pending videos upload completed: success=$success, fail=$fail")
+                }.onFailure { error ->
+                    Log.e(TAG, "Failed to upload pending videos", error)
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during pending videos upload", e)
+            }
+        }
     }
 }
