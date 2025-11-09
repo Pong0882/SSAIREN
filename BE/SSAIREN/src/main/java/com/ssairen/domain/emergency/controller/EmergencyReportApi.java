@@ -1313,6 +1313,9 @@ public interface EmergencyReportApi {
                                                     "dispatchInfo": {
                                                         "id": 1,
                                                         "disasterNumber": "CB0000000662",
+                                                        "disasterType": "화재",
+                                                        "disasterSubtype": "건물화재",
+                                                        "locationAddress": "서울특별시 강남구 테헤란로 123",
                                                         "date": "2025-10-30 17:43:28.235931"
                                                     },
                                                     "createdAt": "2025-10-30 17:43:28.235931",
@@ -1327,6 +1330,9 @@ public interface EmergencyReportApi {
                                                     "dispatchInfo": {
                                                         "id": 2,
                                                         "disasterNumber": "CB0000000662",
+                                                        "disasterType": "구조구급",
+                                                        "disasterSubtype": "교통사고",
+                                                        "locationAddress": "서울특별시 서초구 서초대로 456",
                                                         "date": "2025-11-01 21:00:41.284828"
                                                     },
                                                     "createdAt": "2025-11-01 21:00:41.284828",
