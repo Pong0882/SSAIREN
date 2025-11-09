@@ -32,8 +32,7 @@ class MainActivity : ComponentActivity() {
     // UI 상태
     private var heartRate by mutableStateOf(0)
     private var spo2 by mutableStateOf(0)
-    private var statusMessage by mutableStateOf("")
-    private var connectionMessage by mutableStateOf("")
+    private var currentMessage by mutableStateOf("")  // 현재 표시 중인 메시지 (상태 기반)
     private var isPeriodicSpo2Active by mutableStateOf(false)
 
     // ========= 생명주기 =========
@@ -55,10 +54,10 @@ class MainActivity : ComponentActivity() {
             spo2 = value
         }
         HealthTrackingForegroundService.onStatusUpdate = { msg ->
-            statusMessage = msg
+            currentMessage = msg  // 새 메시지로 즉시 덮어쓰기
         }
         HealthTrackingForegroundService.onConnectionStateUpdate = { msg ->
-            connectionMessage = msg
+            currentMessage = msg  // 새 메시지로 즉시 덮어쓰기
         }
 
         setContent {
@@ -70,8 +69,7 @@ class MainActivity : ComponentActivity() {
                 heartRate = heartRate,
                 spo2 = spo2,
                 isPeriodicActive = isPeriodicSpo2Active,
-                statusMessage = statusMessage,
-                connectionMessage = connectionMessage
+                currentMessage = currentMessage
             )
         }
     }
@@ -119,8 +117,7 @@ private fun HealthMeasureScreen(
     heartRate: Int,
     spo2: Int,
     isPeriodicActive: Boolean,
-    statusMessage: String,
-    connectionMessage: String
+    currentMessage: String
 ) {
     var hasPermission by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -194,27 +191,16 @@ private fun HealthMeasureScreen(
                     )
                 }
 
-                // 📢 연결 상태 메시지 (센서 초기화)
-                if (connectionMessage.isNotEmpty()) {
+                // 📢 메시지 표시 영역 (한 번에 하나씩)
+                if (currentMessage.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = connectionMessage,
-                        color = if (connectionMessage.contains("실패") || connectionMessage.contains("오류"))
+                        text = currentMessage,
+                        color = if (currentMessage.contains("실패") || currentMessage.contains("오류") ||
+                                   currentMessage.contains("착용") || currentMessage.contains("움직임"))
                             MaterialTheme.colors.error
-                        else
-                            androidx.compose.ui.graphics.Color(0xFF00d9ff),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.caption1
-                    )
-                }
-
-                // 📢 상태 메시지 영역 (SpO2 측정 관련 메시지 표시)
-                if (statusMessage.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = statusMessage,
-                        color = if (statusMessage.contains("오류") || statusMessage.contains("착용") || statusMessage.contains("움직임"))
-                            MaterialTheme.colors.error
+                        else if (currentMessage.contains("연결") || currentMessage.contains("초기화"))
+                            androidx.compose.ui.graphics.Color(0xFF00d9ff)
                         else
                             MaterialTheme.colors.onSurface,
                         textAlign = TextAlign.Center,

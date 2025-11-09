@@ -34,7 +34,7 @@ private const val SPO2_KEY = "spo2_value"
 // 전송 제어
 private const val MIN_DELTA = 1
 private const val MIN_INTERVAL_MS = 1_000L
-private const val PERIODIC_SPO2_INTERVAL_MS = 300_000L   // 5분
+private const val PERIODIC_SPO2_INTERVAL_MS = 60_000L   // 1분
 
 class HealthTrackingForegroundService : Service() {
 
@@ -271,7 +271,7 @@ class HealthTrackingForegroundService : Service() {
     private fun startPeriodicSpo2Measurement() {
         if (isPeriodicSpo2Active) return
         isPeriodicSpo2Active = true
-        onStatusUpdate?.invoke("5분 간격 측정 시작")
+        onStatusUpdate?.invoke("1분 간격 측정 시작")
 
         periodicSpo2Job = serviceScope.launch {
             while (isActive) {
