@@ -88,6 +88,9 @@ public class EmergencyReportMapper {
         return new DispatchInfoSimple(
                 dispatch.getId(),
                 dispatch.getDisasterNumber(),
+                dispatch.getDisasterType(),
+                dispatch.getDisasterSubtype(),
+                dispatch.getLocationAddress(),
                 dispatch.getDate()
         );
     }
