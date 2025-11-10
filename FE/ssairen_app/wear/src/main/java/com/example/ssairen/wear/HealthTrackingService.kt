@@ -34,7 +34,7 @@ private const val SPO2_KEY = "spo2_value"
 // 전송 제어
 private const val MIN_DELTA = 1
 private const val MIN_INTERVAL_MS = 1_000L
-private const val PERIODIC_SPO2_INTERVAL_MS = 300_000L   // 5분
+private const val PERIODIC_SPO2_INTERVAL_MS = 60_000L   // 1분
 
 class HealthTrackingForegroundService : Service() {
 
@@ -65,10 +65,11 @@ class HealthTrackingForegroundService : Service() {
 
     companion object {
         // UI 업데이트를 위한 콜백 (MainActivity에서 설정)
+        // MainActivity의 updateMessage()가 자동으로 우선순위를 판단합니다
         var onHeartRateUpdate: ((Int) -> Unit)? = null
         var onSpo2Update: ((Int) -> Unit)? = null
-        var onStatusUpdate: ((String) -> Unit)? = null
-        var onConnectionStateUpdate: ((String) -> Unit)? = null
+        var onStatusUpdate: ((String) -> Unit)? = null           // 측정 상태 메시지
+        var onConnectionStateUpdate: ((String) -> Unit)? = null  // 연결 상태 메시지
         var isServiceRunning = false
     }
 
@@ -90,7 +91,7 @@ class HealthTrackingForegroundService : Service() {
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, createNotification("센서 연결 중..."))
 
-        onConnectionStateUpdate?.invoke("센서 연결 중...")
+        onConnectionStateUpdate?.invoke("센서 연결 중...")  // 우선순위: CONNECTING
 
         trackingService = SamsungHealthTrackingService(connectionListener, this)
         trackingService.connectService()
@@ -135,7 +136,7 @@ class HealthTrackingForegroundService : Service() {
     private val connectionListener = object : ConnectionListener {
         override fun onConnectionSuccess() {
             Log.d(TAG, "Connected to Samsung Health Service")
-            onConnectionStateUpdate?.invoke("심박수 센서 초기화 중...")
+            onConnectionStateUpdate?.invoke("심박수 센서 초기화 중...")  // 우선순위: CONNECTING
 
             try {
                 heartRateTracker = trackingService.getHealthTracker(HealthTrackerType.HEART_RATE)
@@ -147,24 +148,24 @@ class HealthTrackingForegroundService : Service() {
                 serviceScope.launch {
                     delay(3000)
                     if (onConnectionStateUpdate != null && heartRate == 0) {
-                        onConnectionStateUpdate?.invoke("첫 심박수 측정 중... (최대 15초 소요)")
+                        onConnectionStateUpdate?.invoke("첫 심박수 측정 중... (최대 15초 소요)")  // 우선순위: CONNECTING
                     }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to get trackers", e)
-                onConnectionStateUpdate?.invoke("센서 초기화 실패")
+                onConnectionStateUpdate?.invoke("센서 초기화 실패")  // 우선순위: CRITICAL_ERROR
             }
         }
 
         override fun onConnectionFailed(e: HealthTrackerException) {
             Log.e(TAG, "Connection failed", e)
             updateNotification("센서 연결 실패")
-            onConnectionStateUpdate?.invoke("센서 연결 실패: 워치를 손목에 착용하세요")
+            onConnectionStateUpdate?.invoke("센서 연결 실패: 워치를 손목에 착용하세요")  // 우선순위: CRITICAL_ERROR
         }
 
         override fun onConnectionEnded() {
             Log.d(TAG, "Connection ended")
-            onConnectionStateUpdate?.invoke("센서 연결 종료됨")
+            onConnectionStateUpdate?.invoke("센서 연결 종료됨")  // 우선순위: CRITICAL_ERROR
         }
     }
 
@@ -211,7 +212,7 @@ class HealthTrackingForegroundService : Service() {
         // 첫 심박수 수신 시 연결 상태 메시지 클리어
         if (heartRate == 0) {
             Log.d(TAG, "🎉 첫 심박수 데이터 수신 완료!")
-            onConnectionStateUpdate?.invoke("")
+            onConnectionStateUpdate?.invoke("")  // 우선순위: CLEAR (연결 메시지만 지움)
         }
         heartRate = hr
 
@@ -238,13 +239,13 @@ class HealthTrackingForegroundService : Service() {
 
                 // HR 센서 재정비
                 serviceScope.launch {
-                    onStatusUpdate?.invoke("센서 재정비 중...")
+                    onStatusUpdate?.invoke("센서 재정비 중...")  // 우선순위: IN_PROGRESS
                     delay(10000)
-                    onStatusUpdate?.invoke("")
+                    onStatusUpdate?.invoke("")  // 우선순위: CLEAR
                 }
             } else if (status < 0) {
                 val errorMsg = getErrorMessage(status)
-                onStatusUpdate?.invoke(errorMsg)
+                onStatusUpdate?.invoke(errorMsg)  // 우선순위: MEASUREMENT_ERROR
                 stopSpo2Tracking()
 
                 // 재시도 로직
@@ -261,7 +262,7 @@ class HealthTrackingForegroundService : Service() {
 
         override fun onError(error: HealthTracker.TrackerError) {
             Log.e(TAG, "SpO2 Sensor error: $error")
-            onStatusUpdate?.invoke("산소포화도 센서 오류")
+            onStatusUpdate?.invoke("산소포화도 센서 오류")  // 우선순위: CRITICAL_ERROR
             stopSpo2Tracking()
         }
 
@@ -271,7 +272,7 @@ class HealthTrackingForegroundService : Service() {
     private fun startPeriodicSpo2Measurement() {
         if (isPeriodicSpo2Active) return
         isPeriodicSpo2Active = true
-        onStatusUpdate?.invoke("5분 간격 측정 시작")
+        onStatusUpdate?.invoke("1분 간격 측정 시작")  // 우선순위: IN_PROGRESS
 
         periodicSpo2Job = serviceScope.launch {
             while (isActive) {
@@ -286,13 +287,13 @@ class HealthTrackingForegroundService : Service() {
         periodicSpo2Job?.cancel()
         isPeriodicSpo2Active = false
         if (isSpo2Tracking) stopSpo2Tracking()
-        onStatusUpdate?.invoke("반복 측정 중지")
+        onStatusUpdate?.invoke("반복 측정 중지")  // 우선순위: IN_PROGRESS
     }
 
     private fun triggerSpo2Measurement() {
         if (isSpo2Tracking || spo2Tracker == null) return
         isSpo2Tracking = true
-        onStatusUpdate?.invoke("SpO₂ 측정 중...")
+        onStatusUpdate?.invoke("SpO₂ 측정 중...")  // 우선순위: IN_PROGRESS
         spo2Tracker?.setEventListener(spo2Listener)
     }
 
