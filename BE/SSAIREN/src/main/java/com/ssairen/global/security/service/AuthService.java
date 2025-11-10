@@ -100,6 +100,9 @@ public class AuthService {
             Paramedic paramedic = paramedicRepository.findById(principal.getId())
                     .orElseThrow(() -> new CustomException(ErrorCode.PARAMEDIC_NOT_FOUND));
 
+            log.info("fcmToken insert: userType={}, userId={}, username={}, fcmToken={}",
+                    principal.getUserType(), principal.getId(), principal.getUsername(), request.fcmToken());
+
             // FCM 토큰이 제공된 경우 등록
             if (request.fcmToken() != null && !request.fcmToken().isBlank()) {
                 try {
