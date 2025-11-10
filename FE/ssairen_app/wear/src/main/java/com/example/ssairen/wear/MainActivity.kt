@@ -24,16 +24,23 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 private const val TAG = "MainActivity"
+private const val ERROR_MESSAGE_TIMEOUT_MS = 5_000L // 오류 메시지 5초 자동 제거
 
 class MainActivity : ComponentActivity() {
 
     // UI 상태
     private var heartRate by mutableStateOf(0)
     private var spo2 by mutableStateOf(0)
-    private var currentMessage by mutableStateOf("")  // 현재 표시 중인 메시지 (상태 기반)
+    private var currentMessage by mutableStateOf<PriorityMessage?>(null)  // 우선순위 기반 메시지
     private var isPeriodicSpo2Active by mutableStateOf(false)
+
+    // 메시지 타임아웃 관리
+    private var messageTimeoutJob: kotlinx.coroutines.Job? = null
 
     // ========= 생명주기 =========
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,9 +50,6 @@ class MainActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         Log.d(TAG, "⭐ 화면 켜짐 유지 설정 완료 (FLAG_KEEP_SCREEN_ON)")
 
-        // Foreground Service 시작
-        startHealthTrackingService()
-
         // Service에서 UI 업데이트 콜백 설정
         HealthTrackingForegroundService.onHeartRateUpdate = { hr ->
             heartRate = hr
@@ -54,10 +58,10 @@ class MainActivity : ComponentActivity() {
             spo2 = value
         }
         HealthTrackingForegroundService.onStatusUpdate = { msg ->
-            currentMessage = msg  // 새 메시지로 즉시 덮어쓰기
+            updateMessage(msg)
         }
         HealthTrackingForegroundService.onConnectionStateUpdate = { msg ->
-            currentMessage = msg  // 새 메시지로 즉시 덮어쓰기
+            updateMessage(msg)
         }
 
         setContent {
@@ -69,7 +73,7 @@ class MainActivity : ComponentActivity() {
                 heartRate = heartRate,
                 spo2 = spo2,
                 isPeriodicActive = isPeriodicSpo2Active,
-                currentMessage = currentMessage
+                currentMessage = currentMessage?.content ?: ""
             )
         }
     }
@@ -81,16 +85,69 @@ class MainActivity : ComponentActivity() {
         HealthTrackingForegroundService.onSpo2Update = null
         HealthTrackingForegroundService.onStatusUpdate = null
         HealthTrackingForegroundService.onConnectionStateUpdate = null
+        messageTimeoutJob?.cancel()
+    }
+
+    /**
+     * 우선순위 기반 메시지 업데이트 로직
+     */
+    private fun updateMessage(message: String) {
+        val newMessage = PriorityMessage(message)
+
+        // 우선순위 비교 후 업데이트 결정
+        if (newMessage.hasHigherPriorityThan(currentMessage)) {
+            val oldMessage = currentMessage?.content ?: "없음"
+            Log.d(TAG, "📢 메시지 업데이트: '$oldMessage' → '$message' (우선순위: ${newMessage.priority.level})")
+
+            // 메시지 업데이트
+            currentMessage = if (message.isEmpty()) null else newMessage
+
+            // 기존 타임아웃 취소
+            messageTimeoutJob?.cancel()
+
+            // 오류 메시지는 5초 후 자동 제거
+            if (newMessage.isError()) {
+                messageTimeoutJob = lifecycleScope.launch {
+                    delay(ERROR_MESSAGE_TIMEOUT_MS)
+                    // 같은 메시지가 여전히 표시 중이면 제거
+                    if (currentMessage?.content == message) {
+                        Log.d(TAG, "⏰ 오류 메시지 타임아웃 (5초): '$message'")
+                        currentMessage = null
+                    }
+                }
+            }
+        } else {
+            Log.d(TAG, "🚫 메시지 무시: '$message' (현재: '${currentMessage?.content}', 우선순위 낮음)")
+        }
     }
 
     private fun startHealthTrackingService() {
-        if (HealthTrackingForegroundService.isServiceRunning) return
+        if (HealthTrackingForegroundService.isServiceRunning) {
+            Log.d(TAG, "서비스가 이미 실행 중입니다")
+            return
+        }
 
+        // 권한 확인
+        val hasPermission = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.BODY_SENSORS
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasPermission) {
+            Log.w(TAG, "⚠️ BODY_SENSORS 권한이 없어 서비스를 시작할 수 없습니다")
+            return
+        }
+
+        Log.d(TAG, "✅ 권한 확인 완료, Foreground Service 시작")
         val intent = Intent(this, HealthTrackingForegroundService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent)
-        } else {
-            startService(intent)
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Foreground Service 시작 실패", e)
         }
     }
 
@@ -122,20 +179,36 @@ private fun HealthMeasureScreen(
     var hasPermission by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { granted ->
-            hasPermission = granted
-            if (granted) onPermissionGranted()
+    // 여러 권한을 한 번에 요청
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { permissions ->
+            // 모든 권한이 승인되었는지 확인
+            val allGranted = permissions.values.all { it }
+            hasPermission = allGranted
+            if (allGranted) onPermissionGranted()
         }
     )
 
     LaunchedEffect(Unit) {
-        val granted = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.BODY_SENSORS
-        ) == PackageManager.PERMISSION_GRANTED
-        hasPermission = granted
-        if (granted) onPermissionGranted() else permissionLauncher.launch(Manifest.permission.BODY_SENSORS)
+        // 필수 권한 목록
+        val requiredPermissions = listOf(
+            Manifest.permission.BODY_SENSORS,
+            Manifest.permission.ACTIVITY_RECOGNITION,
+            Manifest.permission.HIGH_SAMPLING_RATE_SENSORS
+        )
+
+        // 모든 권한이 승인되었는지 확인
+        val allGranted = requiredPermissions.all { permission ->
+            ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+        }
+
+        hasPermission = allGranted
+        if (allGranted) {
+            onPermissionGranted()
+        } else {
+            permissionsLauncher.launch(requiredPermissions.toTypedArray())
+        }
     }
 
     // 📱 전체 화면 레이아웃 (중앙 정렬된 세로 배치)
