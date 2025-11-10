@@ -3,11 +3,13 @@ package com.ssairen.domain.file.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssairen.domain.ai.entity.SttTranscript;
 import com.ssairen.domain.ai.repository.SttTranscriptRepository;
+import com.ssairen.domain.ai.service.LocalWhisperSttService;
 import com.ssairen.domain.ai.service.SttService;
 import com.ssairen.domain.emergency.entity.EmergencyReport;
 import com.ssairen.domain.emergency.repository.EmergencyReportRepository;
 import com.ssairen.domain.file.dto.AudioUploadWithSttResponse;
 import com.ssairen.domain.file.dto.FileUploadResponse;
+import com.ssairen.domain.file.dto.LocalWhisperSttResponse;
 import com.ssairen.domain.file.dto.SttResponse;
 import com.ssairen.domain.file.service.MinioService;
 import com.ssairen.global.dto.ApiResponse;
@@ -39,6 +41,7 @@ public class FileController {
 
     private final MinioService minioService;
     private final SttService sttService;
+    private final LocalWhisperSttService localWhisperSttService;
     private final SttTranscriptRepository sttTranscriptRepository;
     private final EmergencyReportRepository emergencyReportRepository;
     private final ObjectMapper objectMapper;
@@ -273,6 +276,47 @@ public class FileController {
 
         return ResponseEntity.ok(
                 ApiResponse.success(response, "오디오 파일 업로드 및 STT 변환이 완료되었습니다.")
+        );
+    }
+
+    /**
+     * 로컬 Whisper STT 변환 API
+     * - 로컬 Faster-Whisper 모델을 사용한 음성-텍스트 변환
+     * - 전체 텍스트 반환
+     */
+    @PostMapping(value = "/stt/local/full", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "로컬 Whisper STT (전체 텍스트)",
+            description = "로컬 Faster-Whisper 모델을 사용하여 음성을 텍스트로 변환합니다. 전체 텍스트와 세그먼트 정보를 반환합니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "STT 변환 성공",
+                    content = @Content(schema = @Schema(implementation = LocalWhisperSttResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (빈 파일, 지원하지 않는 형식 등)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "STT 변환 실패"
+            )
+    })
+    public ResponseEntity<ApiResponse<LocalWhisperSttResponse>> convertSpeechToTextWithLocalWhisper(
+            @Parameter(description = "오디오 파일 (mp3, wav, m4a 등)", required = true)
+            @RequestParam("file") MultipartFile file,
+            @Parameter(description = "언어 코드 (예: ko, en, ja)")
+            @RequestParam(value = "language", required = false, defaultValue = "ko") String language
+    ) {
+        log.info("로컬 Whisper STT 요청 - 파일명: {}, 언어: {}, 크기: {} bytes",
+                file.getOriginalFilename(), language, file.getSize());
+
+        LocalWhisperSttResponse response = localWhisperSttService.convertSpeechToText(file, language);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(response, "로컬 Whisper STT 변환이 완료되었습니다.")
         );
     }
 }

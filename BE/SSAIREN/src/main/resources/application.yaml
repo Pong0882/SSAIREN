@@ -64,6 +64,8 @@ ai:
   server:
     base-url: ${AI_SERVER_BASE_URL:https://ai.ssairen.site}
     timeout: 300  # 초 (5분)
+  local-whisper:
+    base-url: ${AI_LOCAL_WHISPER_BASE_URL:https://alondra-reprobationary-margeret.ngrok-free.dev}
 
 # JWT 인증 설정
 jwt:
