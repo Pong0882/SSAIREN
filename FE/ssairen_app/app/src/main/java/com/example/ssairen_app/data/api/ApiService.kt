@@ -7,7 +7,7 @@ import com.example.ssairen_app.data.model.response.LoginResponse
 import com.example.ssairen_app.data.model.response.CreateReportResponse
 import com.example.ssairen_app.data.model.response.ReportListResponse
 import com.example.ssairen_app.data.model.response.PatientInfoResponse
-//import com.example.ssairen_app.data.model.response.PatientTypeResponse
+import com.example.ssairen_app.data.model.response.PatientTypeResponse
 //import com.example.ssairen_app.data.model.response.FirstAidResponse
 //import com.example.ssairen_app.data.model.response.PatientEvaResponse
 
@@ -64,11 +64,12 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<PatientInfoResponse>
 
-//    // 환자발생유형
-//    @GET("api/emergency-reports/{emergencyReportId}/sections/INCIDENT_TYPE")
-//    suspend fun getPatientType(
-//        @Path("emergencyReportId") emergencyReportId: Int
-//    ): Response<PatientTypeResponse>
+    // 환자발생유형
+    @GET("api/emergency-reports/{emergencyReportId}/sections/INCIDENT_TYPE")
+    suspend fun getPatientType(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String
+    ): Response<PatientTypeResponse>
 //
 //    // 환자평가
 //    @GET("api/emergency-reports/{emergencyReportId}/sections/ASSESSMENT")

@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.ssairen_app.data.local.AuthManager
 import com.example.ssairen_app.data.repository.ReportRepository
 import com.example.ssairen_app.data.model.response.PatientInfoResponse
+import com.example.ssairen_app.data.model.response.PatientTypeResponse
 import kotlinx.coroutines.launch
 
 class ActivityViewModel(application: Application) : AndroidViewModel(application) {
@@ -77,44 +78,44 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
         _patientInfoState.postValue(PatientInfoApiState.Idle)
     }
 
-//    // ==========================================
-//    // 환자발생유형 (주석 처리 - PatientInfo 확인 후 사용)
-//    // ==========================================
-//    private val _patientTypeState = MutableLiveData<PatientTypeApiState>(PatientTypeApiState.Idle)
-//    val patientTypeState: LiveData<PatientTypeApiState> = _patientTypeState
-//
-//    fun getPatientType() {
-//        val reportId = _currentEmergencyReportId.value ?: HARDCODED_REPORT_ID
-//        getPatientType(reportId)
-//    }
-//
-//    fun getPatientType(emergencyReportId: Int) {
-//        Log.d(TAG, "=== 환자발생유형 조회 시작 (ViewModel) ===")
-//        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
-//
-//        _patientTypeState.postValue(PatientTypeApiState.Loading)
-//
-//        viewModelScope.launch {
-//            try {
-//                val result = repository.getPatientType(emergencyReportId)
-//
-//                result.onSuccess { response ->
-//                    Log.d(TAG, "✅ 환자발생유형 조회 성공 (ViewModel)")
-//                    _patientTypeState.postValue(PatientTypeApiState.Success(response))
-//                }.onFailure { error ->
-//                    Log.e(TAG, "❌ 환자발생유형 조회 실패 (ViewModel): ${error.message}")
-//                    _patientTypeState.postValue(PatientTypeApiState.Error(error.message ?: "알 수 없는 오류"))
-//                }
-//            } catch (e: Exception) {
-//                Log.e(TAG, "💥 예외 발생 (ViewModel)", e)
-//                _patientTypeState.postValue(PatientTypeApiState.Error(e.message ?: "알 수 없는 오류"))
-//            }
-//        }
-//    }
-//
-//    fun resetPatientTypeState() {
-//        _patientTypeState.postValue(PatientTypeApiState.Idle)
-//    }
+    // ==========================================
+    // 환자발생유형 (주석 처리 - PatientInfo 확인 후 사용)
+    // ==========================================
+    private val _patientTypeState = MutableLiveData<PatientTypeApiState>(PatientTypeApiState.Idle)
+    val patientTypeState: LiveData<PatientTypeApiState> = _patientTypeState
+
+    fun getPatientType() {
+        val reportId = _currentEmergencyReportId.value ?: HARDCODED_REPORT_ID
+        getPatientType(reportId)
+    }
+
+    fun getPatientType(emergencyReportId: Int) {
+        Log.d(TAG, "=== 환자발생유형 조회 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _patientTypeState.postValue(PatientTypeApiState.Loading)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.getPatientType(emergencyReportId)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 환자발생유형 조회 성공 (ViewModel)")
+                    _patientTypeState.postValue(PatientTypeApiState.Success(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 환자발생유형 조회 실패 (ViewModel): ${error.message}")
+                    _patientTypeState.postValue(PatientTypeApiState.Error(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 예외 발생 (ViewModel)", e)
+                _patientTypeState.postValue(PatientTypeApiState.Error(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    fun resetPatientTypeState() {
+        _patientTypeState.postValue(PatientTypeApiState.Idle)
+    }
 //
 //    // ==========================================
 //    // 환자평가 (주석 처리 - PatientInfo 확인 후 사용)
@@ -211,13 +212,13 @@ sealed class PatientInfoApiState {
 }
 
 // 주석 처리 - PatientInfo 확인 후 사용
-//sealed class PatientTypeApiState {
-//    object Idle : PatientTypeApiState()
-//    object Loading : PatientTypeApiState()
-//    data class Success(val patientTypeResponse: PatientTypeResponse) : PatientTypeApiState()
-//    data class Error(val message: String) : PatientTypeApiState()
-//}
-//
+sealed class PatientTypeApiState {
+    object Idle : PatientTypeApiState()
+    object Loading : PatientTypeApiState()
+    data class Success(val patientTypeResponse: PatientTypeResponse) : PatientTypeApiState()
+    data class Error(val message: String) : PatientTypeApiState()
+}
+
 //sealed class PatientEvaApiState {
 //    object Idle : PatientEvaApiState()
 //    object Loading : PatientEvaApiState()

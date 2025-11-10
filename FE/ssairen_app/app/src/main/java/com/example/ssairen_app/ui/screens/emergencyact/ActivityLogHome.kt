@@ -1,4 +1,4 @@
-// ActivityLogHome.kt
+// ActivityLogHome(네비게이션이 2개가 있는 진입점 홈).kt
 package com.example.ssairen_app.ui.screens.emergencyact
 
 import android.util.Log
@@ -18,14 +18,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.ui.navigation.ActivityLogNavigationBar
 import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.viewmodel.LogViewModel
-//import com.example.ssairen_app.ui.screens.emergencyact.PatientType
 
 @Composable
 fun ActivityLogHome(
     initialTab: Int = 0,
     onNavigateBack: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
-    onNavigateToSummation: () -> Unit = {},  // ✅ 추가
+    onNavigateToSummation: () -> Unit = {},
     viewModel: LogViewModel = viewModel()
 ) {
     var selectedLogTab by remember { mutableIntStateOf(initialTab) }
@@ -111,24 +110,12 @@ fun ActivityLogHome(
                     data = activityLogData
                 )
                 1 -> Text("구급출동", color = Color.White)  // TODO: DispatchSection()
-                2 -> {
-                    // ✅ 임시: PatientType 화면 (빌드 오류로 주석 처리)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFF1a1a1a)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "환자발생유형 (준비 중)",
-                            color = Color.White,
-                            fontSize = 16.sp
-                        )
-                    }
-                    // PatientType(viewModel = viewModel, data = activityLogData)
-                }
+                2 -> PatientType(
+                    viewModel = viewModel,
+                    data = activityLogData
+                )
                 3 -> {
-                    // ✅ 임시: PatientEva 화면 (빌드 오류로 주석 처리)
+                    // ✅ 임시: PatientEva 화면 (준비 중)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -141,10 +128,9 @@ fun ActivityLogHome(
                             fontSize = 16.sp
                         )
                     }
-                    // PatientEva(viewModel = viewModel, data = activityLogData)
                 }
                 4 -> {
-                    // ✅ 임시: FirstAid 화면 (빌드 오류로 주석 처리)
+                    // ✅ 임시: FirstAid 화면 (준비 중)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -157,7 +143,6 @@ fun ActivityLogHome(
                             fontSize = 16.sp
                         )
                     }
-                    // FirstAid(viewModel = viewModel, data = activityLogData)
                 }
                 5 -> Text("의료지도", color = Color.White)  // TODO: MedicalGuidance()
                 6 -> Text("환자이송", color = Color.White)  // TODO: PatientTransport()
@@ -165,7 +150,7 @@ fun ActivityLogHome(
             }
         }
 
-        // 4. 하단 네비게이션 ✅ 수정
+        // 4. 하단 네비게이션
         EmergencyNav(
             selectedTab = selectedBottomTab,
             onTabSelected = { newTab ->
