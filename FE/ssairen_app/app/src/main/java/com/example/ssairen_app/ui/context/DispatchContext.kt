@@ -45,7 +45,7 @@ class DispatchState {
         val currentDate = dateFormat.format(Date())
 
         val newDispatch = DispatchItem(
-            id = "CB${System.currentTimeMillis()}",
+            id = "22",
             type = "구급출동 | 긴급",
             date = currentDate,
             location = "서울특별시 강남구 테헤란로 212 거리 3.2km",
@@ -75,7 +75,7 @@ val LocalDispatchState = compositionLocalOf<DispatchState> {
 @Composable
 fun DispatchProvider(
     initialShowModal: Boolean = false,
-    autoCreateDispatch: Boolean = true,  // ⬅️ 추가
+    autoCreateDispatch: Boolean = false,  // ⬅️ 추가
     content: @Composable () -> Unit
 ) {
     val dispatchState = remember {

@@ -6,7 +6,7 @@ import com.example.ssairen_app.data.ApiVideoUploader
 import com.example.ssairen_app.data.api.RetrofitInstance
 import com.example.ssairen_app.data.local.AuthManager
 import com.example.ssairen_app.data.model.request.LoginRequest
-import com.example.ssairen_app.data.model.response.LoginData // <--- 2. LoginData 임포트
+import com.example.ssairen_app.data.model.response.LoginData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -49,10 +49,12 @@ class AuthRepository(
                     // ✅ 로그인 성공
                     Log.d(TAG, "✅ 로그인 성공!")
                     Log.d(TAG, "Access Token: ${body.data.accessToken.take(20)}...")
+                    // <--- 5. paramedic 객체 없이 LoginData에서 바로 name 접근
                     Log.d(TAG, "Paramedic: ${body.data.name}")
 
                     // Access Token과 Refresh Token 모두 저장
                     authManager.saveLoginInfo(
+                        // <--- 6. LoginData에 정의한 username (또는 studentNumber) 필드 사용
                         userId = body.data.username,
                         userName = body.data.name,
                         accessToken = body.data.accessToken,
@@ -110,6 +112,50 @@ class AuthRepository(
         }
     }
 
+    // ✅ 로그아웃 API 호출 추가
+    suspend fun logout(): Result<String> {
+        return try {
+            Log.d(TAG, "=== 로그아웃 시작 ===")
+
+            val accessToken = authManager.getAccessToken()
+
+            if (accessToken != null) {
+                Log.d(TAG, "Access Token 존재 - API 호출")
+
+                val response = api.logout("Bearer $accessToken")
+                Log.d(TAG, "응답 코드: ${response.code()}")
+
+                // API 호출 성공 여부와 관계없이 로컬 데이터 삭제
+                authManager.logout()
+                Log.d(TAG, "🗑️ 로컬 데이터 삭제 완료")
+
+                if (response.isSuccessful && response.body() != null) {
+                    val body = response.body()!!
+
+                    if (body.success) {
+                        Log.d(TAG, "✅ 로그아웃 API 성공: ${body.message}")
+                        Result.success(body.data ?: body.message ?: "로그아웃 성공")
+                    } else {
+                        Log.w(TAG, "⚠️ 로그아웃 API 실패: ${body.error?.message}")
+                        Result.success("로컬 로그아웃 완료")
+                    }
+                } else {
+                    Log.w(TAG, "⚠️ 로그아웃 API 오류: ${response.code()}")
+                    Result.success("로컬 로그아웃 완료")
+                }
+            } else {
+                Log.d(TAG, "ℹ️ Access Token 없음 - 로컬 데이터만 삭제")
+                authManager.logout()
+                Result.success("로컬 로그아웃 완료")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "💥 로그아웃 예외 발생", e)
+            // 예외 발생해도 로컬 데이터는 삭제
+            authManager.logout()
+            Result.success("로컬 로그아웃 완료")
+        }
+    }
+
     // 로그인 상태 확인
     fun isLoggedIn(): Boolean {
         return authManager.isLoggedIn()
@@ -128,11 +174,6 @@ class AuthRepository(
     // Refresh Token 가져오기
     fun getRefreshToken(): String? {
         return authManager.getRefreshToken()
-    }
-
-    // 로그아웃
-    fun logout() {
-        authManager.logout()
     }
 
     /**

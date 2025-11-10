@@ -3,6 +3,7 @@ package com.example.ssairen_app.data.local
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 
 class AuthManager(context: Context) {
 
@@ -10,10 +11,11 @@ class AuthManager(context: Context) {
         context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
 
     companion object {
+        private const val TAG = "AuthManager"
         private const val KEY_USER_ID = "user_id"
+        private const val KEY_ACCESS_TOKEN = "access_token"
+        private const val KEY_REFRESH_TOKEN = "refresh_token"
         private const val KEY_USER_NAME = "user_name"  // ⭐ 사용자 이름 추가
-        private const val KEY_ACCESS_TOKEN = "access_token"  // ⭐ 이름 변경
-        private const val KEY_REFRESH_TOKEN = "refresh_token"  // ⭐ 추가
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
         private const val KEY_LOGIN_TIME = "login_time"
         private const val KEY_LOGIN_USERNAME = "login_username"  // ⭐ 재로그인용
@@ -43,6 +45,17 @@ class AuthManager(context: Context) {
             putLong(KEY_LOGIN_TIME, System.currentTimeMillis())
             apply()
         }
+        Log.d(TAG, "✅ 로그인 정보 저장 완료 - User: $userId")
+    }
+
+    // ✅ 토큰만 저장 (토큰 갱신 시 사용)
+    fun saveTokens(accessToken: String, refreshToken: String) {
+        prefs.edit().apply {
+            putString(KEY_ACCESS_TOKEN, accessToken)
+            putString(KEY_REFRESH_TOKEN, refreshToken)
+            apply()
+        }
+        Log.d(TAG, "✅ 토큰 갱신 완료")
     }
 
     // ⭐ Access Token 가져오기
@@ -93,7 +106,9 @@ class AuthManager(context: Context) {
 
     // ⭐ Access Token만 업데이트 (토큰 갱신 시 사용)
     fun saveAccessToken(token: String) {
-        prefs.edit().putString(KEY_ACCESS_TOKEN, token).apply()
+        prefs.edit()
+            .putString(KEY_ACCESS_TOKEN, token)
+            .apply()
     }
 
     fun logout() {
@@ -108,6 +123,7 @@ class AuthManager(context: Context) {
             putBoolean(KEY_IS_LOGGED_IN, false)
             apply()
         }
+        Log.d(TAG, "🗑️ 로그아웃 - 모든 인증 정보 삭제 완료")
     }
 
     // ⭐ 로그인 자격 증명 데이터 클래스

@@ -116,4 +116,13 @@ dependencies {
 
     // Compose LiveData
     implementation("androidx.compose.runtime:runtime-livedata:1.5.4")
+
+    // 1. observeAsState() 사용을 위한 의존성
+    implementation("androidx.compose.runtime:runtime-livedata")
+
+// 2. viewModel() 사용을 위한 의존성
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+// 3. Navigation (보고서 클릭 시 페이지 이동)
+    implementation("androidx.navigation:navigation-compose:2.7.6")
 }

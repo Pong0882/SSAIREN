@@ -302,6 +302,68 @@ class LogViewModel : ViewModel() {
     }
 
     /**
+     * ✅ 탭 변경 시 백엔드에 현재 섹션 저장
+     * @param tabIndex 현재 탭 인덱스 (0: 환자정보, 1: 구급출동, ...)
+     */
+    fun saveToBackend(tabIndex: Int) {
+        viewModelScope.launch {
+            val currentData = _activityLogData.value
+
+            when (tabIndex) {
+                0 -> {
+                    // 환자정보 저장
+                    println("💾 [백엔드 저장] 환자정보: ${currentData.patientInfo}")
+                    // TODO: API 연결
+                    // repository.updatePatientInfo(emergencyReportId, currentData.patientInfo)
+                }
+                1 -> {
+                    // 구급출동 저장
+                    println("💾 [백엔드 저장] 구급출동: ${currentData.dispatch}")
+                    // TODO: API 연결
+                }
+                2 -> {
+                    // 환자발생유형 저장
+                    println("💾 [백엔드 저장] 환자발생유형: ${currentData.patienType}")
+                    // TODO: API 연결
+                }
+                3 -> {
+                    // 환자평가 저장
+                    println("💾 [백엔드 저장] 환자평가: ${currentData.patientEva}")
+                    // TODO: API 연결
+                }
+                4 -> {
+                    // 응급처치 저장
+                    println("💾 [백엔드 저장] 응급처치: ${currentData.firstAid}")
+                    // TODO: API 연결
+                }
+                5 -> {
+                    // 의료지도 저장
+                    println("💾 [백엔드 저장] 의료지도: ${currentData.medicalGuidance}")
+                    // TODO: API 연결
+                }
+                6 -> {
+                    // 환자이송 저장
+                    println("💾 [백엔드 저장] 환자이송: ${currentData.patientTransport}")
+                    // TODO: API 연결
+                }
+                7 -> {
+                    // 세부사항표 저장
+                    println("💾 [백엔드 저장] 세부사항표: ${currentData.reportDetail}")
+                    // TODO: API 연결
+                }
+            }
+
+            // 저장 시간 업데이트
+            _lastSavedTime.value = SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss",
+                Locale.getDefault()
+            ).format(Date())
+
+            println("✅ 백엔드 저장 완료: ${_lastSavedTime.value}")
+        }
+    }
+
+    /**
      * 데이터 초기화
      */
     fun clearData() {

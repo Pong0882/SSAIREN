@@ -2,6 +2,7 @@
 package com.example.ssairen_app.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -17,6 +18,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         context = application
     )
 
+    companion object {
+        private const val TAG = "AuthViewModel"
+    }
+
     // 로그인 상태
     private val _loginState = MutableLiveData<LoginState>()
     val loginState: LiveData<LoginState> = _loginState
@@ -24,6 +29,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     // 로그인 여부
     private val _isLoggedIn = MutableLiveData<Boolean>()
     val isLoggedIn: LiveData<Boolean> = _isLoggedIn
+
+    // ✅ 로그아웃 상태 추가
+    private val _logoutState = MutableLiveData<LogoutState>()
+    val logoutState: LiveData<LogoutState> = _logoutState
 
     init {
         checkLoginStatus()
@@ -46,8 +55,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _loginState.value = LoginState.Loading
 
             val result = repository.login(studentNumber, password)
-            result.onSuccess { paramedic ->
-                _loginState.value = LoginState.Success(paramedic)
+            result.onSuccess { loginData ->
+                _loginState.value = LoginState.Success(loginData)
                 _isLoggedIn.value = true
             }.onFailure { error ->
                 _loginState.value = LoginState.Error(error.message ?: "로그인 실패")
@@ -56,12 +65,42 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // 로그아웃
+    // ✅ 로그아웃 (API 호출 포함)
     fun logout() {
-        repository.logout()
-        _isLoggedIn.value = false
-        _loginState.value = LoginState.Idle
+        viewModelScope.launch {
+            _logoutState.value = LogoutState.Loading
+            Log.d(TAG, "🚪 로그아웃 시작...")
+
+            try {
+                val result = repository.logout()
+
+                result.onSuccess { message ->
+                    _isLoggedIn.value = false
+                    _loginState.value = LoginState.Idle
+                    _logoutState.value = LogoutState.Success(message)
+                    Log.d(TAG, "✅ 로그아웃 완료: $message")
+                }.onFailure { error ->
+                    // 실패해도 로컬은 로그아웃 처리됨
+                    _isLoggedIn.value = false
+                    _loginState.value = LoginState.Idle
+                    _logoutState.value = LogoutState.Error(error.message ?: "로그아웃 실패")
+                    Log.w(TAG, "⚠️ 로그아웃 경고: ${error.message}")
+                }
+            } catch (e: Exception) {
+                // 예외 발생해도 로컬은 로그아웃 처리
+                _isLoggedIn.value = false
+                _loginState.value = LoginState.Idle
+                _logoutState.value = LogoutState.Error(e.message ?: "로그아웃 오류")
+                Log.e(TAG, "❌ 로그아웃 예외", e)
+            }
+        }
     }
 }
 
-// ⭐ sealed class 삭제 (별도 파일로 분리했으므로)
+// ✅ 로그아웃 상태 sealed class 추가
+sealed class LogoutState {
+    object Idle : LogoutState()
+    object Loading : LogoutState()
+    data class Success(val message: String) : LogoutState()
+    data class Error(val message: String) : LogoutState()
+}

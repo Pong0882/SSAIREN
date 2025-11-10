@@ -1,29 +1,88 @@
-//ReportHome.kt
+// ReportHome.kt (무한 스크롤 개선 버전 - 작성 상태 UI 제거)
 package com.example.ssairen_app.ui.screens.report
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.ui.components.ClickableDarkCard
 import com.example.ssairen_app.ui.context.rememberDispatchState
 import com.example.ssairen_app.ui.navigation.ReportNavigationBar
+import com.example.ssairen_app.viewmodel.ReportViewModel
+import com.example.ssairen_app.viewmodel.CreateReportState
+import com.example.ssairen_app.viewmodel.ReportListState
 
 @Composable
 fun ReportHome(
-    onNavigateToActivityLog: () -> Unit = {}  // ✅ 이름 변경: ActivityLog로 이동
+    onNavigateToActivityLog: (emergencyReportId: Int) -> Unit = {},
+    onLogout: () -> Unit = {},
+    reportViewModel: ReportViewModel = viewModel()
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val dispatchState = rememberDispatchState()
 
-    // 출동 모달 표시
+    val createReportState by reportViewModel.createReportState.observeAsState(CreateReportState.Idle)
+    val reportListState by reportViewModel.reportListState.observeAsState(ReportListState.Idle)
+    val isLoadingMore by reportViewModel.isLoadingMore.observeAsState(false)
+    val hasMoreData by reportViewModel.hasMoreData.observeAsState(true)
+
+    LaunchedEffect(Unit) {
+        reportViewModel.getReports()
+    }
+
+    LaunchedEffect(createReportState) {
+        if (createReportState is CreateReportState.Success) {
+            val reportId = (createReportState as CreateReportState.Success).reportData.emergencyReportId
+            reportViewModel.getReports()
+            onNavigateToActivityLog(reportId)
+            reportViewModel.resetCreateState()
+        }
+    }
+
+    if (createReportState is CreateReportState.Error) {
+        val errorMessage = (createReportState as CreateReportState.Error).message
+        AlertDialog(
+            onDismissRequest = { reportViewModel.resetCreateState() },
+            title = { Text("일지 생성 실패", color = Color.White) },
+            text = { Text(errorMessage, color = Color.White) },
+            confirmButton = {
+                TextButton(onClick = { reportViewModel.resetCreateState() }) {
+                    Text("확인")
+                }
+            },
+            containerColor = Color(0xFF2a2a2a)
+        )
+    }
+
+    if (createReportState is CreateReportState.Loading) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("일지 생성 중...", color = Color.White) },
+            text = {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    CircularProgressIndicator()
+                }
+            },
+            confirmButton = { },
+            containerColor = Color(0xFF2a2a2a)
+        )
+    }
+
     if (dispatchState.showDispatchModal && dispatchState.activeDispatch != null) {
         val dispatch = dispatchState.activeDispatch!!
         DispatchDetail(
@@ -44,7 +103,7 @@ fun ReportHome(
             },
             onCreateNewReport = {
                 dispatchState.closeDispatchModal()
-                onNavigateToActivityLog()  // ✅ ActivityLog로 이동 (환자정보 화면)
+                reportViewModel.getReports()
             }
         )
     }
@@ -55,33 +114,85 @@ fun ReportHome(
             .padding(horizontal = 16.dp)
             .padding(top = 50.dp, bottom = 16.dp)
     ) {
-        // 상단 타이틀
-        Text(
-            text = "보고서 메인화면",
-            color = Color.White,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "보고서 메인화면",
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            OutlinedButton(
+                onClick = onLogout,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color.White
+                ),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF666666))
+            ) {
+                Text(
+                    text = "로그아웃",
+                    fontSize = 14.sp
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ReportNavigationBar 사용
         ReportNavigationBar(
             selectedTab = selectedTab,
-            onTabSelected = { selectedTab = it }
+            onTabSelected = {
+                Log.d("ReportHome", "🔵 탭 클릭됨: $it")
+                selectedTab = it
+            }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 탭에 따라 다른 콘텐츠 표시
         when (selectedTab) {
-            0 -> ReportListContent()
-            1 -> DispatchList()
-            2 -> ReportSearchScreen(
-                onNavigateToDetail = { report ->
-                    println("Report detail: ${report.id}")
+            0 -> {
+                Log.d("ReportHome", "✅ ReportListContent 표시 중")
+                ReportListContent(
+                    reportListState = reportListState,
+                    onRefresh = { reportViewModel.getReports() },
+                    onLoadMore = { reportViewModel.loadMoreReports() },
+                    onReportClick = { emergencyReportId ->
+                        onNavigateToActivityLog(emergencyReportId)
+                    },
+                    isLoadingMore = isLoadingMore,
+                    hasMoreData = hasMoreData,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
+            }
+            1 -> {
+                Log.d("ReportHome", "⚠️ DispatchList 표시 중 (목 데이터)")
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    DispatchList()
                 }
-            )
+            }
+            2 -> {
+                Log.d("ReportHome", "🔍 ReportSearchScreen 표시 중")
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    ReportSearchScreen(
+                        onNavigateToDetail = { report ->
+                            println("Report detail: ${report.id}")
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -90,26 +201,143 @@ fun ReportHome(
 // 내 보고서 콘텐츠
 // ==========================================
 @Composable
-private fun ReportListContent() {
+private fun ReportListContent(
+    reportListState: ReportListState,
+    onRefresh: () -> Unit,
+    onLoadMore: () -> Unit,
+    onReportClick: (Int) -> Unit,
+    isLoadingMore: Boolean,
+    hasMoreData: Boolean,
+    modifier: Modifier = Modifier
+) {
     var selectedCardIndex by remember { mutableStateOf<Int?>(null) }
+    val listState = rememberLazyListState()
 
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(bottom = 16.dp)
-    ) {
-        itemsIndexed(listOf(
-            ReportData("CB000000000842", "0000000", "정상", 65, "2024-04-05", "감서 소방서 (구급대 차 번호)"),
-            ReportData("CB000000000843", "0000001", "정상", 65, "2024-04-05", "감서 소방서 (구급대 차 번호)"),
-            ReportData("CB000000000844", "0000002", "정상", 65, "2024-04-05", "감서 소방서 (구급대 차 번호)"),
-            ReportData("CB000000000845", "0000003", "정상", 65, "2024-04-05", "감서 소방서 (구급대 차 번호)")
-        )) { index, report ->
-            ReportCard(
-                reportData = report,
-                isSelected = selectedCardIndex == index,
-                onClick = {
-                    selectedCardIndex = if (selectedCardIndex == index) null else index
+    when (reportListState) {
+        is ReportListState.Idle -> {
+            Log.d("ReportHome", "⭕ ReportListState.Idle")
+        }
+
+        is ReportListState.Loading -> {
+            Log.d("ReportHome", "⏳ ReportListState.Loading")
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        }
+
+        is ReportListState.Error -> {
+            Log.d("ReportHome", "❌ ReportListState.Error: ${reportListState.message}")
+            Column(
+                modifier = modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = reportListState.message,
+                    color = Color(0xFFFF6B6B),
+                    fontSize = 14.sp
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onRefresh,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF3b7cff)
+                    )
+                ) {
+                    Text("다시 시도")
                 }
-            )
+            }
+        }
+
+        is ReportListState.Success -> {
+            val reportsData = reportListState.reportListData
+
+            // ✅ 원래 코드: 모든 보고서 표시
+            // val reports = reportsData.emergencyReports
+
+            // ✅ 임시 코드: 보고서 21번만 필터링
+            val reports = reportsData.emergencyReports.filter { it.id == 21 }
+
+            Log.d("ReportHome", "✅ ReportListState.Success - 보고서 개수: ${reports.size}")
+            Log.d("ReportHome", "📌 필터링된 보고서: ID 21번만 표시")
+
+            if (reports.isEmpty()) {
+                Box(
+                    modifier = modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "보고서 21번을 찾을 수 없습니다",
+                        color = Color(0xFF999999),
+                        fontSize = 14.sp
+                    )
+                }
+            } else {
+                // ✅ 원래 코드: 무한 스크롤 감지
+                /*
+                LaunchedEffect(listState, reports.size) {
+                    snapshotFlow {
+                        val layoutInfo = listState.layoutInfo
+                        val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()
+                        val lastVisibleIndex = lastVisibleItem?.index ?: -1
+                        val totalItems = layoutInfo.totalItemsCount
+
+                        Log.d("ReportHome", "📊 스크롤 상태")
+                        Log.d("ReportHome", "   - 마지막 보이는 인덱스: $lastVisibleIndex")
+                        Log.d("ReportHome", "   - 전체 아이템 수: $totalItems")
+                        Log.d("ReportHome", "   - hasMoreData: $hasMoreData")
+                        Log.d("ReportHome", "   - isLoadingMore: $isLoadingMore")
+
+                        lastVisibleIndex to totalItems
+                    }.collect { (lastVisibleIndex, totalItems) ->
+                        // ✅ 마지막에서 3번째 아이템에 도달하면 로드
+                        if (lastVisibleIndex >= totalItems - 3 && hasMoreData && !isLoadingMore) {
+                            Log.d("ReportHome", "🔄 무한 스크롤 트리거!")
+                            Log.d("ReportHome", "   - 트리거 인덱스: $lastVisibleIndex")
+                            Log.d("ReportHome", "   - 전체 개수: $totalItems")
+                            onLoadMore()
+                        }
+                    }
+                }
+                */
+
+                LazyColumn(
+                    state = listState,
+                    modifier = modifier,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    itemsIndexed(reports, key = { _, report -> report.id }) { index, report ->
+                        val dispatchInfo = report.dispatchInfo
+
+                        val formattedDate = try {
+                            dispatchInfo.date.substringBefore('T')
+                        } catch (e: Exception) {
+                            dispatchInfo.date
+                        }
+
+                        ReportCard(
+                            reportData = ReportData(
+                                reportNumber = dispatchInfo.disasterNumber,
+                                patientNumber = report.id.toString().padStart(7, '0'),
+                                status = dispatchInfo.disasterType,
+                                progress = 0,  // ✅ 사용 안 하지만 호환성 유지
+                                date = formattedDate,
+                                location = dispatchInfo.fireStateInfo.name,
+                                locationAddress = dispatchInfo.locationAddress
+                            ),
+                            isSelected = selectedCardIndex == index,
+                            onClick = {
+                                selectedCardIndex = if (selectedCardIndex == index) null else index
+                                onReportClick(report.id)
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -118,11 +346,13 @@ data class ReportData(
     val reportNumber: String,
     val patientNumber: String,
     val status: String,
-    val progress: Int,
+    val progress: Int = 0,  // ✅ 더 이상 사용 안 하지만 호환성 유지
     val date: String,
-    val location: String
+    val location: String,
+    val locationAddress: String = ""
 )
 
+// ✅ 작성 상태 UI 제거된 ReportCard
 @Composable
 private fun ReportCard(
     reportData: ReportData,
@@ -137,58 +367,30 @@ private fun ReportCard(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "${reportData.reportNumber} 구급출동 | ${reportData.status}",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-
-                Surface(
-                    color = Color(0xFF4a4a4a),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
-                ) {
-                    Text(
-                        text = "${reportData.progress}% 작성중",
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            LinearProgressIndicator(
-                progress = { reportData.progress / 100f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp),
-                color = Color(0xFF3b7cff),
-                trackColor = Color(0xFF3a3a3a),
-                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+            // ✅ 상단: 재난번호 | 상태만 표시
+            Text(
+                text = "${reportData.reportNumber} | ${reportData.status}",
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // ✅ 하단: 보고서 정보
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "신정운 ${reportData.patientNumber}",
+                    text = "보고서 ID: ${reportData.patientNumber}",
                     color = Color.White,
                     fontSize = 12.sp
                 )
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "${reportData.date} 지정시간",
+                        text = reportData.date,
                         color = Color(0xFF999999),
                         fontSize = 11.sp
                     )
@@ -197,6 +399,13 @@ private fun ReportCard(
                         color = Color(0xFF999999),
                         fontSize = 11.sp
                     )
+                    if (reportData.locationAddress.isNotEmpty()) {
+                        Text(
+                            text = reportData.locationAddress,
+                            color = Color(0xFF999999),
+                            fontSize = 10.sp
+                        )
+                    }
                 }
             }
         }
