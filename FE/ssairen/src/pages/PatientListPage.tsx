@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Header,
   Tabs,
@@ -21,7 +22,9 @@ import {
 import type { Patient } from "@/features/patients/types/patient.types";
 
 export default function PatientListPage() {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
+  const clearAuth = useAuthStore((state) => state.clearAuth);
   const [activeTab, setActiveTab] = useState<"all" | "waiting">("all");
   const [dateRange, setDateRange] = useState<"all" | "week" | "month">("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,6 +33,9 @@ export default function PatientListPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 10;
+
+  // 사이드바 접기/펼치기 상태
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // 상세 정보 모달 상태
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -198,10 +204,104 @@ export default function PatientListPage() {
     return "-";
   };
 
+  // 로그아웃 핸들러
+  const handleLogout = () => {
+    clearAuth();
+    navigate("/login");
+  };
+
   return (
-    <div className="h-screen bg-neutral-900 flex flex-col overflow-hidden">
-      {/* Header */}
-      <Header />
+    <div className="h-screen flex overflow-hidden">
+      {/* 사이드바 */}
+      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-neutral-900 flex flex-col transition-all duration-300`}>
+        {/* 로고/타이틀 영역 + 토글 버튼 */}
+        <div className={`h-[88px] px-6 border-b border-neutral-700 flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+          {!isSidebarCollapsed && (
+            <div>
+              <h2 className="text-xl font-bold text-white whitespace-nowrap">SSAIREN</h2>
+              <p className="text-sm text-gray-400 mt-1 whitespace-nowrap">환자 관리 시스템</p>
+            </div>
+          )}
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="p-3 text-gray-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {isSidebarCollapsed ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              )}
+            </svg>
+          </button>
+        </div>
+
+        {/* 메뉴 항목들 */}
+        <nav className="flex-1 px-4 py-6">
+          <div className="space-y-2">
+            {/* 대시보드 */}
+            <div className="h-[44px] px-4 text-gray-400 rounded-lg hover:bg-neutral-800 cursor-not-allowed transition-colors">
+              <div className="h-full flex items-center">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                {!isSidebarCollapsed && <span className="font-medium whitespace-nowrap ml-3">대시보드</span>}
+              </div>
+            </div>
+
+            {/* 환자 목록 (현재 페이지) */}
+            <div className="h-[44px] px-4 text-white bg-blue-600 rounded-lg transition-colors">
+              <div className="h-full flex items-center">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                {!isSidebarCollapsed && <span className="font-medium whitespace-nowrap ml-3">환자 목록</span>}
+              </div>
+            </div>
+
+            {/* 통계/리포트 */}
+            <div className="h-[44px] px-4 text-gray-400 rounded-lg hover:bg-neutral-800 cursor-not-allowed transition-colors">
+              <div className="h-full flex items-center">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                {!isSidebarCollapsed && <span className="font-medium whitespace-nowrap ml-3">통계/리포트</span>}
+              </div>
+            </div>
+
+            {/* 설정 */}
+            <div className="h-[44px] px-4 text-gray-400 rounded-lg hover:bg-neutral-800 cursor-not-allowed transition-colors">
+              <div className="h-full flex items-center">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {!isSidebarCollapsed && <span className="font-medium whitespace-nowrap ml-3">설정</span>}
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* 로그아웃 버튼 */}
+        <div className="p-4 border-t border-neutral-700">
+          <button
+            onClick={handleLogout}
+            className="w-full h-[44px] px-4 text-white bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors"
+          >
+            <div className="h-full flex items-center">
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              {!isSidebarCollapsed && <span className="font-medium whitespace-nowrap ml-3">로그아웃</span>}
+            </div>
+          </button>
+        </div>
+      </aside>
+
+      {/* 메인 컨텐츠 */}
+      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+        {/* Header */}
+        <Header />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 min-h-0">
@@ -229,8 +329,8 @@ export default function PatientListPage() {
               <button
                 className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                   dateRange === "all"
-                    ? "bg-secondary-500 text-white"
-                    : "bg-white text-neutral-700 hover:bg-neutral-100"
+                    ? "bg-sky-500 text-white shadow-sm"
+                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
                 }`}
                 onClick={() => handleDateRangeChange("all")}
               >
@@ -239,8 +339,8 @@ export default function PatientListPage() {
               <button
                 className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                   dateRange === "week"
-                    ? "bg-secondary-500 text-white"
-                    : "bg-white text-neutral-700 hover:bg-neutral-100"
+                    ? "bg-sky-500 text-white shadow-sm"
+                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
                 }`}
                 onClick={() => handleDateRangeChange("week")}
               >
@@ -249,8 +349,8 @@ export default function PatientListPage() {
               <button
                 className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                   dateRange === "month"
-                    ? "bg-secondary-500 text-white"
-                    : "bg-white text-neutral-700 hover:bg-neutral-100"
+                    ? "bg-sky-500 text-white shadow-sm"
+                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
                 }`}
                 onClick={() => handleDateRangeChange("month")}
               >
@@ -259,20 +359,21 @@ export default function PatientListPage() {
             </div>
           </div>
           {/* 테이블 */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden flex-1">
+          <div className="bg-white rounded-lg shadow-lg overflow-auto flex-1">
             {loading ? (
               <div className="flex items-center justify-center h-64">
-                <p className="text-neutral-500">로딩 중...</p>
+                <p className="text-gray-600">로딩 중...</p>
               </div>
             ) : error ? (
               <div className="flex items-center justify-center h-64">
-                <p className="text-danger-500">{error}</p>
+                <p className="text-red-600">{error}</p>
               </div>
             ) : patients.length === 0 ? (
               <div className="flex items-center justify-center h-64">
-                <p className="text-neutral-500">환자 데이터가 없습니다.</p>
+                <p className="text-gray-600">환자 데이터가 없습니다.</p>
               </div>
             ) : (
+              <div className="overflow-auto h-full">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -331,6 +432,7 @@ export default function PatientListPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </div>
 
@@ -344,6 +446,7 @@ export default function PatientListPage() {
           </div>
         </div>
       </div>
+      </div>
 
       {/* 환자 상세 정보 모달 */}
       <Modal
@@ -356,12 +459,12 @@ export default function PatientListPage() {
       >
         {detailLoading ? (
           <div className="flex items-center justify-center py-8">
-            <p className="text-neutral-500">로딩 중...</p>
+            <p className="text-gray-600">로딩 중...</p>
           </div>
         ) : selectedPatient ? (
           <div className="px-10 py-1">
             {/* 헤더 */}
-            <h2 className="text-2xl font-bold text-neutral-800 mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
               환자 정보
             </h2>
 
@@ -370,18 +473,18 @@ export default function PatientListPage() {
               {/* 성별, 나이 */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs text-neutral-700 mb-0.5">
-                    성별 <span className="text-danger-500">*</span>
+                  <label className="block text-xs text-gray-700 mb-0.5">
+                    성별 <span className="text-red-500">*</span>
                   </label>
-                  <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                  <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                     {selectedPatient.gender === "M" ? "남성" : "여성"}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-neutral-700 mb-0.5">
-                    나이 <span className="text-danger-500">*</span>
+                  <label className="block text-xs text-gray-700 mb-0.5">
+                    나이 <span className="text-red-500">*</span>
                   </label>
-                  <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                  <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                     {selectedPatient.age}
                   </div>
                 </div>
@@ -390,19 +493,19 @@ export default function PatientListPage() {
               {/* 시간, 멘탈 */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs text-neutral-700 mb-0.5">
-                    시간 <span className="text-danger-500">*</span>
+                  <label className="block text-xs text-gray-700 mb-0.5">
+                    시간 <span className="text-red-500">*</span>
                   </label>
-                  <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                  <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                     {selectedPatient.recordTime?.replace("T", " ") ||
                       selectedPatient.recordTime}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-neutral-700 mb-0.5">
-                    멘탈 <span className="text-danger-500">*</span>
+                  <label className="block text-xs text-gray-700 mb-0.5">
+                    멘탈 <span className="text-red-500">*</span>
                   </label>
-                  <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                  <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                     {selectedPatient.mentalStatus}
                   </div>
                 </div>
@@ -410,10 +513,10 @@ export default function PatientListPage() {
 
               {/* 주호소 */}
               <div>
-                <label className="block text-xs text-neutral-700 mb-0.5">
-                  주호소 <span className="text-danger-500">*</span>
+                <label className="block text-xs text-gray-700 mb-0.5">
+                  주호소 <span className="text-red-500">*</span>
                 </label>
-                <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                   {selectedPatient.chiefComplaint}
                 </div>
               </div>
@@ -424,7 +527,7 @@ export default function PatientListPage() {
               <div className="flex justify-center my-3">
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-200 hover:bg-neutral-300 transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
                 >
                   <svg
                     className="w-4 h-4"
@@ -445,11 +548,11 @@ export default function PatientListPage() {
 
             {/* 펼쳐졌을 때 추가 정보 */}
             {isExpanded && (
-              <div className="space-y-2 border-t border-neutral-200 pt-3 my-5 relative">
+              <div className="space-y-2 border-t border-gray-200 pt-3 my-5 relative">
                 {/* 접기 버튼을 구분선 위에 배치 */}
                 <button
                   onClick={() => setIsExpanded(false)}
-                  className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-neutral-200 hover:bg-neutral-300 transition-colors"
+                  className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
                 >
                   <svg
                     className="w-4 h-4"
@@ -469,26 +572,26 @@ export default function PatientListPage() {
                 {/* HR, BP, SpO2 */}
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-xs text-neutral-700 mb-0.5">
-                      HR <span className="text-danger-500">*</span>
+                    <label className="block text-xs text-gray-700 mb-0.5">
+                      HR <span className="text-red-500">*</span>
                     </label>
-                    <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                    <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                       {selectedPatient.hr}
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-700 mb-0.5">
-                      BP <span className="text-danger-500">*</span>
+                    <label className="block text-xs text-gray-700 mb-0.5">
+                      BP <span className="text-red-500">*</span>
                     </label>
-                    <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                    <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                       {selectedPatient.bp}
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-700 mb-0.5">
-                      SpO2 <span className="text-danger-500">*</span>
+                    <label className="block text-xs text-gray-700 mb-0.5">
+                      SpO2 <span className="text-red-500">*</span>
                     </label>
-                    <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                    <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                       {selectedPatient.spo2}
                     </div>
                   </div>
@@ -497,26 +600,26 @@ export default function PatientListPage() {
                 {/* RR, BT, 보호자 유무 */}
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-xs text-neutral-700 mb-0.5">
-                      RR <span className="text-danger-500">*</span>
+                    <label className="block text-xs text-gray-700 mb-0.5">
+                      RR <span className="text-red-500">*</span>
                     </label>
-                    <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                    <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                       {selectedPatient.rr}
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-700 mb-0.5">
-                      BT <span className="text-danger-500">*</span>
+                    <label className="block text-xs text-gray-700 mb-0.5">
+                      BT <span className="text-red-500">*</span>
                     </label>
-                    <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                    <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                       {selectedPatient.bt}
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-700 mb-0.5">
-                      보호자 유무 <span className="text-danger-500">*</span>
+                    <label className="block text-xs text-gray-700 mb-0.5">
+                      보호자 유무 <span className="text-red-500">*</span>
                     </label>
-                    <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                    <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                       {selectedPatient.hasGuardian ? "유" : "무"}
                     </div>
                   </div>
@@ -524,10 +627,10 @@ export default function PatientListPage() {
 
                 {/* Hx */}
                 <div>
-                  <label className="block text-xs text-neutral-700 mb-0.5">
-                    Hx <span className="text-danger-500">*</span>
+                  <label className="block text-xs text-gray-700 mb-0.5">
+                    Hx <span className="text-red-500">*</span>
                   </label>
-                  <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                  <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                     {selectedPatient.hx}
                   </div>
                 </div>
@@ -535,19 +638,19 @@ export default function PatientListPage() {
                 {/* 발병 시간, LNT */}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs text-neutral-700 mb-0.5">
-                      발병 시간 <span className="text-danger-500">*</span>
+                    <label className="block text-xs text-gray-700 mb-0.5">
+                      발병 시간 <span className="text-red-500">*</span>
                     </label>
-                    <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                    <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                       {selectedPatient.onsetTime?.replace("T", " ") ||
                         selectedPatient.onsetTime}
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-700 mb-0.5">
-                      LNT <span className="text-danger-500">*</span>
+                    <label className="block text-xs text-gray-700 mb-0.5">
+                      LNT <span className="text-red-500">*</span>
                     </label>
-                    <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
+                    <div className="bg-gray-100 px-3 py-1.5 rounded text-sm text-gray-800">
                       {selectedPatient.lnt?.replace("T", " ") ||
                         selectedPatient.lnt}
                     </div>
@@ -562,13 +665,13 @@ export default function PatientListPage() {
               <div className="grid grid-cols-2 gap-3 mt-6">
                 <button
                   onClick={handleCloseModal}
-                  className="px-3 py-2 bg-neutral-500 text-white rounded-lg font-semibold hover:bg-neutral-600 transition-colors"
+                  className="px-3 py-2 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors"
                 >
                   닫기
                 </button>
                 <button
                   onClick={handleCompleteVisit}
-                  className="px-3 py-2 bg-primary-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+                  className="px-3 py-2 bg-sky-500 text-white rounded-lg font-semibold hover:bg-sky-600 transition-colors"
                 >
                   내원완료
                 </button>
@@ -578,7 +681,7 @@ export default function PatientListPage() {
               <div className="flex justify-center mt-6">
                 <button
                   onClick={handleCloseModal}
-                  className="w-1/2 px-3 py-2 bg-neutral-500 text-white rounded-lg font-semibold hover:bg-neutral-600 transition-colors"
+                  className="w-1/2 px-3 py-2 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors"
                 >
                   닫기
                 </button>

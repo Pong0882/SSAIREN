@@ -23,8 +23,8 @@ export function TabButton({
   className = "",
 }: TabButtonProps) {
   const activeStyles = active
-    ? "bg-primary-500 text-white border-2 border-primary-500"
-    : "bg-transparent text-white border-2 border-white hover:bg-neutral-500 hover:border-neutral-700";
+    ? "bg-sky-500 text-white border-2 border-sky-500 shadow-sm"
+    : "bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-100 hover:border-gray-400";
 
   return (
     <button
