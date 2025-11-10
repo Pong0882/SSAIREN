@@ -2,6 +2,7 @@ package com.ssairen.global.security.service;
 
 import com.ssairen.domain.firestation.entity.Paramedic;
 import com.ssairen.domain.firestation.repository.ParamedicRepository;
+import com.ssairen.domain.firestation.service.FcmService;
 import com.ssairen.domain.hospital.entity.Hospital;
 import com.ssairen.domain.hospital.repository.HospitalRepository;
 import com.ssairen.global.exception.CustomException;
@@ -41,6 +42,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
+    private final FcmService fcmService;
 
     /**
      * 로그인
@@ -93,10 +95,21 @@ public class AuthService {
         log.info("Login successful: userType={}, userId={}, username={}",
                 principal.getUserType(), principal.getId(), principal.getUsername());
 
-        // 5. 구급대원인 경우 상세 정보 포함
+        // 5. 구급대원인 경우 FCM 토큰 등록 및 상세 정보 포함
         if (principal.getUserType() == UserType.PARAMEDIC) {
             Paramedic paramedic = paramedicRepository.findById(principal.getId())
                     .orElseThrow(() -> new CustomException(ErrorCode.PARAMEDIC_NOT_FOUND));
+
+            // FCM 토큰이 제공된 경우 등록
+            if (request.fcmToken() != null && !request.fcmToken().isBlank()) {
+                try {
+                    fcmService.registerToken(principal.getId(), request.fcmToken());
+                    log.info("FCM 토큰 등록 완료 - paramedicId={}", principal.getId());
+                } catch (Exception e) {
+                    log.error("FCM 토큰 등록 실패 - paramedicId={}", principal.getId(), e);
+                    // FCM 토큰 등록 실패가 로그인을 방해하지 않도록 예외만 로그
+                }
+            }
 
             return tokenResponseConverter.toTokenResponseWithParamedic(
                     accessToken,
@@ -204,6 +217,17 @@ public class AuthService {
 
         // RefreshToken 삭제
         refreshTokenService.deleteByUserIdAndUserType(principal.getId(), principal.getUserType());
+
+        // 구급대원인 경우 FCM 토큰도 삭제
+        if (principal.getUserType() == UserType.PARAMEDIC) {
+            try {
+                fcmService.deleteAllParamedicTokens(principal.getId());
+                log.info("FCM 토큰 삭제 완료 - paramedicId={}", principal.getId());
+            } catch (Exception e) {
+                log.error("FCM 토큰 삭제 실패 - paramedicId={}", principal.getId(), e);
+                // FCM 토큰 삭제 실패가 로그아웃을 방해하지 않도록 예외만 로그
+            }
+        }
 
         log.info("Logout successful: userType={}, userId={}", principal.getUserType(), principal.getId());
     }

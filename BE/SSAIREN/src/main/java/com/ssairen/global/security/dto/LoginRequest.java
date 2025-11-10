@@ -35,6 +35,13 @@ public record LoginRequest(
         )
         @ExcludeFromLogging
         @NotBlank(message = "비밀번호는 필수입니다")
-        String password
+        String password,
+
+        @Schema(
+                description = "FCM 토큰 (구급대원만 사용, 선택사항)",
+                example = "dXJKl3...",
+                requiredMode = Schema.RequiredMode.NOT_REQUIRED
+        )
+        String fcmToken
 ) {
 }
