@@ -18,14 +18,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.ui.navigation.ActivityLogNavigationBar
 import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.viewmodel.LogViewModel
+import com.example.ssairen_app.viewmodel.ActivityViewModel
 
 @Composable
 fun ActivityLogHome(
+    emergencyReportId: Int,
     initialTab: Int = 0,
+    isReadOnly: Boolean = false,
     onNavigateBack: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
     onNavigateToSummation: () -> Unit = {},
-    viewModel: LogViewModel = viewModel()
+    viewModel: LogViewModel = viewModel(),
+    activityViewModel: ActivityViewModel = viewModel()
 ) {
     var selectedLogTab by remember { mutableIntStateOf(initialTab) }
     var selectedBottomTab by remember { mutableIntStateOf(1) }
@@ -33,8 +37,22 @@ fun ActivityLogHome(
     val activityLogData by viewModel.activityLogData.collectAsState()
     val lastSavedTime by viewModel.lastSavedTime.collectAsState()
 
+    // ✅ emergencyReportId를 ActivityViewModel에 설정
+    LaunchedEffect(emergencyReportId) {
+        if (emergencyReportId > 0) {
+            Log.d("ActivityLogHome", "📝 emergencyReportId 설정: $emergencyReportId")
+            activityViewModel.setEmergencyReportId(emergencyReportId)
+        } else {
+            Log.w("ActivityLogHome", "⚠️ 유효하지 않은 emergencyReportId: $emergencyReportId")
+        }
+    }
+
     // ✅ 탭 변경 전에 현재 데이터를 백엔드에 저장하는 함수
     fun saveCurrentTabToBackend() {
+        if (isReadOnly) {
+            Log.d("ActivityLogHome", "🔒 읽기 전용 모드 - 저장 차단")
+            return
+        }
         Log.d("ActivityLogHome", "💾 탭 변경 감지 - 백엔드 저장 시작")
         Log.d("ActivityLogHome", "   - 현재 탭: $selectedLogTab")
 
@@ -107,43 +125,25 @@ fun ActivityLogHome(
             when (selectedLogTab) {
                 0 -> PatientInfo(
                     viewModel = viewModel,
-                    data = activityLogData
+                    data = activityLogData,
+                    isReadOnly = isReadOnly
                 )
                 1 -> Text("구급출동", color = Color.White)  // TODO: DispatchSection()
                 2 -> PatientType(
                     viewModel = viewModel,
-                    data = activityLogData
+                    data = activityLogData,
+                    isReadOnly = isReadOnly
                 )
-                3 -> {
-                    // ✅ 임시: PatientEva 화면 (준비 중)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFF1a1a1a)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "환자평가 (준비 중)",
-                            color = Color.White,
-                            fontSize = 16.sp
-                        )
-                    }
-                }
-                4 -> {
-                    // ✅ 임시: FirstAid 화면 (준비 중)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFF1a1a1a)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "응급처치 (준비 중)",
-                            color = Color.White,
-                            fontSize = 16.sp
-                        )
-                    }
-                }
+                3 -> PatientEva(
+                    viewModel = viewModel,
+                    data = activityLogData,
+                    isReadOnly = isReadOnly
+                )
+                4 -> FirstAid(
+                    viewModel = viewModel,
+                    data = activityLogData,
+                    isReadOnly = isReadOnly
+                )
                 5 -> Text("의료지도", color = Color.White)  // TODO: MedicalGuidance()
                 6 -> Text("환자이송", color = Color.White)  // TODO: PatientTransport()
                 7 -> Text("세부상황표", color = Color.White)  // TODO: ReportDetail()

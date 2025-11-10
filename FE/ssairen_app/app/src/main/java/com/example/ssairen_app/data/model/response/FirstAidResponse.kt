@@ -14,6 +14,9 @@ data class FirstAidResponse(
     @SerializedName("data")
     val data: FirstAidSectionData,
 
+    @SerializedName("message")
+    val message: String,
+
     @SerializedName("timestamp")
     val timestamp: String
 )
@@ -39,14 +42,14 @@ data class FirstAidSectionData(
 )
 
 data class FirstAidDataWrapper(
-    @SerializedName("schemaVersion")
-    val schemaVersion: Int,
+    @SerializedName("treatment")
+    val treatment: TreatmentData,
 
-    @SerializedName("emergencyTreatment")
-    val emergencyTreatment: EmergencyTreatmentData
+    @SerializedName("schemaVersion")
+    val schemaVersion: Int
 )
 
-data class EmergencyTreatmentData(
+data class TreatmentData(
     @SerializedName("airwayManagement")
     val airwayManagement: AirwayManagementData?,
 
@@ -54,16 +57,31 @@ data class EmergencyTreatmentData(
     val oxygenTherapy: OxygenTherapyData?,
 
     @SerializedName("cpr")
-    val cpr: CPRData?,
+    val cpr: String?,  // "실시", "미실시" 등
 
-    @SerializedName("bleedingControl")
-    val bleedingControl: BleedingControlData?,
+    @SerializedName("aed")
+    val aed: AEDData?,
+
+    @SerializedName("ecg")
+    val ecg: Boolean?,  // 심전도 모니터링
+
+    @SerializedName("circulation")
+    val circulation: CirculationData?,  // 순환 관리
 
     @SerializedName("woundCare")
-    val woundCare: WoundCareData?,
+    val woundCare: String?,  // "지혈", "상처 소독 처리" 등
 
-    @SerializedName("delivery")
-    val delivery: DeliveryData?,
+    @SerializedName("fixed")
+    val fixed: String?,  // 고정 부위: "목뼈", "척추" 등
+
+    @SerializedName("drug")
+    val drug: String?,  // 약물 투여
+
+    @SerializedName("temperature")
+    val temperature: String?,  // 체온 관리
+
+    @SerializedName("deliverytime")
+    val deliverytime: String?,  // 분만 시간
 
     @SerializedName("notes")
     val notes: String?,
@@ -77,68 +95,29 @@ data class EmergencyTreatmentData(
 
 data class AirwayManagementData(
     @SerializedName("methods")
-    val methods: List<String>?,  // ["기도유지", "두부후굴", ...]
-
-    @SerializedName("notes")
-    val notes: String?
+    val methods: List<String>?  // ["기도유지", "두부후굴", "하악거상" 등]
 )
 
 data class OxygenTherapyData(
-    @SerializedName("applied")
-    val applied: Boolean?,  // true/false
+    @SerializedName("device")
+    val device: String?,  // "비재호흡마스크", "비강캐뉼라", "백밸브마스크"
 
     @SerializedName("flowRateLpm")
-    val flowRateLpm: Int?,  // 10
-
-    @SerializedName("device")
-    val device: String?  // "비재호흡마스크", "비강캐뉼라", "백밸브마스크"
-)
-
-data class CPRData(
-    @SerializedName("performed")
-    val performed: Boolean?,  // true/false
-
-    @SerializedName("type")
-    val type: String?,  // "1회 시행", "다회 시행", "DNR", "중단"
-
-    @SerializedName("aed")
-    val aed: AEDData?
+    val flowRateLpm: Int?  // 산소 유량 (L/min)
 )
 
 data class AEDData(
-    @SerializedName("used")
-    val used: Boolean?,  // true/false
+    @SerializedName("type")
+    val type: String?,  // "shock" (전기충격), "monitoring" (모니터링만)
 
-    @SerializedName("shock")
-    val shock: Boolean?,  // true/false (전기충격 실시)
-
-    @SerializedName("monitoring")
-    val monitoring: Boolean?  // true/false (모니터링만)
+    @SerializedName("value")
+    val value: String?  // 추가 정보 (현재는 null)
 )
 
-data class BleedingControlData(
-    @SerializedName("methods")
-    val methods: List<String>?,  // ["직접압박", "지혈", ...]
+data class CirculationData(
+    @SerializedName("type")
+    val type: String?,  // "수액공급 확보", "정맥로 확보" 등
 
-    @SerializedName("notes")
-    val notes: String?
-)
-
-data class WoundCareData(
-    @SerializedName("types")
-    val types: List<String>?,  // ["상처 소독 처리", "붕대", "드레싱", ...]
-
-    @SerializedName("notes")
-    val notes: String?
-)
-
-data class DeliveryData(
-    @SerializedName("performed")
-    val performed: Boolean?,  // true/false
-
-    @SerializedName("time")
-    val time: String?,  // "02:45"
-
-    @SerializedName("babyCondition")
-    val babyCondition: String?  // "양호", "불량"
+    @SerializedName("value")
+    val value: String?  // 수액량 등: "200", "500" 등
 )

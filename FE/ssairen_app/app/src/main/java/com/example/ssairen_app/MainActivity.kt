@@ -58,7 +58,8 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermission()
 
         setContent {
-            DispatchProvider(autoCreateDispatch = false) {
+            // ✅ autoCreateDispatch = true로 변경 - 임의로 모달창 자동 생성
+            DispatchProvider(autoCreateDispatch = true) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color(0xFF1a1a1a)
@@ -129,8 +130,8 @@ fun AppNavigation(
     ) {
         composable("report_home") {
             ReportHome(
-                onNavigateToActivityLog = {
-                    navController.navigate("activity_log/0")
+                onNavigateToActivityLog = { emergencyReportId, isReadOnly ->
+                    navController.navigate("activity_log/$emergencyReportId/0?isReadOnly=$isReadOnly")
                 },
                 onLogout = onLogout  // ✅ 로그아웃 연결
             )
@@ -139,48 +140,56 @@ fun AppNavigation(
         composable("activity_main") {
             ActivityMain(
                 onNavigateToActivityLog = {
-                    navController.navigate("activity_log/0")
+                    navController.navigate("activity_log/0/0")
                 },
                 onNavigateToPatientInfo = {
-                    navController.navigate("activity_log/0")
+                    navController.navigate("activity_log/0/0")
                 },
                 onNavigateToPatientType = {
-                    navController.navigate("activity_log/2")
+                    navController.navigate("activity_log/0/2")
                 },
                 onNavigateToPatientEva = {
-                    navController.navigate("activity_log/3")
+                    navController.navigate("activity_log/0/3")
                 },
                 onNavigateToFirstAid = {
-                    navController.navigate("activity_log/4")
+                    navController.navigate("activity_log/0/4")
                 },
                 onNavigateToDispatch = {
-                    navController.navigate("activity_log/1")
+                    navController.navigate("activity_log/0/1")
                 },
                 onNavigateToMedicalGuidance = {
-                    navController.navigate("activity_log/5")
+                    navController.navigate("activity_log/0/5")
                 },
                 onNavigateToPatientTransport = {
-                    navController.navigate("activity_log/6")
+                    navController.navigate("activity_log/0/6")
                 },
                 onNavigateToReportDetail = {
-                    navController.navigate("activity_log/7")
+                    navController.navigate("activity_log/0/7")
                 }
             )
         }
 
         composable(
-            route = "activity_log/{tab}",
-            arguments = listOf(navArgument("tab") { defaultValue = 0 })
+            route = "activity_log/{emergencyReportId}/{tab}?isReadOnly={isReadOnly}",
+            arguments = listOf(
+                navArgument("emergencyReportId") { defaultValue = 0 },
+                navArgument("tab") { defaultValue = 0 },
+                navArgument("isReadOnly") { defaultValue = false }
+            )
         ) { backStackEntry ->
+            val emergencyReportId = backStackEntry.arguments?.getInt("emergencyReportId") ?: 0
             val tabIndex = backStackEntry.arguments?.getInt("tab") ?: 0
+            val isReadOnly = backStackEntry.arguments?.getBoolean("isReadOnly") ?: false
             ActivityLogHome(
+                emergencyReportId = emergencyReportId,
                 initialTab = tabIndex,
+                isReadOnly = isReadOnly,
                 onNavigateBack = {
                     navController.popBackStack()
                 },
                 onNavigateToHome = {
                     navController.navigate("activity_main") {
-                        popUpTo("activity_log/{tab}") { inclusive = true }
+                        popUpTo("activity_log/{emergencyReportId}/{tab}?isReadOnly={isReadOnly}") { inclusive = true }
                     }
                 },
                 onNavigateToSummation = {
@@ -200,7 +209,7 @@ fun AppNavigation(
                     }
                 },
                 onNavigateToActivityLog = {
-                    navController.navigate("activity_log/0")
+                    navController.navigate("activity_log/0/0")
                 }
             )
         }

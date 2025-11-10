@@ -13,7 +13,8 @@ data class DispatchItem(
     val type: String,
     val date: String,
     val location: String,
-    val isActive: Boolean = false
+    val isActive: Boolean = false,
+    val emergencyReportId: Int = 0  // ✅ 출동보고서 ID 추가
 )
 
 // ==========================================
@@ -49,7 +50,8 @@ class DispatchState {
             type = "구급출동 | 긴급",
             date = currentDate,
             location = "서울특별시 강남구 테헤란로 212 거리 3.2km",
-            isActive = true
+            isActive = true,
+            emergencyReportId = 23  // ✅ 23번으로 하드코딩
         )
 
         _activeDispatch = newDispatch

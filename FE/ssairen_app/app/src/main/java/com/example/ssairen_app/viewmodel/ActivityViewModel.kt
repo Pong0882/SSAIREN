@@ -10,6 +10,9 @@ import com.example.ssairen_app.data.local.AuthManager
 import com.example.ssairen_app.data.repository.ReportRepository
 import com.example.ssairen_app.data.model.response.PatientInfoResponse
 import com.example.ssairen_app.data.model.response.PatientTypeResponse
+import com.example.ssairen_app.data.model.response.PatientEvaResponse
+import com.example.ssairen_app.data.model.response.FirstAidResponse
+
 import kotlinx.coroutines.launch
 
 class ActivityViewModel(application: Application) : AndroidViewModel(application) {
@@ -18,7 +21,6 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
 
     companion object {
         private const val TAG = "ActivityViewModel"
-        private const val HARDCODED_REPORT_ID = 21
     }
 
     init {
@@ -29,10 +31,8 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    private val _currentEmergencyReportId = MutableLiveData<Int>().apply {
-        value = HARDCODED_REPORT_ID
-    }
-    val currentEmergencyReportId: LiveData<Int> = _currentEmergencyReportId
+    private val _currentEmergencyReportId = MutableLiveData<Int?>()
+    val currentEmergencyReportId: LiveData<Int?> = _currentEmergencyReportId
 
     fun setEmergencyReportId(reportId: Int) {
         Log.d(TAG, "📝 출동보고서 ID 변경: ${_currentEmergencyReportId.value} → $reportId")
@@ -46,7 +46,12 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
     val patientInfoState: LiveData<PatientInfoApiState> = _patientInfoState
 
     fun getPatientInfo() {
-        val reportId = _currentEmergencyReportId.value ?: HARDCODED_REPORT_ID
+        val reportId = _currentEmergencyReportId.value
+        if (reportId == null) {
+            Log.e(TAG, "❌ emergencyReportId가 설정되지 않았습니다")
+            _patientInfoState.postValue(PatientInfoApiState.Error("보고서 ID가 설정되지 않았습니다"))
+            return
+        }
         getPatientInfo(reportId)
     }
 
@@ -85,7 +90,12 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
     val patientTypeState: LiveData<PatientTypeApiState> = _patientTypeState
 
     fun getPatientType() {
-        val reportId = _currentEmergencyReportId.value ?: HARDCODED_REPORT_ID
+        val reportId = _currentEmergencyReportId.value
+        if (reportId == null) {
+            Log.e(TAG, "❌ emergencyReportId가 설정되지 않았습니다")
+            _patientTypeState.postValue(PatientTypeApiState.Error("보고서 ID가 설정되지 않았습니다"))
+            return
+        }
         getPatientType(reportId)
     }
 
@@ -117,83 +127,93 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
         _patientTypeState.postValue(PatientTypeApiState.Idle)
     }
 //
-//    // ==========================================
-//    // 환자평가 (주석 처리 - PatientInfo 확인 후 사용)
-//    // ==========================================
-//    private val _patientEvaState = MutableLiveData<PatientEvaApiState>(PatientEvaApiState.Idle)
-//    val patientEvaState: LiveData<PatientEvaApiState> = _patientEvaState
+    // ==========================================
+    // 환자평가 (주석 처리 - PatientInfo 확인 후 사용)
+    // ==========================================
+    private val _patientEvaState = MutableLiveData<PatientEvaApiState>(PatientEvaApiState.Idle)
+    val patientEvaState: LiveData<PatientEvaApiState> = _patientEvaState
+
+    fun getPatientEva() {
+        val reportId = _currentEmergencyReportId.value
+        if (reportId == null) {
+            Log.e(TAG, "❌ emergencyReportId가 설정되지 않았습니다")
+            _patientEvaState.postValue(PatientEvaApiState.Error("보고서 ID가 설정되지 않았습니다"))
+            return
+        }
+        getPatientEva(reportId)
+    }
+
+    fun getPatientEva(emergencyReportId: Int) {
+        Log.d(TAG, "=== 환자평가 조회 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _patientEvaState.postValue(PatientEvaApiState.Loading)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.getPatientEva(emergencyReportId)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 환자평가 조회 성공 (ViewModel)")
+                    _patientEvaState.postValue(PatientEvaApiState.Success(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 환자평가 조회 실패 (ViewModel): ${error.message}")
+                    _patientEvaState.postValue(PatientEvaApiState.Error(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 예외 발생 (ViewModel)", e)
+                _patientEvaState.postValue(PatientEvaApiState.Error(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    fun resetPatientEvaState() {
+        _patientEvaState.postValue(PatientEvaApiState.Idle)
+    }
 //
-//    fun getPatientEva() {
-//        val reportId = _currentEmergencyReportId.value ?: HARDCODED_REPORT_ID
-//        getPatientEva(reportId)
-//    }
-//
-//    fun getPatientEva(emergencyReportId: Int) {
-//        Log.d(TAG, "=== 환자평가 조회 시작 (ViewModel) ===")
-//        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
-//
-//        _patientEvaState.postValue(PatientEvaApiState.Loading)
-//
-//        viewModelScope.launch {
-//            try {
-//                val result = repository.getPatientEva(emergencyReportId)
-//
-//                result.onSuccess { response ->
-//                    Log.d(TAG, "✅ 환자평가 조회 성공 (ViewModel)")
-//                    _patientEvaState.postValue(PatientEvaApiState.Success(response))
-//                }.onFailure { error ->
-//                    Log.e(TAG, "❌ 환자평가 조회 실패 (ViewModel): ${error.message}")
-//                    _patientEvaState.postValue(PatientEvaApiState.Error(error.message ?: "알 수 없는 오류"))
-//                }
-//            } catch (e: Exception) {
-//                Log.e(TAG, "💥 예외 발생 (ViewModel)", e)
-//                _patientEvaState.postValue(PatientEvaApiState.Error(e.message ?: "알 수 없는 오류"))
-//            }
-//        }
-//    }
-//
-//    fun resetPatientEvaState() {
-//        _patientEvaState.postValue(PatientEvaApiState.Idle)
-//    }
-//
-//    // ==========================================
-//    // 응급처치 (주석 처리 - PatientInfo 확인 후 사용)
-//    // ==========================================
-//    private val _firstAidState = MutableLiveData<FirstAidApiState>(FirstAidApiState.Idle)
-//    val firstAidState: LiveData<FirstAidApiState> = _firstAidState
-//
-//    fun getFirstAid() {
-//        val reportId = _currentEmergencyReportId.value ?: HARDCODED_REPORT_ID
-//        getFirstAid(reportId)
-//    }
-//
-//    fun getFirstAid(emergencyReportId: Int) {
-//        Log.d(TAG, "=== 응급처치 조회 시작 (ViewModel) ===")
-//        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
-//
-//        _firstAidState.postValue(FirstAidApiState.Loading)
-//
-//        viewModelScope.launch {
-//            try {
-//                val result = repository.getFirstAid(emergencyReportId)
-//
-//                result.onSuccess { response ->
-//                    Log.d(TAG, "✅ 응급처치 조회 성공 (ViewModel)")
-//                    _firstAidState.postValue(FirstAidApiState.Success(response))
-//                }.onFailure { error ->
-//                    Log.e(TAG, "❌ 응급처치 조회 실패 (ViewModel): ${error.message}")
-//                    _firstAidState.postValue(FirstAidApiState.Error(error.message ?: "알 수 없는 오류"))
-//                }
-//            } catch (e: Exception) {
-//                Log.e(TAG, "💥 예외 발생 (ViewModel)", e)
-//                _firstAidState.postValue(FirstAidApiState.Error(e.message ?: "알 수 없는 오류"))
-//            }
-//        }
-//    }
-//
-//    fun resetFirstAidState() {
-//        _firstAidState.postValue(FirstAidApiState.Idle)
-//    }
+    // ==========================================
+    // 응급처치 (주석 처리 - PatientInfo 확인 후 사용)
+    // ==========================================
+    private val _firstAidState = MutableLiveData<FirstAidApiState>(FirstAidApiState.Idle)
+    val firstAidState: LiveData<FirstAidApiState> = _firstAidState
+
+    fun getFirstAid() {
+        val reportId = _currentEmergencyReportId.value
+        if (reportId == null) {
+            Log.e(TAG, "❌ emergencyReportId가 설정되지 않았습니다")
+            _firstAidState.postValue(FirstAidApiState.Error("보고서 ID가 설정되지 않았습니다"))
+            return
+        }
+        getFirstAid(reportId)
+    }
+
+    fun getFirstAid(emergencyReportId: Int) {
+        Log.d(TAG, "=== 응급처치 조회 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _firstAidState.postValue(FirstAidApiState.Loading)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.getFirstAid(emergencyReportId)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 응급처치 조회 성공 (ViewModel)")
+                    _firstAidState.postValue(FirstAidApiState.Success(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 응급처치 조회 실패 (ViewModel): ${error.message}")
+                    _firstAidState.postValue(FirstAidApiState.Error(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 예외 발생 (ViewModel)", e)
+                _firstAidState.postValue(FirstAidApiState.Error(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    fun resetFirstAidState() {
+        _firstAidState.postValue(FirstAidApiState.Idle)
+    }
 
     override fun onCleared() {
         super.onCleared()
@@ -219,16 +239,16 @@ sealed class PatientTypeApiState {
     data class Error(val message: String) : PatientTypeApiState()
 }
 
-//sealed class PatientEvaApiState {
-//    object Idle : PatientEvaApiState()
-//    object Loading : PatientEvaApiState()
-//    data class Success(val patientEvaResponse: PatientEvaResponse) : PatientEvaApiState()
-//    data class Error(val message: String) : PatientEvaApiState()
-//}
-//
-//sealed class FirstAidApiState {
-//    object Idle : FirstAidApiState()
-//    object Loading : FirstAidApiState()
-//    data class Success(val firstAidResponse: FirstAidResponse) : FirstAidApiState()
-//    data class Error(val message: String) : FirstAidApiState()
-//}
+sealed class PatientEvaApiState {
+    object Idle : PatientEvaApiState()
+    object Loading : PatientEvaApiState()
+    data class Success(val patientEvaResponse: PatientEvaResponse) : PatientEvaApiState()
+    data class Error(val message: String) : PatientEvaApiState()
+}
+
+sealed class FirstAidApiState {
+    object Idle : FirstAidApiState()
+    object Loading : FirstAidApiState()
+    data class Success(val firstAidResponse: FirstAidResponse) : FirstAidApiState()
+    data class Error(val message: String) : FirstAidApiState()
+}

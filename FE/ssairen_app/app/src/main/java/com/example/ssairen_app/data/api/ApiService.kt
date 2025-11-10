@@ -8,8 +8,9 @@ import com.example.ssairen_app.data.model.response.CreateReportResponse
 import com.example.ssairen_app.data.model.response.ReportListResponse
 import com.example.ssairen_app.data.model.response.PatientInfoResponse
 import com.example.ssairen_app.data.model.response.PatientTypeResponse
-//import com.example.ssairen_app.data.model.response.FirstAidResponse
-//import com.example.ssairen_app.data.model.response.PatientEvaResponse
+import com.example.ssairen_app.data.model.response.PatientEvaResponse
+import com.example.ssairen_app.data.model.response.FirstAidResponse
+
 
 import retrofit2.Response
 import retrofit2.http.*
@@ -40,11 +41,12 @@ interface ApiService {
     // 보고서 API
     // ==========================================
 
-    @POST("api/emergency-reports/{dispatch_id}")
-    suspend fun createReport(
-        @Path("dispatch_id") dispatchId: Int,
-        @Header("Authorization") token: String
-    ): Response<CreateReportResponse>
+    // ✅ 임시로 주석처리 - API 대신 모달창에서 직접 이동
+//    @POST("api/emergency-reports/{dispatch_id}")
+//    suspend fun createReport(
+//        @Path("dispatch_id") dispatchId: Int,
+//        @Header("Authorization") token: String
+//    ): Response<CreateReportResponse>
 
     @GET("api/emergency-reports/me")
     suspend fun getReports(
@@ -71,15 +73,17 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<PatientTypeResponse>
 //
-//    // 환자평가
-//    @GET("api/emergency-reports/{emergencyReportId}/sections/ASSESSMENT")
-//    suspend fun getPatientEva(
-//        @Path("emergencyReportId") emergencyReportId: Int
-//    ): Response<PatientEvaResponse>
+    // 환자평가
+    @GET("api/emergency-reports/{id}/sections/ASSESSMENT")
+    suspend fun getPatientEva(
+        @Path("id") emergencyReportId: Int,
+        @Header("Authorization") token: String  // ✅ Bearer 토큰 헤더 추가
+    ): Response<PatientEvaResponse>
 //
-//    // 응급처치
-//    @GET("api/emergency-reports/{emergencyReportId}/sections/TREATMENT")
-//    suspend fun getFirstAid(
-//        @Path("emergencyReportId") emergencyReportId: Int
-//    ): Response<FirstAidResponse>
+    // 응급처치
+    @GET("api/emergency-reports/{emergencyReportId}/sections/TREATMENT")
+    suspend fun getFirstAid(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String
+    ): Response<FirstAidResponse>
 }

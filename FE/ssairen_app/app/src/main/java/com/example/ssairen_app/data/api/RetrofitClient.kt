@@ -91,7 +91,8 @@ object RetrofitClient {
 
     /**
      * 토큰 자동 갱신 Authenticator
-     * 401 응답을 받으면 자동으로 재로그인 시도
+     * 401 응답을 받으면 자동으로 refresh token으로 토큰 갱신 시도
+     * refresh token 실패 시 재로그인 시도
      */
     private val tokenAuthenticator = Authenticator { route: Route?, response: okhttp3.Response ->
         // AuthManager가 초기화되지 않았으면 재시도 불가
@@ -109,18 +110,11 @@ object RetrofitClient {
 
         Log.d(TAG, "Received 401, attempting to refresh token...")
 
-        // 저장된 로그인 자격 증명 조회
-        val credentials = authManager.getLoginCredentials()
-        if (credentials == null) {
-            Log.e(TAG, "No login credentials found, cannot refresh token")
-            return@Authenticator null
-        }
-
         // 동기 방식으로 토큰 갱신 시도
         val newToken = runBlocking {
             try {
-                // 로그인용 별도 Retrofit 인스턴스 생성 (Authenticator 없음)
-                val loginRetrofit = Retrofit.Builder()
+                // 토큰 갱신용 별도 Retrofit 인스턴스 생성 (Authenticator 없음)
+                val refreshRetrofit = Retrofit.Builder()
                     .baseUrl(BASE_URL)
                     .client(OkHttpClient.Builder()
                         .connectTimeout(30, TimeUnit.SECONDS)
@@ -130,29 +124,50 @@ object RetrofitClient {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
 
-                val loginService = loginRetrofit.create(FileApiService::class.java)
-                val loginRequest = LoginRequest(
-                    userType = credentials.userType,
-                    username = credentials.username,
-                    password = credentials.password
-                )
-                val loginResponse = loginService.login(loginRequest)
+                val refreshService = refreshRetrofit.create(FileApiService::class.java)
 
-                if (loginResponse.isSuccessful && loginResponse.body()?.success == true) {
-                    val tokenData = loginResponse.body()?.data
-                    if (tokenData != null) {
-                        // AuthManager에 새 토큰 저장
-                        authManager.saveAccessToken(tokenData.accessToken)
-                        Log.d(TAG, "Token refreshed successfully")
-                        tokenData.accessToken
-                    } else {
-                        Log.e(TAG, "Token refresh failed: no token data")
-                        null
+                // 1단계: Refresh Token으로 토큰 갱신 시도
+                val refreshToken = authManager.getRefreshToken()
+                if (refreshToken != null) {
+                    Log.d(TAG, "Attempting to refresh token using refresh token...")
+                    val refreshResponse = refreshService.refreshToken("Bearer $refreshToken")
+
+                    if (refreshResponse.isSuccessful && refreshResponse.body()?.success == true) {
+                        val tokenData = refreshResponse.body()?.data
+                        if (tokenData != null && tokenData.accessToken != null && tokenData.refreshToken != null) {
+                            // AuthManager에 새 토큰 저장
+                            authManager.saveTokens(tokenData.accessToken, tokenData.refreshToken)
+                            Log.d(TAG, "✅ Token refreshed successfully using refresh token")
+                            return@runBlocking tokenData.accessToken
+                        }
                     }
-                } else {
-                    Log.e(TAG, "Token refresh failed: ${loginResponse.code()}")
-                    null
+                    Log.w(TAG, "Refresh token failed, falling back to re-login...")
                 }
+
+                // 2단계: Refresh Token 실패 시 재로그인 시도
+                val credentials = authManager.getLoginCredentials()
+                if (credentials != null) {
+                    Log.d(TAG, "Attempting to re-login with credentials...")
+                    val loginRequest = LoginRequest(
+                        userType = credentials.userType,
+                        username = credentials.username,
+                        password = credentials.password
+                    )
+                    val loginResponse = refreshService.login(loginRequest)
+
+                    if (loginResponse.isSuccessful && loginResponse.body()?.success == true) {
+                        val tokenData = loginResponse.body()?.data
+                        if (tokenData != null && tokenData.accessToken != null && tokenData.refreshToken != null) {
+                            // AuthManager에 새 토큰 저장
+                            authManager.saveTokens(tokenData.accessToken, tokenData.refreshToken)
+                            Log.d(TAG, "✅ Token refreshed successfully using re-login")
+                            return@runBlocking tokenData.accessToken
+                        }
+                    }
+                }
+
+                Log.e(TAG, "❌ All token refresh methods failed")
+                null
             } catch (e: Exception) {
                 Log.e(TAG, "Token refresh error", e)
                 null

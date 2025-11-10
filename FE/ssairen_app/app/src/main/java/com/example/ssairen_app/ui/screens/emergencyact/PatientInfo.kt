@@ -43,16 +43,19 @@ import com.example.ssairen_app.viewmodel.PatientInfoData
 fun PatientInfo(
     viewModel: LogViewModel,
     data: ActivityLogData,
+    isReadOnly: Boolean = false,
     activityViewModel: ActivityViewModel = viewModel()  // ✅ ActivityViewModel 추가
 ) {
     // ✅ API 상태 관찰
     val patientInfoState by activityViewModel.patientInfoState.observeAsState(PatientInfoApiState.Idle)
-    val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState(21)
+    val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState()
 
-    // ✅ API 호출 (화면 진입 시 1회)
+    // ✅ API 호출 (currentReportId가 설정되면 자동 실행)
     LaunchedEffect(currentReportId) {
-        Log.d("PatientInfo", "🔵 LaunchedEffect 시작 - reportId: $currentReportId")
-        activityViewModel.getPatientInfo(currentReportId)
+        currentReportId?.let { reportId ->
+            Log.d("PatientInfo", "📞 API 호출: getPatientInfo($reportId)")
+            activityViewModel.getPatientInfo(reportId)
+        }
     }
 
     // ✅ State 변수들 (data.patientInfo로 초기화)
@@ -201,7 +204,8 @@ fun PatientInfo(
                             reporterPhone = it
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
 
                     // 신고방법
@@ -218,8 +222,10 @@ fun PatientInfo(
                         ) {
                             MainButton(
                                 onClick = {
-                                    selectedReportMethod = "휴대전화"
-                                    saveData()
+                                    if (!isReadOnly) {
+                                        selectedReportMethod = "휴대전화"
+                                        saveData()
+                                    }
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -232,8 +238,10 @@ fun PatientInfo(
                             }
                             MainButton(
                                 onClick = {
-                                    selectedReportMethod = "유선전화"
-                                    saveData()
+                                    if (!isReadOnly) {
+                                        selectedReportMethod = "유선전화"
+                                        saveData()
+                                    }
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -246,8 +254,10 @@ fun PatientInfo(
                             }
                             MainButton(
                                 onClick = {
-                                    selectedReportMethod = "기타"
-                                    saveData()
+                                    if (!isReadOnly) {
+                                        selectedReportMethod = "기타"
+                                        saveData()
+                                    }
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -274,7 +284,8 @@ fun PatientInfo(
                             patientName = it
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
 
                     // 성별
@@ -291,8 +302,10 @@ fun PatientInfo(
                         ) {
                             MainButton(
                                 onClick = {
-                                    selectedGender = "남성"
-                                    saveData()
+                                    if (!isReadOnly) {
+                                        selectedGender = "남성"
+                                        saveData()
+                                    }
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -305,8 +318,10 @@ fun PatientInfo(
                             }
                             MainButton(
                                 onClick = {
-                                    selectedGender = "여성"
-                                    saveData()
+                                    if (!isReadOnly) {
+                                        selectedGender = "여성"
+                                        saveData()
+                                    }
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -342,19 +357,22 @@ fun PatientInfo(
                                 value = birthYear,
                                 onValueChange = { birthYear = it; saveData() },
                                 label = "년",
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                enabled = !isReadOnly
                             )
                             BirthDateField(
                                 value = birthMonth,
                                 onValueChange = { birthMonth = it; saveData() },
                                 label = "월",
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                enabled = !isReadOnly
                             )
                             BirthDateField(
                                 value = birthDay,
                                 onValueChange = { birthDay = it; saveData() },
                                 label = "일",
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                enabled = !isReadOnly
                             )
                         }
                     }
@@ -386,7 +404,8 @@ fun PatientInfo(
                                     fontWeight = FontWeight.Normal,
                                     textAlign = TextAlign.End
                                 ),
-                                singleLine = true
+                                singleLine = true,
+                                readOnly = isReadOnly
                             )
                             Text(
                                 text = "세",
@@ -409,7 +428,8 @@ fun PatientInfo(
                     onValueChange = {
                         patientAddress = it
                         saveData()
-                    }
+                    },
+                    enabled = !isReadOnly
                 )
 
                 HorizontalDivider(
@@ -430,7 +450,8 @@ fun PatientInfo(
                             guardianName = it
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     UnderlineInputField(
                         label = "보호자 관계",
@@ -439,7 +460,8 @@ fun PatientInfo(
                             guardianRelation = it
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                 }
 
@@ -450,7 +472,8 @@ fun PatientInfo(
                     onValueChange = {
                         guardianPhone = it
                         saveData()
-                    }
+                    },
+                    enabled = !isReadOnly
                 )
             }
         }
@@ -466,7 +489,8 @@ private fun BirthDateField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Column(modifier = modifier) {
         Row(
@@ -484,7 +508,8 @@ private fun BirthDateField(
                     fontWeight = FontWeight.Normal,
                     textAlign = TextAlign.End
                 ),
-                singleLine = true
+                singleLine = true,
+                readOnly = !enabled
             )
             Text(
                 text = label,
@@ -506,7 +531,8 @@ private fun UnderlineInputField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    textAlign: TextAlign = TextAlign.End
+    textAlign: TextAlign = TextAlign.End,
+    enabled: Boolean = true
 ) {
     Column(modifier = modifier) {
         Text(
@@ -530,6 +556,7 @@ private fun UnderlineInputField(
                 textAlign = textAlign
             ),
             singleLine = true,
+            readOnly = !enabled,
             decorationBox = { innerTextField ->
                 Box(modifier = Modifier.fillMaxWidth()) {
                     if (value.isEmpty()) {
