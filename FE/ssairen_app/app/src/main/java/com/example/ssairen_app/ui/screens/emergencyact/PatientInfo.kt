@@ -1,33 +1,61 @@
 // PatientInfo.kt
 package com.example.ssairen_app.ui.screens.emergencyact
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField // ✅ import 추가
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle // ✅ import 추가
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign // ✅ import 추가
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.ui.components.MainButton
 import com.example.ssairen_app.viewmodel.ActivityLogData
+import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.LogViewModel
-import com.example.ssairen_app.viewmodel.PatientInfoData  // ✅ import 유지
+import com.example.ssairen_app.viewmodel.PatientInfoApiState
+import com.example.ssairen_app.viewmodel.PatientInfoData
 
+/**
+ * 환자정보 화면
+ *
+ * 📌 용도:
+ * 1. 새 일지 작성 - data.patientInfo가 빈 값
+ * 2. 기존 보고서 조회/수정 - ActivityViewModel로 GET API 호출하여 데이터 로드
+ *
+ * 🔄 동작 방식:
+ * - 화면 진입 → ActivityViewModel.getPatientInfo() → API 호출 → 화면에 표시
+ * - 입력/수정 → saveData() → LogViewModel에 임시 저장 (메모리)
+ * - 탭 변경 → ActivityLogHome의 saveToBackend() → PATCH API 호출 (DB 저장)
+ */
 @Composable
 fun PatientInfo(
     viewModel: LogViewModel,
-    data: ActivityLogData
+    data: ActivityLogData,
+    activityViewModel: ActivityViewModel = viewModel()  // ✅ ActivityViewModel 추가
 ) {
-    // ✅ ViewModel 데이터로 초기화 (data.patientInfo 경로 사용)
+    // ✅ API 상태 관찰
+    val patientInfoState by activityViewModel.patientInfoState.observeAsState(PatientInfoApiState.Idle)
+    val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState(21)
+
+    // ✅ API 호출 (화면 진입 시 1회)
+    LaunchedEffect(currentReportId) {
+        Log.d("PatientInfo", "🔵 LaunchedEffect 시작 - reportId: $currentReportId")
+        activityViewModel.getPatientInfo(currentReportId)
+    }
+
+    // ✅ State 변수들 (data.patientInfo로 초기화)
     var reporterPhone by remember { mutableStateOf(data.patientInfo.reporterPhone) }
     var selectedReportMethod by remember { mutableStateOf(data.patientInfo.reportMethod) }
     var patientName by remember { mutableStateOf(data.patientInfo.patientName) }
@@ -41,7 +69,67 @@ fun PatientInfo(
     var guardianRelation by remember { mutableStateOf(data.patientInfo.guardianRelation) }
     var guardianPhone by remember { mutableStateOf(data.patientInfo.guardianPhone) }
 
-    // ✅ 자동 저장 함수 (PatientInfoData 객체로 묶어서 전달)
+    // ✅ API 응답 처리
+    LaunchedEffect(patientInfoState) {
+        Log.d("PatientInfo", "🟢 patientInfoState 변경: $patientInfoState")
+
+        when (val state = patientInfoState) {
+            is PatientInfoApiState.Success -> {
+                Log.d("PatientInfo", "✅ API 성공 - 데이터 매핑 시작")
+                val apiData = state.patientInfoResponse.data.data.patientInfo
+
+                // 신고자 정보 매핑
+                apiData.reporter?.let { reporter ->
+                    reporterPhone = reporter.phone ?: ""
+                    selectedReportMethod = reporter.reportMethod ?: ""
+                    Log.d("PatientInfo", "신고자: phone=$reporterPhone, method=$selectedReportMethod")
+                }
+
+                // 환자 정보 매핑
+                apiData.patient?.let { patient ->
+                    patientName = patient.name ?: ""
+                    selectedGender = patient.gender ?: ""
+                    patientAge = patient.ageYears?.toString() ?: ""
+                    patientAddress = patient.address ?: ""
+
+                    Log.d("PatientInfo", "환자: name=$patientName, gender=$selectedGender, age=$patientAge")
+                    Log.d("PatientInfo", "주소: $patientAddress")
+
+                    // 생년월일 파싱 (YYYY-MM-DD)
+                    patient.birthDate?.let { birthDate ->
+                        val parts = birthDate.split("-")
+                        if (parts.size == 3) {
+                            birthYear = parts[0]
+                            birthMonth = parts[1]
+                            birthDay = parts[2]
+                            Log.d("PatientInfo", "생년월일: $birthYear-$birthMonth-$birthDay")
+                        }
+                    }
+                }
+
+                // 보호자 정보 매핑
+                apiData.guardian?.let { guardian ->
+                    guardianName = guardian.name ?: ""
+                    guardianRelation = guardian.relation ?: ""
+                    guardianPhone = guardian.phone ?: ""
+                    Log.d("PatientInfo", "보호자: name=$guardianName, relation=$guardianRelation, phone=$guardianPhone")
+                }
+
+                Log.d("PatientInfo", "✅ 데이터 매핑 완료")
+            }
+            is PatientInfoApiState.Error -> {
+                Log.e("PatientInfo", "❌ API 오류: ${state.message}")
+            }
+            is PatientInfoApiState.Loading -> {
+                Log.d("PatientInfo", "⏳ 로딩 중...")
+            }
+            else -> {
+                Log.d("PatientInfo", "⚪ Idle 상태")
+            }
+        }
+    }
+
+    // ✅ 자동 저장 함수 (LogViewModel에 임시 저장)
     fun saveData() {
         val patientInfoData = PatientInfoData(
             reporterPhone = reporterPhone,
@@ -58,6 +146,19 @@ fun PatientInfo(
             guardianPhone = guardianPhone
         )
         viewModel.updatePatientInfo(patientInfoData)
+    }
+
+    // ✅ 로딩 중일 때 표시
+    if (patientInfoState is PatientInfoApiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF1a1a1a)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = Color(0xFF3b7cff))
+        }
+        return
     }
 
     Column(
@@ -98,7 +199,7 @@ fun PatientInfo(
                         value = reporterPhone,
                         onValueChange = {
                             reporterPhone = it
-                            saveData()  // ✅ 자동 저장
+                            saveData()
                         },
                         modifier = Modifier.weight(1f)
                     )
@@ -117,13 +218,13 @@ fun PatientInfo(
                         ) {
                             MainButton(
                                 onClick = {
-                                    selectedReportMethod = "일반전화"
-                                    saveData()  // ✅ 자동 저장
+                                    selectedReportMethod = "휴대전화"
+                                    saveData()
                                 },
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(36.dp),
-                                backgroundColor = if (selectedReportMethod == "일반전화")
+                                backgroundColor = if (selectedReportMethod == "휴대전화")
                                     Color(0xFF3b7cff) else Color(0xFF3a3a3a),
                                 cornerRadius = 6.dp
                             ) {
@@ -132,7 +233,7 @@ fun PatientInfo(
                             MainButton(
                                 onClick = {
                                     selectedReportMethod = "유선전화"
-                                    saveData()  // ✅ 자동 저장
+                                    saveData()
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -146,7 +247,7 @@ fun PatientInfo(
                             MainButton(
                                 onClick = {
                                     selectedReportMethod = "기타"
-                                    saveData()  // ✅ 자동 저장
+                                    saveData()
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -171,7 +272,7 @@ fun PatientInfo(
                         value = patientName,
                         onValueChange = {
                             patientName = it
-                            saveData()  // ✅ 자동 저장
+                            saveData()
                         },
                         modifier = Modifier.weight(1f)
                     )
@@ -191,7 +292,7 @@ fun PatientInfo(
                             MainButton(
                                 onClick = {
                                     selectedGender = "남성"
-                                    saveData()  // ✅ 자동 저장
+                                    saveData()
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -205,7 +306,7 @@ fun PatientInfo(
                             MainButton(
                                 onClick = {
                                     selectedGender = "여성"
-                                    saveData()  // ✅ 자동 저장
+                                    saveData()
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -220,12 +321,12 @@ fun PatientInfo(
                     }
                 }
 
-                // ✅ 생년월일 (년/월/일) + 나이 (세 고정)
+                // 생년월일 + 나이
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // 생년월일 (년, 월, 일)
+                    // 생년월일
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "생년월일",
@@ -237,114 +338,28 @@ fun PatientInfo(
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // 년
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    BasicTextField(
-                                        value = birthYear,
-                                        onValueChange = {
-                                            birthYear = it
-                                            saveData()  // ✅ 자동 저장
-                                        },
-                                        modifier = Modifier.padding(bottom = 4.dp),
-                                        textStyle = TextStyle(
-                                            color = Color.White,
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            textAlign = TextAlign.End
-                                        ),
-                                        singleLine = true
-                                    )
-                                    Text(
-                                        text = "년",
-                                        color = Color.White,
-                                        fontSize = 15.sp,
-                                        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-                                    )
-                                }
-                                HorizontalDivider(
-                                    color = Color(0xFF4a4a4a),
-                                    thickness = 1.dp
-                                )
-                            }
-
-                            // 월
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    BasicTextField(
-                                        value = birthMonth,
-                                        onValueChange = {
-                                            birthMonth = it
-                                            saveData()  // ✅ 자동 저장
-                                        },
-                                        modifier = Modifier.padding(bottom = 4.dp),
-                                        textStyle = TextStyle(
-                                            color = Color.White,
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            textAlign = TextAlign.End
-                                        ),
-                                        singleLine = true
-                                    )
-                                    Text(
-                                        text = "월",
-                                        color = Color.White,
-                                        fontSize = 15.sp,
-                                        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-                                    )
-                                }
-                                HorizontalDivider(
-                                    color = Color(0xFF4a4a4a),
-                                    thickness = 1.dp
-                                )
-                            }
-
-                            // 일
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    BasicTextField(
-                                        value = birthDay,
-                                        onValueChange = {
-                                            birthDay = it
-                                            saveData()  // ✅ 자동 저장
-                                        },
-                                        modifier = Modifier.padding(bottom = 4.dp),
-                                        textStyle = TextStyle(
-                                            color = Color.White,
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            textAlign = TextAlign.End
-                                        ),
-                                        singleLine = true
-                                    )
-                                    Text(
-                                        text = "일",
-                                        color = Color.White,
-                                        fontSize = 15.sp,
-                                        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-                                    )
-                                }
-                                HorizontalDivider(
-                                    color = Color(0xFF4a4a4a),
-                                    thickness = 1.dp
-                                )
-                            }
+                            BirthDateField(
+                                value = birthYear,
+                                onValueChange = { birthYear = it; saveData() },
+                                label = "년",
+                                modifier = Modifier.weight(1f)
+                            )
+                            BirthDateField(
+                                value = birthMonth,
+                                onValueChange = { birthMonth = it; saveData() },
+                                label = "월",
+                                modifier = Modifier.weight(1f)
+                            )
+                            BirthDateField(
+                                value = birthDay,
+                                onValueChange = { birthDay = it; saveData() },
+                                label = "일",
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
 
-                    // 나이 (세 고정)
+                    // 나이
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "나이",
@@ -362,7 +377,7 @@ fun PatientInfo(
                                 value = patientAge,
                                 onValueChange = {
                                     patientAge = it
-                                    saveData()  // ✅ 자동 저장
+                                    saveData()
                                 },
                                 modifier = Modifier.padding(bottom = 4.dp),
                                 textStyle = TextStyle(
@@ -387,13 +402,13 @@ fun PatientInfo(
                     }
                 }
 
-                // 환자주소 (한 줄)
+                // 환자주소
                 UnderlineInputField(
                     label = "환자주소",
                     value = patientAddress,
                     onValueChange = {
                         patientAddress = it
-                        saveData()  // ✅ 자동 저장
+                        saveData()
                     }
                 )
 
@@ -413,7 +428,7 @@ fun PatientInfo(
                         value = guardianName,
                         onValueChange = {
                             guardianName = it
-                            saveData()  // ✅ 자동 저장
+                            saveData()
                         },
                         modifier = Modifier.weight(1f)
                     )
@@ -422,7 +437,7 @@ fun PatientInfo(
                         value = guardianRelation,
                         onValueChange = {
                             guardianRelation = it
-                            saveData()  // ✅ 자동 저장
+                            saveData()
                         },
                         modifier = Modifier.weight(1f)
                     )
@@ -434,7 +449,7 @@ fun PatientInfo(
                     value = guardianPhone,
                     onValueChange = {
                         guardianPhone = it
-                        saveData()  // ✅ 자동 저장
+                        saveData()
                     }
                 )
             }
@@ -443,15 +458,55 @@ fun PatientInfo(
 }
 
 // ==========================================
-// 밑줄 스타일 입력 필드 컴포넌트 (오른쪽 정렬 기본값)
+// 보조 컴포넌트들
 // ==========================================
+
+@Composable
+private fun BirthDateField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.padding(bottom = 4.dp),
+                textStyle = TextStyle(
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.End
+                ),
+                singleLine = true
+            )
+            Text(
+                text = label,
+                color = Color.White,
+                fontSize = 15.sp,
+                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+            )
+        }
+        HorizontalDivider(
+            color = Color(0xFF4a4a4a),
+            thickness = 1.dp
+        )
+    }
+}
+
 @Composable
 private fun UnderlineInputField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    textAlign: TextAlign = TextAlign.End // ✅ 오른쪽 정렬 기본값
+    textAlign: TextAlign = TextAlign.End
 ) {
     Column(modifier = modifier) {
         Text(
@@ -476,9 +531,7 @@ private fun UnderlineInputField(
             ),
             singleLine = true,
             decorationBox = { innerTextField ->
-                Box(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
                     if (value.isEmpty()) {
                         Text(
                             text = "",
@@ -491,7 +544,6 @@ private fun UnderlineInputField(
             }
         )
 
-        // 밑줄
         HorizontalDivider(
             color = Color(0xFF4a4a4a),
             thickness = 1.dp

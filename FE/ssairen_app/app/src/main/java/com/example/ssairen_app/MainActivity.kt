@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermission()
 
         setContent {
-            DispatchProvider(autoCreateDispatch = true) {
+            DispatchProvider(autoCreateDispatch = false) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color(0xFF1a1a1a)
@@ -97,7 +97,11 @@ fun AppRoot(
 
     if (isLoggedIn) {
         // ✅ 로그인됨 → 메인 네비게이션
-        AppNavigation()
+        AppNavigation(
+            onLogout = {
+                viewModel.logout()  // ✅ ViewModel의 logout 호출
+            }
+        )
     } else {
         // ❌ 로그인 안됨 → 로그인 화면
         Login(
@@ -110,7 +114,9 @@ fun AppRoot(
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    onLogout: () -> Unit  // ✅ 로그아웃 콜백 추가
+) {
     val navController = rememberNavController()
 
     NavHost(
@@ -121,7 +127,8 @@ fun AppNavigation() {
             ReportHome(
                 onNavigateToActivityLog = {
                     navController.navigate("activity_log/0")
-                }
+                },
+                onLogout = onLogout  // ✅ 로그아웃 연결
             )
         }
 
