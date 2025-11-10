@@ -7,9 +7,11 @@ import com.example.ssairen_app.data.api.RetrofitInstance
 import com.example.ssairen_app.data.local.AuthManager
 import com.example.ssairen_app.data.model.request.LoginRequest
 import com.example.ssairen_app.data.model.response.LoginData
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class AuthRepository(
     private val authManager: AuthManager,
@@ -29,13 +31,24 @@ class AuthRepository(
             Log.d(TAG, "학번: $studentNumber")
             Log.d(TAG, "비밀번호 길이: ${password.length}")
 
-            // <--- 4. userType을 포함하여 LoginRequest 생성
+            // FCM 토큰 가져오기
+            val fcmToken = try {
+                FirebaseMessaging.getInstance().token.await().also {
+                    Log.d(TAG, "FCM 토큰 발급 성공: ${it.take(20)}...")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "FCM 토큰 발급 실패", e)
+                null
+            }
+
+            // <--- 4. userType과 fcmToken을 포함하여 LoginRequest 생성
             val request = LoginRequest(
                 userType = "PARAMEDIC", // JSON 예시에 있던 userType 추가
                 username = studentNumber, // 또는 LoginRequest에서 username으로 필드명을 바꿨다면 username = studentNumber
-                password = password
+                password = password,
+                fcmToken = fcmToken
             )
-            Log.d(TAG, "요청 생성 완료")
+            Log.d(TAG, "요청 생성 완료 (FCM 토큰 포함: ${fcmToken != null})")
 
             val response = api.login(request)
             Log.d(TAG, "응답 코드: ${response.code()}")
