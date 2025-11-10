@@ -201,4 +201,73 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
             @Param("emergencyReportId") Long emergencyReportId,
             @Param("excludeId") Integer excludeId
     );
+
+    // ===== 통계 관련 쿼리 =====
+
+    /**
+     * 요일별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     * 0 = 일요일, 1 = 월요일, ..., 6 = 토요일
+     *
+     * @param hospitalId 병원 ID
+     * @param startDateTime 시작 날짜
+     * @param endDateTime 종료 날짜
+     * @return 요일별 건수 (0~6)
+     */
+    @Query(value = "SELECT EXTRACT(DOW FROM hs.response_at) AS day_of_week, COUNT(*) " +
+            "FROM hospital_selection hs " +
+            "WHERE hs.hospital_id = :hospitalId " +
+            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.response_at >= :startDateTime " +
+            "AND hs.response_at < :endDateTime " +
+            "GROUP BY day_of_week " +
+            "ORDER BY day_of_week",
+            nativeQuery = true)
+    List<Object[]> countByDayOfWeek(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    /**
+     * 시간대별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     * 0 ~ 23시
+     *
+     * @param hospitalId 병원 ID
+     * @param startDateTime 시작 날짜
+     * @param endDateTime 종료 날짜
+     * @return 시간대별 건수 (0~23)
+     */
+    @Query(value = "SELECT EXTRACT(HOUR FROM hs.response_at) AS hour, COUNT(*) " +
+            "FROM hospital_selection hs " +
+            "WHERE hs.hospital_id = :hospitalId " +
+            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.response_at >= :startDateTime " +
+            "AND hs.response_at < :endDateTime " +
+            "GROUP BY hour " +
+            "ORDER BY hour",
+            nativeQuery = true)
+    List<Object[]> countByHour(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    /**
+     * 기간 내 총 수용 건수 조회 (ACCEPTED 상태만)
+     *
+     * @param hospitalId 병원 ID
+     * @param startDateTime 시작 날짜
+     * @param endDateTime 종료 날짜
+     * @return 총 건수
+     */
+    @Query("SELECT COUNT(hs) FROM HospitalSelection hs " +
+            "WHERE hs.hospital.id = :hospitalId " +
+            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.responseAt >= :startDateTime " +
+            "AND hs.responseAt < :endDateTime")
+    long countByHospitalIdAndPeriod(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
 }
