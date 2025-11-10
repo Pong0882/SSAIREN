@@ -2,6 +2,7 @@ package com.ssairen.domain.emergency.entity;
 
 import com.ssairen.domain.common.entity.BaseEntity;
 import com.ssairen.domain.firestation.entity.FireState;
+import com.ssairen.domain.firestation.entity.Paramedic;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -55,4 +56,8 @@ public class Dispatch extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fire_state_id")
     private FireState fireState;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "paramedic_id") // nullable이면 생략 가능, 필수면 nullable=false
+    private Paramedic paramedic;
 }

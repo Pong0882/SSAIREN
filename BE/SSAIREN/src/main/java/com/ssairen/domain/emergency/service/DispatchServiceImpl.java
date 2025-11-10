@@ -48,7 +48,11 @@ public class DispatchServiceImpl implements DispatchService {
         FireState fireState = fireStateRepository.findById(request.fireStateId())
                 .orElseThrow(() -> new CustomException(ErrorCode.FIRE_STATE_NOT_FOUND));
 
-        Dispatch dispatch = dispatchMapper.toEntity(request, fireState);
+        // 구급대원 존재 여부 확인
+        Paramedic paramedic = paramedicRepository.findById(request.paramedicId())
+                .orElseThrow(() -> new CustomException(ErrorCode.PARAMEDIC_NOT_FOUND));
+
+        Dispatch dispatch = dispatchMapper.toEntity(request, fireState, paramedic);
 
         Dispatch savedDispatch = dispatchRepository.save(dispatch);
 
