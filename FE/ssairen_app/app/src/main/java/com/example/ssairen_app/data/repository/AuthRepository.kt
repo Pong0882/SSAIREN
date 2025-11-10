@@ -1,12 +1,20 @@
 package com.example.ssairen_app.data.repository
 
+import android.content.Context
 import android.util.Log
+import com.example.ssairen_app.data.ApiVideoUploader
 import com.example.ssairen_app.data.api.RetrofitInstance
 import com.example.ssairen_app.data.local.AuthManager
 import com.example.ssairen_app.data.model.request.LoginRequest
 import com.example.ssairen_app.data.model.response.LoginData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class AuthRepository(private val authManager: AuthManager) {
+class AuthRepository(
+    private val authManager: AuthManager,
+    private val context: Context
+) {
 
     private val api = RetrofitInstance.apiService
 
@@ -15,15 +23,16 @@ class AuthRepository(private val authManager: AuthManager) {
     }
 
     // 로그인 API 호출
-    suspend fun login(studentNumber: String, password: String): Result<LoginData> {
+    suspend fun login(studentNumber: String, password: String): Result<LoginData> { // <--- 3. 반환 타입 LoginData로 변경
         return try {
             Log.d(TAG, "=== 로그인 시작 ===")
             Log.d(TAG, "학번: $studentNumber")
             Log.d(TAG, "비밀번호 길이: ${password.length}")
 
+            // <--- 4. userType을 포함하여 LoginRequest 생성
             val request = LoginRequest(
-                userType = "PARAMEDIC",
-                username = studentNumber,
+                userType = "PARAMEDIC", // JSON 예시에 있던 userType 추가
+                username = studentNumber, // 또는 LoginRequest에서 username으로 필드명을 바꿨다면 username = studentNumber
                 password = password
             )
             Log.d(TAG, "요청 생성 완료")
@@ -40,15 +49,25 @@ class AuthRepository(private val authManager: AuthManager) {
                     // ✅ 로그인 성공
                     Log.d(TAG, "✅ 로그인 성공!")
                     Log.d(TAG, "Access Token: ${body.data.accessToken.take(20)}...")
+                    // <--- 5. paramedic 객체 없이 LoginData에서 바로 name 접근
                     Log.d(TAG, "Paramedic: ${body.data.name}")
 
                     // Access Token과 Refresh Token 모두 저장
                     authManager.saveLoginInfo(
+                        // <--- 6. LoginData에 정의한 username (또는 studentNumber) 필드 사용
                         userId = body.data.username,
+                        userName = body.data.name,
                         accessToken = body.data.accessToken,
-                        refreshToken = body.data.refreshToken
+                        refreshToken = body.data.refreshToken,
+                        loginUsername = studentNumber,
+                        loginPassword = password,
+                        loginUserType = "PARAMEDIC"
                     )
 
+                    // 로그인 성공 시 로컬에 저장된 미업로드 비디오 자동 업로드 (백그라운드)
+                    uploadPendingVideosInBackground()
+
+                    // LoginData 객체 전체를 성공 결과로 반환
                     Result.success(body.data)
                 } else {
                     // ❌ success=false인 경우
@@ -155,5 +174,30 @@ class AuthRepository(private val authManager: AuthManager) {
     // Refresh Token 가져오기
     fun getRefreshToken(): String? {
         return authManager.getRefreshToken()
+    }
+
+    /**
+     * 로컬에 저장된 미업로드 비디오 파일들을 백그라운드로 자동 업로드
+     */
+    private fun uploadPendingVideosInBackground() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                Log.d(TAG, "Starting pending videos upload after login...")
+
+                val uploader = ApiVideoUploader()
+                val result = uploader.uploadPendingVideos(context) { current, total ->
+                    Log.d(TAG, "Uploading pending videos: $current/$total")
+                }
+
+                result.onSuccess { (success, fail) ->
+                    Log.d(TAG, "Pending videos upload completed: success=$success, fail=$fail")
+                }.onFailure { error ->
+                    Log.e(TAG, "Failed to upload pending videos", error)
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during pending videos upload", e)
+            }
+        }
     }
 }

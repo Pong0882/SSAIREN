@@ -13,7 +13,10 @@ import kotlinx.coroutines.launch
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = AuthRepository(AuthManager(application))
+    private val repository = AuthRepository(
+        authManager = AuthManager(application),
+        context = application
+    )
 
     companion object {
         private const val TAG = "AuthViewModel"

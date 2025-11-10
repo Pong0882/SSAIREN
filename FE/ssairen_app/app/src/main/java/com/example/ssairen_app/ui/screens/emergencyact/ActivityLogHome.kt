@@ -18,13 +18,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.ui.navigation.ActivityLogNavigationBar
 import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.viewmodel.LogViewModel
+//import com.example.ssairen_app.ui.screens.emergencyact.PatientType
 
 @Composable
 fun ActivityLogHome(
     initialTab: Int = 0,
     onNavigateBack: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
-    onNavigateToSummation: () -> Unit = {},
+    onNavigateToSummation: () -> Unit = {},  // ✅ 추가
     viewModel: LogViewModel = viewModel()
 ) {
     var selectedLogTab by remember { mutableIntStateOf(initialTab) }
@@ -164,7 +165,7 @@ fun ActivityLogHome(
             }
         }
 
-        // 4. 하단 네비게이션
+        // 4. 하단 네비게이션 ✅ 수정
         EmergencyNav(
             selectedTab = selectedBottomTab,
             onTabSelected = { newTab ->
