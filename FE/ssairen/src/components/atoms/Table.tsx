@@ -39,7 +39,7 @@ export function Table({ children, className = "" }: TableProps) {
 }
 
 export function TableHeader({ children, className = "" }: TableHeaderProps) {
-  return <thead className={`bg-neutral-100 ${className}`}>{children}</thead>;
+  return <thead className={`bg-gray-100 ${className}`}>{children}</thead>;
 }
 
 export function TableBody({ children, className = "" }: TableBodyProps) {
@@ -53,14 +53,14 @@ export function TableRow({
   onClick,
 }: TableRowProps) {
   const variantStyles = {
-    default: "bg-neutral-100 hover:bg-neutral-300",
-    alert: "bg-secondary-300 hover:bg-secondary-400",
-    warning: "bg-danger-100 hover:bg-danger-200",
+    default: "bg-white hover:bg-gray-50",
+    alert: "bg-amber-50 hover:bg-amber-100",
+    warning: "bg-red-50 hover:bg-red-100",
   };
 
   return (
     <tr
-      className={`border-b border-neutral-200 transition-colors ${
+      className={`border-b border-gray-200 transition-colors ${
         variantStyles[variant]
       } ${onClick ? "cursor-pointer" : ""} ${className}`}
       onClick={onClick}
@@ -76,10 +76,10 @@ export function TableCell({
   className = "",
 }: TableCellProps) {
   const baseStyles =
-    "px-3 py-2 text-center text-sm border-r border-neutral-200 last:border-r-0";
+    "px-3 py-2 text-center text-sm border-r border-gray-200 last:border-r-0";
   const headerStyles = header
-    ? "font-semibold text-neutral-700"
-    : "text-neutral-800";
+    ? "font-semibold text-gray-700"
+    : "text-gray-800";
 
   if (header) {
     return (

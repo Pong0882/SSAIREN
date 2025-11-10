@@ -53,12 +53,12 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="w-[30px] h-[30px] rounded-lg hover:bg-neutral-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+        className="w-[30px] h-[30px] rounded-lg bg-white border border-gray-300 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-default disabled:hover:bg-white transition-colors flex items-center justify-center"
       >
         <img
           src={leftArrow}
           alt="이전"
-          className="w-4 h-4 brightness-0 invert"
+          className="w-4 h-4 opacity-70"
         />
       </button>
 
@@ -66,7 +66,7 @@ export default function Pagination({
       {getPageNumbers().map((page, index) => {
         if (page === "...") {
           return (
-            <span key={`ellipsis-${index}`} className="px-2 text-neutral-500">
+            <span key={`ellipsis-${index}`} className="px-2 text-gray-500">
               ...
             </span>
           );
@@ -78,8 +78,8 @@ export default function Pagination({
             onClick={() => onPageChange(page as number)}
             className={`w-[30px] h-[30px] rounded-lg transition-colors flex items-center justify-center ${
               currentPage === page
-                ? "bg-primary-500 text-white font-semibold"
-                : "border border-neutral-300 text-white hover:bg-neutral-500"
+                ? "bg-sky-500 text-white font-semibold shadow-sm"
+                : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
             }`}
           >
             {page}
@@ -91,12 +91,12 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="w-[30px] h-[30px] rounded-lg hover:bg-neutral-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+        className="w-[30px] h-[30px] rounded-lg bg-white border border-gray-300 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-default disabled:hover:bg-white transition-colors flex items-center justify-center"
       >
         <img
           src={rightArrow}
           alt="다음"
-          className="w-4 h-4 brightness-0 invert"
+          className="w-4 h-4 opacity-70"
         />
       </button>
     </div>
