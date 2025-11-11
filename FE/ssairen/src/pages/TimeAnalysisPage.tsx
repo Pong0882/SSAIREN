@@ -13,11 +13,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
-  Area,
-  ReferenceArea,
-  LabelList
 } from "recharts";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -126,7 +122,7 @@ export default function TimeAnalysisPage() {
   const hourlyData = data
     ? Array.from({ length: 24 }, (_, hour) => ({
         name: `${hour}시`,
-        count: parseInt(data.byHour[hour.toString()]) || 0,
+        count: Number(data.byHour[hour.toString()]) || 0,
       }))
     : [];
 

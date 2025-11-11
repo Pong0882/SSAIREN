@@ -1,7 +1,11 @@
 import { Client, StompSubscription } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
+// SockJS는 http/https URL을 사용하고, 자동으로 WebSocket으로 업그레이드됩니다
 const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws';
+
+// wss:// 를 https:// 로 변환 (SockJS는 http/https만 허용)
+const SOCKJS_URL = WS_URL.replace(/^wss:\/\//, 'https://').replace(/^ws:\/\//, 'http://');
 
 export class WebSocketClient {
   private client: Client | null = null;
@@ -13,7 +17,7 @@ export class WebSocketClient {
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.client = new Client({
-        webSocketFactory: () => new SockJS(WS_URL) as any,
+        webSocketFactory: () => new SockJS(SOCKJS_URL) as any,
         debug: (str) => {
           console.log('[WebSocket Debug]', str);
         },
