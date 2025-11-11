@@ -99,16 +99,17 @@ public class HospitalService {
             HospitalSelection savedSelection = hospitalSelectionRepository.save(selection);
             selections.add(savedSelection);
 
-            // 5. 각 병원에게 웹소켓으로 요청 메시지 전송 (환자 정보 포함)
+            // 5. 각 병원에게 웹소켓으로 요청 메시지 전송 (환자 정보 및 구급대원 ID 포함)
             String topic = "/topic/hospital." + hospital.getId();
             HospitalRequestMessage message = HospitalRequestMessage.of(
                     savedSelection.getId(),
                     request.getEmergencyReportId(),
+                    emergencyReport.getParamedic().getId(),
                     patientInfoDto
             );
 
-            log.info(LOG_PREFIX + "웹소켓 메시지 전송 시작 - 병원 ID: {}, 토픽: {}, 환자 정보 포함: {}",
-                    hospital.getId(), topic, (patientInfoDto != null));
+            log.info(LOG_PREFIX + "웹소켓 메시지 전송 시작 - 병원 ID: {}, 토픽: {}, 구급대원 ID: {}, 환자 정보 포함: {}",
+                    hospital.getId(), topic, emergencyReport.getParamedic().getId(), (patientInfoDto != null));
 
             try {
                 messagingTemplate.convertAndSend(topic, message);
@@ -268,17 +269,18 @@ public class HospitalService {
                     .map(PatientInfoDto::from)
                     .orElse(null);
 
-            // HospitalRequestMessage 생성
+            // HospitalRequestMessage 생성 (구급대원 ID 포함)
             HospitalRequestMessage message = HospitalRequestMessage.of(
                     selection.getId(),
                     emergencyReportId,
+                    selection.getEmergencyReport().getParamedic().getId(),
                     patientInfoDto
             );
 
             requestMessages.add(message);
 
-            log.debug(LOG_PREFIX + "요청 메시지 생성 - 선택 ID: {}, 구급일지 ID: {}, 환자 정보 포함: {}",
-                    selection.getId(), emergencyReportId, (patientInfoDto != null));
+            log.debug(LOG_PREFIX + "요청 메시지 생성 - 선택 ID: {}, 구급일지 ID: {}, 구급대원 ID: {}, 환자 정보 포함: {}",
+                    selection.getId(), emergencyReportId, selection.getEmergencyReport().getParamedic().getId(), (patientInfoDto != null));
         }
 
         log.info(LOG_PREFIX + "PENDING 요청 목록 조회 완료 - 병원 ID: {}, 반환 개수: {}",
@@ -748,16 +750,17 @@ public class HospitalService {
             HospitalSelection savedSelection = hospitalSelectionRepository.save(selection);
             selections.add(savedSelection);
 
-            // 8. 각 병원에게 웹소켓으로 요청 메시지 전송 (환자 정보 포함)
+            // 8. 각 병원에게 웹소켓으로 요청 메시지 전송 (환자 정보 및 구급대원 ID 포함)
             String topic = "/topic/hospital." + hospital.getId();
             HospitalRequestMessage message = HospitalRequestMessage.of(
                     savedSelection.getId(),
                     emergencyReportId,
+                    emergencyReport.getParamedic().getId(),
                     patientInfoDto
             );
 
-            log.info(LOG_PREFIX + "웹소켓 메시지 전송 시작 - 병원 ID: {}, 토픽: {}, 환자 정보 포함: {}",
-                    hospital.getId(), topic, (patientInfoDto != null));
+            log.info(LOG_PREFIX + "웹소켓 메시지 전송 시작 - 병원 ID: {}, 토픽: {}, 구급대원 ID: {}, 환자 정보 포함: {}",
+                    hospital.getId(), topic, emergencyReport.getParamedic().getId(), (patientInfoDto != null));
 
             try {
                 messagingTemplate.convertAndSend(topic, message);
