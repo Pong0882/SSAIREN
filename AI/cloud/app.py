@@ -19,9 +19,6 @@ def read_root():
 # 라우터 등록
 app.include_router(integrated_router, prefix="/api")  # 통합 API (STT + LLM)
 app.include_router(emergency_router, prefix="/api")  # 응급실 추천 API
-<<<<<<< HEAD
 app.include_router(stt_to_json_router, prefix="/api")  # 파인튜닝 LoRA 모델 (텍스트 → JSON)
-=======
 app.include_router(stt_to_json_router, prefix="/api")  # ✨ 파인튜닝 LoRA 모델
 app.include_router(stt_router_local, prefix="/api")  # 로컬 Whisper STT
->>>>>>> 6677e939acbd392f2838cd80808dbb3bb8d48d64
