@@ -1,5 +1,6 @@
 package com.ssairen.domain.hospital.service;
 
+import com.ssairen.domain.hospital.dto.PatientStatisticsResponse;
 import com.ssairen.domain.hospital.dto.StatisticsRequest;
 import com.ssairen.domain.hospital.dto.TimeStatisticsResponse;
 import com.ssairen.domain.hospital.repository.HospitalRepository;
@@ -142,6 +143,141 @@ public class HospitalStatisticsService {
             Long count = ((Number) result[1]).longValue();
 
             statistics.put(String.valueOf(hour), count);
+        }
+
+        return statistics;
+    }
+
+    /**
+     * 환자 통계 조회
+     *
+     * @param request 통계 조회 요청 (startDate, endDate)
+     * @param hospitalId 병원 ID
+     * @return 성별, 연령대, 의식 상태별 통계
+     */
+    public PatientStatisticsResponse getPatientStatistics(StatisticsRequest request, Integer hospitalId) {
+        log.info("📊 Fetching patient statistics for hospital ID: {}, period: {} ~ {}",
+                hospitalId, request.startDate(), request.endDate());
+
+        // 1. 병원 존재 확인
+        if (!hospitalRepository.existsById(hospitalId)) {
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND);
+        }
+
+        // 2. LocalDate → LocalDateTime 변환
+        LocalDateTime startDateTime = request.startDate().atStartOfDay();
+        LocalDateTime endDateTime = request.endDate().plusDays(1).atStartOfDay();
+
+        // 3. 성별 통계 조회
+        Map<String, Long> byGender = getGenderStatistics(hospitalId, startDateTime, endDateTime);
+
+        // 4. 연령대 통계 조회
+        Map<String, Long> byAgeGroup = getAgeGroupStatistics(hospitalId, startDateTime, endDateTime);
+
+        // 5. 의식 상태 통계 조회
+        Map<String, Long> byMentalStatus = getMentalStatusStatistics(hospitalId, startDateTime, endDateTime);
+
+        // 6. 총 수용 건수
+        long totalCount = hospitalSelectionRepository.countByHospitalIdAndPeriod(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        log.info("✅ Patient statistics calculated - Total: {}, Gender: {}, AgeGroup: {}, MentalStatus: {}",
+                totalCount, byGender.size(), byAgeGroup.size(), byMentalStatus.size());
+
+        return new PatientStatisticsResponse(
+                byGender,
+                byAgeGroup,
+                byMentalStatus,
+                request.startDate(),
+                request.endDate(),
+                totalCount
+        );
+    }
+
+    /**
+     * 성별 통계 계산
+     */
+    private Map<String, Long> getGenderStatistics(
+            Integer hospitalId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+        List<Object[]> results = hospitalSelectionRepository.countByGender(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        Map<String, Long> statistics = new HashMap<>();
+
+        // M, F 초기화
+        statistics.put("M", 0L);
+        statistics.put("F", 0L);
+
+        // 쿼리 결과를 Map으로 변환
+        for (Object[] result : results) {
+            String gender = (String) result[0];
+            Long count = ((Number) result[1]).longValue();
+            statistics.put(gender, count);
+        }
+
+        return statistics;
+    }
+
+    /**
+     * 연령대 통계 계산
+     */
+    private Map<String, Long> getAgeGroupStatistics(
+            Integer hospitalId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+        List<Object[]> results = hospitalSelectionRepository.countByAgeGroup(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        Map<String, Long> statistics = new HashMap<>();
+
+        // 모든 연령대를 0으로 초기화
+        String[] ageGroups = {"0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"};
+        for (String ageGroup : ageGroups) {
+            statistics.put(ageGroup, 0L);
+        }
+
+        // 쿼리 결과를 Map으로 변환
+        for (Object[] result : results) {
+            String ageGroup = (String) result[0];
+            Long count = ((Number) result[1]).longValue();
+            statistics.put(ageGroup, count);
+        }
+
+        return statistics;
+    }
+
+    /**
+     * 의식 상태 통계 계산
+     */
+    private Map<String, Long> getMentalStatusStatistics(
+            Integer hospitalId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+        List<Object[]> results = hospitalSelectionRepository.countByMentalStatus(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        Map<String, Long> statistics = new HashMap<>();
+
+        // 모든 의식 상태를 0으로 초기화
+        statistics.put("ALERT", 0L);
+        statistics.put("VERBAL", 0L);
+        statistics.put("PAIN", 0L);
+        statistics.put("UNRESPONSIVE", 0L);
+
+        // 쿼리 결과를 Map으로 변환
+        for (Object[] result : results) {
+            String mentalStatus = (String) result[0];
+            Long count = ((Number) result[1]).longValue();
+            statistics.put(mentalStatus, count);
         }
 
         return statistics;
