@@ -5,6 +5,7 @@ import com.ssairen.domain.emergency.dto.DispatchCreateResponse;
 import com.ssairen.domain.emergency.dto.FireStateResponse;
 import com.ssairen.domain.emergency.entity.Dispatch;
 import com.ssairen.domain.firestation.entity.FireState;
+import com.ssairen.domain.firestation.entity.Paramedic;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -19,7 +20,8 @@ public interface DispatchMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "fireState", source = "fireState")
-    Dispatch toEntity(DispatchCreateRequest request, FireState fireState);
+    @Mapping(target = "paramedic", source = "paramedic")
+    Dispatch toEntity(DispatchCreateRequest request, FireState fireState, Paramedic paramedic);
 
     DispatchCreateResponse toResponse(Dispatch entity);
 

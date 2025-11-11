@@ -71,6 +71,9 @@ dependencies {
     // WebClient - 외부 API 호출용 (AI 서버 통신)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+    // Firebase Admin SDK - FCM 푸시 알림
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
+
     // Swagger/OpenAPI 문서 자동 생성 및 UI 제공
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.1'
 

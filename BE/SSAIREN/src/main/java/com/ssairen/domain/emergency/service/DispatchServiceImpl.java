@@ -8,6 +8,7 @@ import com.ssairen.domain.firestation.entity.FireState;
 import com.ssairen.domain.firestation.entity.Paramedic;
 import com.ssairen.domain.firestation.repository.FireStateRepository;
 import com.ssairen.domain.firestation.repository.ParamedicRepository;
+import com.ssairen.domain.firestation.service.FcmService;
 import com.ssairen.global.exception.CustomException;
 import com.ssairen.global.exception.ErrorCode;
 import com.ssairen.global.utils.CursorUtils;
@@ -16,7 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -30,6 +33,7 @@ public class DispatchServiceImpl implements DispatchService {
     private final FireStateRepository fireStateRepository;
     private final ParamedicRepository paramedicRepository;
     private final DispatchMapper dispatchMapper;
+    private final FcmService fcmService;
 
     /**
      * 출동 지령 생성
@@ -44,14 +48,63 @@ public class DispatchServiceImpl implements DispatchService {
         FireState fireState = fireStateRepository.findById(request.fireStateId())
                 .orElseThrow(() -> new CustomException(ErrorCode.FIRE_STATE_NOT_FOUND));
 
-        Dispatch dispatch = dispatchMapper.toEntity(request, fireState);
+        // 구급대원 존재 여부 확인
+        Paramedic paramedic = paramedicRepository.findById(request.paramedicId())
+                .orElseThrow(() -> new CustomException(ErrorCode.PARAMEDIC_NOT_FOUND));
+
+        Dispatch dispatch = dispatchMapper.toEntity(request, fireState, paramedic);
 
         Dispatch savedDispatch = dispatchRepository.save(dispatch);
 
         log.info(LOG_PREFIX + "출동 지령 생성 완료 - ID: {}, 소방서: {}, 재난분류: {}, 주소: {}",
                 savedDispatch.getId(), fireState.getName(), savedDispatch.getDisasterType(), savedDispatch.getLocationAddress());
 
+        // 해당 소방서 소속 구급대원들에게 FCM 알림 전송
+        sendDispatchNotificationToParamedics(fireState, savedDispatch);
+
         return dispatchMapper.toResponse(savedDispatch);
+    }
+
+    /**
+     * 출동 지령이 생성되면 해당 소방서 소속 구급대원 전체에게 푸시 알림 전송
+     *
+     * @param fireState 소방서
+     * @param dispatch  출동 지령
+     */
+    private void sendDispatchNotificationToParamedics(FireState fireState, Dispatch dispatch) {
+        try {
+            // 해당 소방서 소속 구급대원 전체 조회
+            List<Paramedic> paramedics = paramedicRepository.findAll().stream()
+                    .filter(p -> p.getFireState().getId().equals(fireState.getId()))
+                    .toList();
+
+            log.info(LOG_PREFIX + "FCM 알림 대상 구급대원 수: {} (소방서: {})", paramedics.size(), fireState.getName());
+
+            // 각 구급대원에게 알림 전송
+            for (Paramedic paramedic : paramedics) {
+                Map<String, String> data = new HashMap<>();
+                data.put("type", "DISPATCH");
+                data.put("dispatchId", dispatch.getId().toString());
+                data.put("disasterType", dispatch.getDisasterType());
+                data.put("locationAddress", dispatch.getLocationAddress());
+
+                fcmService.sendNotification(
+                        paramedic.getId(),
+                        "🚨 출동 지령",
+                        String.format("[%s] %s - %s",
+                                dispatch.getDisasterType(),
+                                dispatch.getLocationAddress(),
+                                dispatch.getIncidentDescription() != null ? dispatch.getIncidentDescription() : ""),
+                        data
+                );
+            }
+
+            log.info(LOG_PREFIX + "FCM 알림 전송 완료 - 출동 ID: {}", dispatch.getId());
+
+        } catch (Exception e) {
+            // FCM 전송 실패가 출동 지령 생성을 방해하지 않도록 예외를 로그만 남김
+            log.error(LOG_PREFIX + "FCM 알림 전송 실패 - 출동 ID: {}, 에러: {}", dispatch.getId(), e.getMessage(), e);
+        }
     }
 
     /**

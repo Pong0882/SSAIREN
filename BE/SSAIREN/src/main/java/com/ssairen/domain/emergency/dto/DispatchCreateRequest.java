@@ -13,6 +13,10 @@ public record DispatchCreateRequest(
         @Positive(message = "소방서 ID는 양의 정수여야 합니다.")
         Integer fireStateId,
 
+//        @NotNull(message = "소방서 ID는 필수 입력 항목입니다.")
+        @Positive(message = "구급대원 ID는 양의 정수여야 합니다.")
+        Integer paramedicId,
+
         @Size(max = 50, message = "재난번호는 50자 이내여야 합니다.")
         String disasterNumber,
 
