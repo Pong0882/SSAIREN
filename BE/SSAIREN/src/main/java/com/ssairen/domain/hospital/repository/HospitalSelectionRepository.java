@@ -358,4 +358,58 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime
     );
+
+    // ===== 재난 유형 통계 관련 쿼리 =====
+
+    /**
+     * 재난 유형별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     *
+     * @param hospitalId 병원 ID
+     * @param startDateTime 시작 날짜
+     * @param endDateTime 종료 날짜
+     * @return 재난 유형별 건수
+     */
+    @Query(value = "SELECT d.disaster_type, COUNT(*) " +
+            "FROM hospital_selection hs " +
+            "INNER JOIN emergency_reports er ON hs.emergency_report_id = er.id " +
+            "INNER JOIN dispatches d ON er.dispatches_id = d.id " +
+            "WHERE hs.hospital_id = :hospitalId " +
+            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.response_at >= :startDateTime " +
+            "AND hs.response_at < :endDateTime " +
+            "AND d.disaster_type IS NOT NULL " +
+            "GROUP BY d.disaster_type " +
+            "ORDER BY COUNT(*) DESC",
+            nativeQuery = true)
+    List<Object[]> countByDisasterType(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    /**
+     * 재난 세부 유형별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     *
+     * @param hospitalId 병원 ID
+     * @param startDateTime 시작 날짜
+     * @param endDateTime 종료 날짜
+     * @return 재난 세부 유형별 건수
+     */
+    @Query(value = "SELECT d.disaster_subtype, COUNT(*) " +
+            "FROM hospital_selection hs " +
+            "INNER JOIN emergency_reports er ON hs.emergency_report_id = er.id " +
+            "INNER JOIN dispatches d ON er.dispatches_id = d.id " +
+            "WHERE hs.hospital_id = :hospitalId " +
+            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.response_at >= :startDateTime " +
+            "AND hs.response_at < :endDateTime " +
+            "AND d.disaster_subtype IS NOT NULL " +
+            "GROUP BY d.disaster_subtype " +
+            "ORDER BY COUNT(*) DESC",
+            nativeQuery = true)
+    List<Object[]> countByDisasterSubtype(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
 }

@@ -1,5 +1,6 @@
 package com.ssairen.domain.hospital.service;
 
+import com.ssairen.domain.hospital.dto.DisasterTypeStatisticsResponse;
 import com.ssairen.domain.hospital.dto.PatientStatisticsResponse;
 import com.ssairen.domain.hospital.dto.StatisticsRequest;
 import com.ssairen.domain.hospital.dto.TimeStatisticsResponse;
@@ -278,6 +279,97 @@ public class HospitalStatisticsService {
             String mentalStatus = (String) result[0];
             Long count = ((Number) result[1]).longValue();
             statistics.put(mentalStatus, count);
+        }
+
+        return statistics;
+    }
+
+    /**
+     * 재난 유형별 통계 조회
+     *
+     * @param request 통계 조회 요청 (startDate, endDate)
+     * @param hospitalId 병원 ID
+     * @return 재난 유형별, 재난 세부 유형별 통계
+     */
+    public DisasterTypeStatisticsResponse getDisasterTypeStatistics(StatisticsRequest request, Integer hospitalId) {
+        log.info("📊 Fetching disaster type statistics for hospital ID: {}, period: {} ~ {}",
+                hospitalId, request.startDate(), request.endDate());
+
+        // 1. 병원 존재 확인
+        if (!hospitalRepository.existsById(hospitalId)) {
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND);
+        }
+
+        // 2. LocalDate → LocalDateTime 변환
+        LocalDateTime startDateTime = request.startDate().atStartOfDay();
+        LocalDateTime endDateTime = request.endDate().plusDays(1).atStartOfDay();
+
+        // 3. 재난 유형별 통계 조회
+        Map<String, Long> byDisasterType = getDisasterTypeMap(hospitalId, startDateTime, endDateTime);
+
+        // 4. 재난 세부 유형별 통계 조회
+        Map<String, Long> byDisasterSubtype = getDisasterSubtypeMap(hospitalId, startDateTime, endDateTime);
+
+        // 5. 총 수용 건수
+        long totalCount = hospitalSelectionRepository.countByHospitalIdAndPeriod(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        log.info("✅ Disaster type statistics calculated - Total: {}, Types: {}, Subtypes: {}",
+                totalCount, byDisasterType.size(), byDisasterSubtype.size());
+
+        return new DisasterTypeStatisticsResponse(
+                byDisasterType,
+                byDisasterSubtype,
+                request.startDate(),
+                request.endDate(),
+                totalCount
+        );
+    }
+
+    /**
+     * 재난 유형별 통계 계산
+     */
+    private Map<String, Long> getDisasterTypeMap(
+            Integer hospitalId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+        List<Object[]> results = hospitalSelectionRepository.countByDisasterType(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        Map<String, Long> statistics = new HashMap<>();
+
+        // 쿼리 결과를 Map으로 변환 (NULL 체크)
+        for (Object[] result : results) {
+            String disasterType = result[0] != null ? (String) result[0] : "미분류";
+            Long count = ((Number) result[1]).longValue();
+            statistics.put(disasterType, count);
+        }
+
+        return statistics;
+    }
+
+    /**
+     * 재난 세부 유형별 통계 계산
+     */
+    private Map<String, Long> getDisasterSubtypeMap(
+            Integer hospitalId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+        List<Object[]> results = hospitalSelectionRepository.countByDisasterSubtype(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        Map<String, Long> statistics = new HashMap<>();
+
+        // 쿼리 결과를 Map으로 변환 (NULL 체크)
+        for (Object[] result : results) {
+            String disasterSubtype = result[0] != null ? (String) result[0] : "미분류";
+            Long count = ((Number) result[1]).longValue();
+            statistics.put(disasterSubtype, count);
         }
 
         return statistics;
