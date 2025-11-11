@@ -79,4 +79,4 @@ volumes:
 
 networks:
   ssairen-net:
-    external: true
+    driver: bridge
