@@ -21,8 +21,8 @@ object RetrofitInstance {
 
     private val retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl("https://api.ssairen.site/")  // ⭐ 직접 입력
-//            .baseUrl("http://localhost:9090/")  // ⭐ 직접 입력
+//            .baseUrl("https://api.ssairen.site/")  // ⭐ 직접 입력
+            .baseUrl("http://localhost:9090/")  // ⭐ 직접 입력
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

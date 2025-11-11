@@ -65,6 +65,7 @@ object WebSocketManager {
      * @param accessToken JWT 액세스 토큰
      * @param paramedicId 구급대원 ID
      * @param onDispatchReceived 출동 지령 수신 콜백
+     * @param onHospitalResponseReceived 병원 응답 수신 콜백
      * @param onError 에러 콜백
      * @param onConnectionStatusChanged 연결 상태 변경 콜백
      */
@@ -72,6 +73,7 @@ object WebSocketManager {
         accessToken: String,
         paramedicId: Long,
         onDispatchReceived: (DispatchMessage) -> Unit,
+        onHospitalResponseReceived: (HospitalResponseMessage) -> Unit = {},
         onError: (String) -> Unit = {},
         onConnectionStatusChanged: (Boolean) -> Unit = {}
     ) {
@@ -121,21 +123,85 @@ object WebSocketManager {
 
             // 채널 구독: /topic/paramedic.{paramedicId}
             val destination = "/topic/paramedic.$paramedicId"
+            Log.d(TAG, "========================================")
             Log.d(TAG, "📡 Subscribing to channel: $destination")
             Log.d(TAG, "👤 Paramedic ID (PK): $paramedicId")
+            Log.d(TAG, "========================================")
 
             val topicDisposable: Disposable = stompClient!!.topic(destination)
+                .doOnSubscribe {
+                    Log.d(TAG, "🔔 SUBSCRIPTION STARTED for $destination")
+                }
+                .doOnNext {
+                    Log.d(TAG, "🔔 MESSAGE INCOMING...")
+                }
                 .subscribe({ stompMessage ->
                     try {
                         val payload = stompMessage.payload
-                        Log.d(TAG, "📩 Message received from $destination: $payload")
+                        Log.d(TAG, "========================================")
+                        Log.d(TAG, "📩 RAW MESSAGE RECEIVED")
+                        Log.d(TAG, "========================================")
+                        Log.d(TAG, "Payload: $payload")
 
-                        // JSON 파싱
-                        val dispatch = gson.fromJson(payload, DispatchMessage::class.java)
-                        onDispatchReceived(dispatch)
+                        // ✅ 메시지 타입 확인
+                        val wrapper = gson.fromJson(payload, WebSocketMessageWrapper::class.java)
+                        val messageType = wrapper.type
+
+                        Log.d(TAG, "----------------------------------------")
+                        Log.d(TAG, "🔍 Message Type: $messageType")
+                        Log.d(TAG, "----------------------------------------")
+
+                        when (messageType) {
+                            "response" -> {
+                                // 병원 응답 메시지
+                                Log.d(TAG, "╔════════════════════════════════════════╗")
+                                Log.d(TAG, "║   🏥 HOSPITAL RESPONSE MESSAGE        ║")
+                                Log.d(TAG, "╚════════════════════════════════════════╝")
+
+                                val hospitalResponse = gson.fromJson(payload, HospitalResponseMessage::class.java)
+
+                                Log.d(TAG, "Hospital Response Details:")
+                                Log.d(TAG, "  - type: ${hospitalResponse.type}")
+                                Log.d(TAG, "  - status: ${hospitalResponse.status}")
+                                Log.d(TAG, "  - hospitalName: ${hospitalResponse.hospitalName}")
+                                Log.d(TAG, "  - hospitalSelectionId: ${hospitalResponse.hospitalSelectionId}")
+                                Log.d(TAG, "  - emergencyReportId: ${hospitalResponse.emergencyReportId}")
+                                Log.d(TAG, "")
+                                Log.d(TAG, "🎯 Calling onHospitalResponseReceived callback...")
+
+                                onHospitalResponseReceived(hospitalResponse)
+
+                                Log.d(TAG, "✅ Callback completed!")
+                                Log.d(TAG, "========================================")
+                            }
+                            else -> {
+                                // 출동 지령 메시지 (type 필드 없거나 다른 값)
+                                Log.d(TAG, "╔════════════════════════════════════════╗")
+                                Log.d(TAG, "║   🚨 DISPATCH MESSAGE                 ║")
+                                Log.d(TAG, "╚════════════════════════════════════════╝")
+
+                                val dispatch = gson.fromJson(payload, DispatchMessage::class.java)
+
+                                Log.d(TAG, "Dispatch Details:")
+                                Log.d(TAG, "  - disasterNumber: ${dispatch.disasterNumber}")
+                                Log.d(TAG, "  - disasterType: ${dispatch.disasterType}")
+                                Log.d(TAG, "  - locationAddress: ${dispatch.locationAddress}")
+                                Log.d(TAG, "")
+                                Log.d(TAG, "🎯 Calling onDispatchReceived callback...")
+
+                                onDispatchReceived(dispatch)
+
+                                Log.d(TAG, "✅ Callback completed!")
+                                Log.d(TAG, "========================================")
+                            }
+                        }
 
                     } catch (e: Exception) {
-                        Log.e(TAG, "❌ Failed to parse message: ${e.message}")
+                        Log.e(TAG, "╔════════════════════════════════════════╗")
+                        Log.e(TAG, "║   ❌ PARSING ERROR                    ║")
+                        Log.e(TAG, "╚════════════════════════════════════════╝")
+                        Log.e(TAG, "Error message: ${e.message}")
+                        Log.e(TAG, "Stack trace:", e)
                         onError("메시지 파싱 실패: ${e.message}")
                     }
                 }, { error ->
@@ -227,4 +293,23 @@ data class DispatchMessage(
     val dispatchOrder: Int? = null,          // 출동 순서
     val dispatchStation: String? = null,     // 출동 센터
     val date: String? = null                 // 발생 시간
+)
+
+/**
+ * 병원 수용 응답 메시지 데이터 클래스
+ * WebSocket으로 수신되는 병원 응답 데이터
+ */
+data class HospitalResponseMessage(
+    val type: String,                        // "response"
+    val status: String,                      // "ACCEPTED", "REJECTED" 등
+    val hospitalSelectionId: Int,            // 병원 선택 ID
+    val emergencyReportId: Int,              // 응급 보고서 ID
+    val hospitalName: String                 // 병원 이름
+)
+
+/**
+ * WebSocket 메시지 타입 구분용
+ */
+data class WebSocketMessageWrapper(
+    val type: String? = null
 )

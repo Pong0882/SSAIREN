@@ -29,9 +29,11 @@ object RetrofitClient {
     // ✅ 배포 서버 (실제 사용)
     const val BASE_URL = "https://api.ssairen.site"
 
-    // 로컬 백엔드 테스트용 (USB 연결 + ADB 포트 포워딩)
-    // adb reverse tcp:9090 tcp:8080
-    // const val BASE_URL = "http://localhost:9090"
+    // 로컬 백엔드 테스트용 (백엔드가 8080 포트에서 실행 중)
+    // 방법 1 (USB 연결): adb reverse tcp:8080 tcp:8080 후 localhost 사용
+    // 방법 2 (WiFi): PC의 로컬 IP 사용 (예: http://192.168.0.10:8080)
+//     const val BASE_URL = "http://localhost:8080"  // ← ADB 포트 포워딩 후 사용
+//     const val BASE_URL = "http://192.168.0.10:8080"  // ← PC IP로 교체
 
     /**
      * AuthManager (로그인 정보 및 토큰 관리)

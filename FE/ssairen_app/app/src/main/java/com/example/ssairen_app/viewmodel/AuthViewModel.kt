@@ -11,6 +11,7 @@ import com.example.ssairen_app.data.api.RetrofitClient
 import com.example.ssairen_app.data.local.AuthManager
 import com.example.ssairen_app.data.repository.AuthRepository
 import com.example.ssairen_app.data.websocket.DispatchMessage
+import com.example.ssairen_app.data.websocket.HospitalResponseMessage
 import com.example.ssairen_app.data.websocket.WebSocketManager
 import kotlinx.coroutines.launch
 
@@ -52,6 +53,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     // ✅ 수신된 출동 메시지 LiveData 추가
     private val _dispatchMessage = MutableLiveData<DispatchMessage?>()
     val dispatchMessage: LiveData<DispatchMessage?> = _dispatchMessage
+
+    // ✅ 수신된 병원 응답 메시지 LiveData 추가
+    private val _hospitalResponseMessage = MutableLiveData<HospitalResponseMessage?>()
+    val hospitalResponseMessage: LiveData<HospitalResponseMessage?> = _hospitalResponseMessage
 
     init {
         checkLoginStatus()
@@ -153,6 +158,23 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 // ✅ 출동 메시지를 LiveData로 전달 (MainActivity에서 관찰)
                 _dispatchMessage.postValue(dispatch)
             },
+            onHospitalResponseReceived = { response ->
+                Log.d(TAG, "╔════════════════════════════════════════╗")
+                Log.d(TAG, "║   AuthViewModel Callback              ║")
+                Log.d(TAG, "╚════════════════════════════════════════╝")
+                Log.d(TAG, "🏥 Hospital response received!")
+                Log.d(TAG, "  - Hospital: ${response.hospitalName}")
+                Log.d(TAG, "  - Status: ${response.status}")
+                Log.d(TAG, "")
+                Log.d(TAG, "🎯 Posting to LiveData...")
+
+                // ✅ 병원 응답 메시지를 LiveData로 전달
+                _hospitalResponseMessage.postValue(response)
+
+                Log.d(TAG, "✅ Posted to hospitalResponseMessage LiveData!")
+                Log.d(TAG, "Current value: ${_hospitalResponseMessage.value}")
+                Log.d(TAG, "========================================")
+            },
             onError = { error ->
                 Log.e(TAG, "❌ WebSocket error: $error")
                 _webSocketConnected.postValue(false)
@@ -167,6 +189,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     // ✅ 출동 메시지 처리 완료 (모달 띄운 후 호출)
     fun clearDispatchMessage() {
         _dispatchMessage.value = null
+    }
+
+    // ✅ 병원 응답 메시지 처리 완료 (모달 띄운 후 호출)
+    fun clearHospitalResponseMessage() {
+        _hospitalResponseMessage.value = null
     }
 
     // ✅ WebSocket 연결 해제
