@@ -121,7 +121,8 @@ object WebSocketManager {
 
             // 채널 구독: /topic/paramedic.{paramedicId}
             val destination = "/topic/paramedic.$paramedicId"
-            Log.d(TAG, "Subscribing to channel: $destination")
+            Log.d(TAG, "📡 Subscribing to channel: $destination")
+            Log.d(TAG, "👤 Paramedic ID (PK): $paramedicId")
 
             val topicDisposable: Disposable = stompClient!!.topic(destination)
                 .subscribe({ stompMessage ->

@@ -17,6 +17,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.example.ssairen_app.data.websocket.DispatchMessage
@@ -44,6 +46,12 @@ class MainActivity : ComponentActivity() {
         private const val TAG = "MainActivity"
     }
 
+    // ✅ Intent를 State로 관리
+    private var currentIntent by mutableStateOf<Intent?>(null)
+
+    // ✅ 알림에서 받은 출동 데이터를 State로 관리
+    private var pendingDispatchFromNotification by mutableStateOf<DispatchMessage?>(null)
+
     // 알림 권한 요청 런처
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -58,11 +66,21 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        Log.d(TAG, "========================================")
+        Log.d(TAG, "🚀 MainActivity.onCreate() 시작")
+        Log.d(TAG, "========================================")
+
         // RetrofitClient 초기화 (바디캠 비디오 업로드용)
         RetrofitClient.init(this)
 
         // Android 13 이상에서 알림 권한 요청
         requestNotificationPermission()
+
+        // ✅ 초기 Intent 설정 및 출동 데이터 추출
+        Log.d(TAG, "📱 Intent 처리 시작")
+        currentIntent = intent
+        extractDispatchFromIntent(intent)
+        Log.d(TAG, "📱 pendingDispatchFromNotification: ${pendingDispatchFromNotification != null}")
 
         setContent {
             DispatchProvider(autoCreateDispatch = false) {
@@ -70,7 +88,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Color(0xFF1a1a1a)
                 ) {
-                    AppRoot(intent = intent)  // ⭐ Intent 전달
+                    AppRoot(
+                        intent = currentIntent,
+                        pendingDispatch = pendingDispatchFromNotification
+                    )
                 }
             }
         }
@@ -80,7 +101,82 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        Log.d(TAG, "📩 New Intent received")
+        currentIntent = intent  // ✅ State 업데이트
+        extractDispatchFromIntent(intent)  // ✅ 출동 데이터 추출
+        Log.d(TAG, "📩 New Intent received, State updated")
+    }
+
+    // ✅ Intent에서 출동 데이터 추출
+    private fun extractDispatchFromIntent(intent: Intent?) {
+        Log.d(TAG, "----------------------------------------")
+        Log.d(TAG, "🔍 extractDispatchFromIntent 호출됨")
+
+        if (intent == null) {
+            Log.d(TAG, "❌ Intent가 null입니다")
+            Log.d(TAG, "----------------------------------------")
+            return
+        }
+
+        Log.d(TAG, "✅ Intent 존재함")
+
+        // Intent extras 전부 출력
+        val extras = intent.extras
+        if (extras != null) {
+            Log.d(TAG, "📦 Intent extras 내용:")
+            for (key in extras.keySet()) {
+                Log.d(TAG, "   $key = ${extras.get(key)}")
+            }
+        } else {
+            Log.d(TAG, "⚠️ Intent extras가 null입니다")
+        }
+
+        val fromNotification = intent.getBooleanExtra("from_notification", false)
+        // ✅ FCM data에 type=DISPATCH가 있으면 알림에서 온 것으로 판단
+        val typeFromFcm = intent.getStringExtra("type")
+        val isFromDispatchNotification = fromNotification || (typeFromFcm == "DISPATCH")
+
+        Log.d(TAG, "🔔 from_notification 플래그: $fromNotification")
+        Log.d(TAG, "🔔 FCM type: $typeFromFcm")
+        Log.d(TAG, "🔔 최종 판단 (알림에서 옴): $isFromDispatchNotification")
+
+        if (isFromDispatchNotification) {
+            Log.d(TAG, "========================================")
+            Log.d(TAG, "🚨🚨🚨 FCM 알림으로 앱 시작됨! 🚨🚨🚨")
+            Log.d(TAG, "========================================")
+
+            // Intent에서 출동 데이터 추출
+            val dispatch = DispatchMessage(
+                fireStateId = intent.getStringExtra("fireStateId")?.toIntOrNull() ?: 0,
+                paramedicId = intent.getStringExtra("paramedicId")?.toIntOrNull() ?: 0,
+                disasterNumber = intent.getStringExtra("disasterNumber") ?: "UNKNOWN",
+                disasterType = intent.getStringExtra("disasterType") ?: "긴급출동",
+                disasterSubtype = intent.getStringExtra("disasterSubtype"),
+                reporterName = intent.getStringExtra("reporterName"),
+                reporterPhone = intent.getStringExtra("reporterPhone"),
+                locationAddress = intent.getStringExtra("locationAddress") ?: "위치 정보 없음",
+                incidentDescription = intent.getStringExtra("incidentDescription"),
+                dispatchLevel = intent.getStringExtra("dispatchLevel"),
+                dispatchOrder = intent.getStringExtra("dispatchOrder")?.toIntOrNull(),
+                dispatchStation = intent.getStringExtra("dispatchStation"),
+                date = intent.getStringExtra("date")
+            )
+
+            Log.d(TAG, "📦 출동 데이터 추출 완료:")
+            Log.d(TAG, "  ✓ 재난번호: ${dispatch.disasterNumber}")
+            Log.d(TAG, "  ✓ 위치: ${dispatch.locationAddress}")
+            Log.d(TAG, "  ✓ 유형: ${dispatch.disasterType}")
+
+            pendingDispatchFromNotification = dispatch
+            Log.d(TAG, "✅ pendingDispatchFromNotification에 저장 완료!")
+
+            // Intent 플래그 제거 (중복 처리 방지)
+            intent.removeExtra("from_notification")
+            intent.removeExtra("type")
+        } else {
+            Log.d(TAG, "ℹ️ 일반 앱 시작 (알림 아님)")
+        }
+
+        Log.d(TAG, "----------------------------------------")
     }
 
     // ✅ 앱이 포그라운드로 들어올 때
@@ -124,9 +220,19 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppRoot(
     viewModel: AuthViewModel = viewModel(),
-    intent: Intent? = null
+    intent: Intent? = null,
+    pendingDispatch: DispatchMessage? = null
 ) {
+    Log.d("AppRoot", "========================================")
+    Log.d("AppRoot", "🎨 AppRoot Composable 렌더링")
+    Log.d("AppRoot", "   - pendingDispatch: ${pendingDispatch != null}")
+    if (pendingDispatch != null) {
+        Log.d("AppRoot", "   - 재난번호: ${pendingDispatch.disasterNumber}")
+    }
+    Log.d("AppRoot", "========================================")
+
     val isLoggedIn by viewModel.isLoggedIn.observeAsState(false)
+    Log.d("AppRoot", "🔐 isLoggedIn: $isLoggedIn")
 
     // ✅ DispatchContext 가져오기
     val dispatchState = rememberDispatchState()
@@ -149,36 +255,62 @@ fun AppRoot(
         }
     }
 
-    // ✅ FCM 알림 클릭으로 들어온 경우 모달 띄우기
-    LaunchedEffect(intent) {
-        intent?.let {
-            if (it.getBooleanExtra("from_notification", false)) {
-                Log.d("AppRoot", "📲 Opened from FCM notification")
+    // ✅ 처리된 출동 ID 기억 (중복 처리 방지)
+    val processedDispatchId = remember { mutableStateOf<String?>(null) }
 
-                // Intent에서 출동 데이터 추출
-                val dispatchFromIntent = DispatchMessage(
-                    fireStateId = it.getStringExtra("fireStateId")?.toIntOrNull() ?: 0,
-                    paramedicId = it.getStringExtra("paramedicId")?.toIntOrNull() ?: 0,
-                    disasterNumber = it.getStringExtra("disasterNumber") ?: "UNKNOWN",
-                    disasterType = it.getStringExtra("disasterType") ?: "긴급출동",
-                    disasterSubtype = it.getStringExtra("disasterSubtype"),
-                    reporterName = it.getStringExtra("reporterName"),
-                    reporterPhone = it.getStringExtra("reporterPhone"),
-                    locationAddress = it.getStringExtra("locationAddress") ?: "위치 정보 없음",
-                    incidentDescription = it.getStringExtra("incidentDescription"),
-                    dispatchLevel = it.getStringExtra("dispatchLevel"),
-                    dispatchOrder = it.getStringExtra("dispatchOrder")?.toIntOrNull(),
-                    dispatchStation = it.getStringExtra("dispatchStation"),
-                    date = it.getStringExtra("date")
-                )
+    // ✅ 알림에서 받은 출동 데이터 처리 (로그인 완료 후)
+    LaunchedEffect(pendingDispatch, isLoggedIn) {
+        Log.d("AppRoot", "╔════════════════════════════════════════╗")
+        Log.d("AppRoot", "║   LaunchedEffect 실행됨!              ║")
+        Log.d("AppRoot", "╚════════════════════════════════════════╝")
+        Log.d("AppRoot", "📊 상태 체크:")
+        Log.d("AppRoot", "   - pendingDispatch: ${pendingDispatch != null}")
+        Log.d("AppRoot", "   - isLoggedIn: $isLoggedIn")
+        Log.d("AppRoot", "   - processedDispatchId: ${processedDispatchId.value}")
 
-                Log.d("AppRoot", "📩 Creating dispatch modal from notification: $dispatchFromIntent")
-                dispatchState.createDispatchFromWebSocket(dispatchFromIntent)
-
-                // Intent 플래그 제거 (다시 안 뜨도록)
-                it.removeExtra("from_notification")
+        // ⚠️ 로그인 상태가 아니면 처리하지 않음
+        if (!isLoggedIn) {
+            if (pendingDispatch != null) {
+                Log.d("AppRoot", "⏳⏳⏳ Pending dispatch exists but not logged in yet")
+                Log.d("AppRoot", "⏳⏳⏳ 로그인 완료되면 자동으로 처리됩니다")
+            } else {
+                Log.d("AppRoot", "ℹ️ 로그인 안됨 & 대기 중인 출동 없음")
             }
+            return@LaunchedEffect
         }
+
+        // ✅ 로그인 완료 + 대기 중인 출동이 있으면 모달 띄우기
+        if (pendingDispatch == null) {
+            Log.d("AppRoot", "ℹ️ 대기 중인 출동 없음")
+            return@LaunchedEffect
+        }
+
+        Log.d("AppRoot", "✅✅✅ 조건 충족! (로그인 완료 + 출동 데이터 있음)")
+
+        // 이미 처리한 출동인지 확인 (중복 방지)
+        if (processedDispatchId.value == pendingDispatch.disasterNumber) {
+            Log.d("AppRoot", "⚠️ 이미 처리한 출동입니다: ${pendingDispatch.disasterNumber}")
+            return@LaunchedEffect
+        }
+
+        Log.d("AppRoot", "╔════════════════════════════════════════╗")
+        Log.d("AppRoot", "║   🚨 알림 출동 처리 시작! 🚨           ║")
+        Log.d("AppRoot", "╚════════════════════════════════════════╝")
+        Log.d("AppRoot", "📦 출동 정보:")
+        Log.d("AppRoot", "  ✓ 재난번호: ${pendingDispatch.disasterNumber}")
+        Log.d("AppRoot", "  ✓ 위치: ${pendingDispatch.locationAddress}")
+        Log.d("AppRoot", "  ✓ 유형: ${pendingDispatch.disasterType}")
+
+        Log.d("AppRoot", "🎯 dispatchState.createDispatchFromWebSocket 호출 중...")
+        dispatchState.createDispatchFromWebSocket(pendingDispatch)
+
+        processedDispatchId.value = pendingDispatch.disasterNumber  // 처리 완료 표시
+
+        Log.d("AppRoot", "╔════════════════════════════════════════╗")
+        Log.d("AppRoot", "║   ✅ 모달 생성 완료! ✅                ║")
+        Log.d("AppRoot", "╚════════════════════════════════════════╝")
+        Log.d("AppRoot", "📌 dispatchState.showDispatchModal: ${dispatchState.showDispatchModal}")
+        Log.d("AppRoot", "📌 dispatchState.activeDispatch: ${dispatchState.activeDispatch}")
     }
 
     if (isLoggedIn) {

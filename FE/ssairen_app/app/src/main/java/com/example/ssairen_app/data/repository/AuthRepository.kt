@@ -61,14 +61,15 @@ class AuthRepository(
                 if (body.success && body.data != null) {
                     // ✅ 로그인 성공
                     Log.d(TAG, "✅ 로그인 성공!")
+                    Log.d(TAG, "User ID (PK): ${body.data.userId}")
+                    Log.d(TAG, "Username (학번): ${body.data.username}")
+                    Log.d(TAG, "Name: ${body.data.name}")
                     Log.d(TAG, "Access Token: ${body.data.accessToken.take(20)}...")
-                    // <--- 5. paramedic 객체 없이 LoginData에서 바로 name 접근
-                    Log.d(TAG, "Paramedic: ${body.data.name}")
 
                     // Access Token과 Refresh Token 모두 저장
                     authManager.saveLoginInfo(
-                        // <--- 6. LoginData에 정의한 username (또는 studentNumber) 필드 사용
-                        userId = body.data.username,
+                        // ✅ userId는 PK를 저장 (웹소켓 토픽 구독에 사용)
+                        userId = body.data.userId.toString(),
                         userName = body.data.name,
                         accessToken = body.data.accessToken,
                         refreshToken = body.data.refreshToken,

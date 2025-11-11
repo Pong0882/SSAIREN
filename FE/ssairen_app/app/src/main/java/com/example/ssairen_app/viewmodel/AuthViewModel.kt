@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.example.ssairen_app.data.api.RetrofitClient
 import com.example.ssairen_app.data.local.AuthManager
 import com.example.ssairen_app.data.repository.AuthRepository
 import com.example.ssairen_app.data.websocket.DispatchMessage
@@ -24,12 +25,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private const val TAG = "AuthViewModel"
-        private const val BASE_URL = "http://localhost:9090"  // WebSocket용 BASE_URL
     }
 
     init {
-        // WebSocketManager 초기화
-        WebSocketManager.init(BASE_URL)
+        // ✅ WebSocketManager 초기화 (RetrofitClient의 BASE_URL 사용)
+        WebSocketManager.init(RetrofitClient.BASE_URL)
+        Log.d(TAG, "🔌 WebSocket initialized with: ${RetrofitClient.BASE_URL}")
     }
 
     // 로그인 상태
@@ -54,11 +55,29 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         checkLoginStatus()
+        // ✅ 로그인 상태면 웹소켓 자동 연결
+        autoConnectWebSocketIfLoggedIn()
     }
 
     // DB에서 로그인 상태 확인
     fun checkLoginStatus() {
         _isLoggedIn.value = repository.isLoggedIn()
+    }
+
+    // ✅ 로그인 상태면 웹소켓 자동 연결
+    private fun autoConnectWebSocketIfLoggedIn() {
+        if (repository.isLoggedIn()) {
+            val accessToken = authManager.getAccessToken()
+            val userId = authManager.getSavedUserId()
+
+            if (accessToken != null && userId != null) {
+                Log.d(TAG, "🔄 Auto-connecting WebSocket for paramedic ID (PK): $userId")
+                Log.d(TAG, "🔌 Subscribing to topic: /topic/paramedic.$userId")
+                connectWebSocket(accessToken, userId.toLong())
+            } else {
+                Log.w(TAG, "⚠️ Cannot auto-connect WebSocket: missing token or userId")
+            }
+        }
     }
 
     // 로그인
@@ -78,6 +97,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 _isLoggedIn.value = true
 
                 // ✅ 로그인 성공 시 WebSocket 연결
+                Log.d(TAG, "🔌 Connecting WebSocket for paramedic ID (PK): ${loginData.userId}")
+                Log.d(TAG, "📡 Topic: /topic/paramedic.${loginData.userId}")
                 connectWebSocket(loginData.accessToken, loginData.userId.toLong())
             }.onFailure { error ->
                 _loginState.value = LoginState.Error(error.message ?: "로그인 실패")
