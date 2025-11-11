@@ -27,3 +27,36 @@ export interface TimeStatisticsParams {
   startDate: string;
   endDate: string;
 }
+
+// 환자 통계 응답
+export interface PatientStatisticsResponse {
+  byGender: Record<string, number>; // { "M": 120, "F": 95 }
+  byAgeGroup: Record<string, number>; // { "0-9": 5, "10-19": 12, "20-29": 25, ... }
+  byMentalStatus: Record<string, number>; // { "ALERT": 80, "VERBAL": 30, "PAIN": 15, "UNRESPONSIVE": 10 }
+  startDate: string;
+  endDate: string;
+  totalCount: number;
+}
+
+// 환자 통계 API 파라미터
+export interface PatientStatisticsParams {
+  hospitalId: number;
+  startDate: string;
+  endDate: string;
+}
+
+// 재난 유형별 통계 응답
+export interface DisasterTypeStatisticsResponse {
+  byDisasterType: Record<string, number>; // { "질병": 120, "교통사고": 95, "추락": 30, ... }
+  byDisasterSubtype: Record<string, number>; // { "심정지": 45, "뇌졸중": 75, ... }
+  startDate: string;
+  endDate: string;
+  totalCount: number;
+}
+
+// 재난 유형별 통계 API 파라미터
+export interface DisasterTypeStatisticsParams {
+  hospitalId: number;
+  startDate: string;
+  endDate: string;
+}
