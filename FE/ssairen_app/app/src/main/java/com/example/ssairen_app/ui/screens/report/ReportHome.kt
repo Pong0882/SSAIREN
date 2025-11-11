@@ -86,31 +86,8 @@ fun ReportHome(
 //        )
 //    }
 
-    if (dispatchState.showDispatchModal && dispatchState.activeDispatch != null) {
-        val dispatch = dispatchState.activeDispatch!!
-        DispatchDetail(
-            dispatchData = DispatchDetailData(
-                dispatchNumber = dispatch.id,
-                status = "실전/1차",
-                type = dispatch.type,
-                area = "관할구역",
-                location = dispatch.location,
-                reporter = "신고자명",
-                reporterPhone = "010-0000-0000",
-                dispatchTime = dispatch.date,
-                address = dispatch.location,
-                cause = "사고 원인 정보"
-            ),
-            onDismiss = {
-                dispatchState.closeDispatchModal()
-            },
-            onCreateNewReport = {
-                dispatchState.closeDispatchModal()
-                // ✅ 모달창의 emergencyReportId 사용 (23번으로 하드코딩됨)
-                onNavigateToActivityLog(dispatch.emergencyReportId, false)
-            }
-        )
-    }
+    // ✅ 출동 모달은 AppNavigation에서 전역으로 처리하므로 여기서는 제거
+    // (중복 모달 방지)
 
     Column(
         modifier = Modifier

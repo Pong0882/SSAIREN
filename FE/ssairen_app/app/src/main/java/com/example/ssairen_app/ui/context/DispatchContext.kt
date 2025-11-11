@@ -52,7 +52,7 @@ class DispatchState {
             date = currentDate,
             location = "서울특별시 강남구 테헤란로 212 거리 3.2km",
             isActive = true,
-            emergencyReportId = 23  // ✅ 23번으로 하드코딩
+            emergencyReportId = 0  // 새 일지 생성 필요 (0 = 미생성)
         )
 
         _activeDispatch = newDispatch
@@ -90,7 +90,8 @@ class DispatchState {
             type = typeString,                     // "화재 | 실전 - 고층건물"
             date = formattedDate,                  // "2025-11-09 09:16"
             location = message.locationAddress,    // 출동 위치
-            isActive = true
+            isActive = true,
+            emergencyReportId = 0  // 새 일지 생성 필요 (0 = 미생성)
         )
 
         _activeDispatch = newDispatch

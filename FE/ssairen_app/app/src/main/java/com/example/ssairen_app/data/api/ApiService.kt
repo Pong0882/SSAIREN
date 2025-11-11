@@ -44,12 +44,12 @@ interface ApiService {
     // 보고서 API
     // ==========================================
 
-    // ✅ 임시로 주석처리 - API 대신 모달창에서 직접 이동
-//    @POST("api/emergency-reports/{dispatch_id}")
-//    suspend fun createReport(
-//        @Path("dispatch_id") dispatchId: Int,
-//        @Header("Authorization") token: String
-//    ): Response<CreateReportResponse>
+    // 새 일지 등록 API
+    @POST("api/emergency-reports/{dispatch_id}")
+    suspend fun createReport(
+        @Path("dispatch_id") dispatchId: Int,
+        @Header("Authorization") token: String
+    ): Response<CreateReportResponse>
 
     @GET("api/emergency-reports/me")
     suspend fun getReports(

@@ -198,47 +198,46 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    // ✅ 임시로 주석처리 - API 대신 모달창에서 직접 이동
     /**
      * 새 일지 등록
      */
-//    fun createReport(dispatchId: Int) {
-//        viewModelScope.launch {
-//            Log.d(TAG, "📝 새 일지 생성 시작... (Dispatch ID: $dispatchId)")
-//
-//            // ✅ postValue 사용
-//            _createReportState.postValue(CreateReportState.Loading)
-//
-//            try {
-//                val result: Result<CreatedReportData> = withContext(Dispatchers.IO) {
-//                    repository.createReport(dispatchId)
-//                }
-//
-//                result.onSuccess { reportData: CreatedReportData ->
-//                    Log.d(TAG, "✅ 일지 생성 성공 - ID: ${reportData.emergencyReportId}")
-//
-//                    // ✅ postValue 사용
-//                    _createReportState.postValue(CreateReportState.Success(reportData))
-//                    _currentReportId.postValue(reportData.emergencyReportId)
-//
-//                }.onFailure { error: Throwable ->
-//                    Log.e(TAG, "❌ 일지 생성 실패: ${error.message}")
-//
-//                    // ✅ postValue 사용
-//                    _createReportState.postValue(
-//                        CreateReportState.Error(error.message ?: "일지 생성 실패")
-//                    )
-//                }
-//            } catch (e: Exception) {
-//                Log.e(TAG, "💥 일지 생성 예외", e)
-//
-//                // ✅ postValue 사용
-//                _createReportState.postValue(
-//                    CreateReportState.Error(e.message ?: "일지 생성 오류")
-//                )
-//            }
-//        }
-//    }
+    fun createReport(dispatchId: Int) {
+        viewModelScope.launch {
+            Log.d(TAG, "📝 새 일지 생성 시작... (Dispatch ID: $dispatchId)")
+
+            // ✅ postValue 사용
+            _createReportState.postValue(CreateReportState.Loading)
+
+            try {
+                val result: Result<CreatedReportData> = withContext(Dispatchers.IO) {
+                    repository.createReport(dispatchId)
+                }
+
+                result.onSuccess { reportData: CreatedReportData ->
+                    Log.d(TAG, "✅ 일지 생성 성공 - ID: ${reportData.emergencyReportId}")
+
+                    // ✅ postValue 사용
+                    _createReportState.postValue(CreateReportState.Success(reportData))
+                    _currentReportId.postValue(reportData.emergencyReportId)
+
+                }.onFailure { error: Throwable ->
+                    Log.e(TAG, "❌ 일지 생성 실패: ${error.message}")
+
+                    // ✅ postValue 사용
+                    _createReportState.postValue(
+                        CreateReportState.Error(error.message ?: "일지 생성 실패")
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 일지 생성 예외", e)
+
+                // ✅ postValue 사용
+                _createReportState.postValue(
+                    CreateReportState.Error(e.message ?: "일지 생성 오류")
+                )
+            }
+        }
+    }
 
     /**
      * 일지 생성 상태 초기화

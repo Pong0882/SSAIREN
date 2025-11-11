@@ -26,6 +26,78 @@ class ReportRepository(
     }
 
     // ==========================================
+    // 새 일지 등록
+    // ==========================================
+
+    /**
+     * 새 일지 등록
+     * POST /api/emergency-reports/{dispatch_id}
+     */
+    suspend fun createReport(dispatchId: Int): Result<CreatedReportData> {
+        return try {
+            Log.d(TAG, "=== 새 일지 등록 시작 ===")
+            Log.d(TAG, "📄 출동 ID: $dispatchId")
+
+            val token = authManager.getAccessToken()
+
+            if (token == null) {
+                Log.e(TAG, "❌ Access Token이 없습니다")
+                return Result.failure(Exception("로그인이 필요합니다"))
+            }
+
+            Log.d(TAG, "🔑 Access Token (앞 20자): ${token.take(20)}...")
+            Log.d(TAG, "API 호출 중...")
+
+            val response = api.createReport(dispatchId, "Bearer $token")
+
+            Log.d(TAG, "응답 코드: ${response.code()}")
+
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                Log.d(TAG, "응답 바디 success: ${body.success}")
+
+                if (body.success && body.data != null) {
+                    Log.d(TAG, "✅ 새 일지 등록 성공!")
+                    Log.d(TAG, "출동보고서 ID: ${body.data.emergencyReportId}")
+                    Log.d(TAG, "재난 번호: ${body.data.dispatchInfo.disasterNumber}")
+
+                    Result.success(body.data)
+                } else {
+                    val errorMessage = "새 일지 등록에 실패했습니다"
+                    Log.e(TAG, "❌ 새 일지 등록 실패: $errorMessage")
+                    Result.failure(Exception(errorMessage))
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "❌ HTTP 오류 - 코드: ${response.code()}")
+                Log.e(TAG, "에러 바디: $errorBody")
+
+                val errorMsg = when (response.code()) {
+                    400 -> "잘못된 출동 ID입니다"
+                    401 -> "인증이 만료되었습니다. 다시 로그인해주세요"
+                    403 -> "일지 등록 권한이 없습니다"
+                    404 -> "출동 정보를 찾을 수 없습니다"
+                    500 -> "서버 내부 오류가 발생했습니다"
+                    else -> "서버 오류: ${response.code()}"
+                }
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "💥 예외 발생!", e)
+
+            val errorMsg = when {
+                e.message?.contains("Unable to resolve host") == true ->
+                    "인터넷 연결을 확인해주세요"
+                e.message?.contains("timeout") == true ->
+                    "서버 응답 시간이 초과되었습니다"
+                else ->
+                    "네트워크 오류: ${e.message}"
+            }
+            Result.failure(Exception(errorMsg))
+        }
+    }
+
+    // ==========================================
     // 조회 메서드들 (기존 코드)
     // ==========================================
 
