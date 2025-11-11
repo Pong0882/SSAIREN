@@ -43,4 +43,5 @@ export interface FetchPatientsParams {
   page?: number;
   size?: number;
   status?: "ACCEPTED" | "COMPLETED" | "ALL";
+  dateRange?: "all" | "week" | "month";
 }

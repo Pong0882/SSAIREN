@@ -42,21 +42,21 @@ export async function fetchPatientsApi({
   page = 1,
   size = 10,
   status = 'ALL',
+  dateRange = 'all',
 }: FetchPatientsParams): Promise<FetchPatientsResult> {
   const params = new URLSearchParams({
     page: String(page - 1), // API가 0-based indexing을 사용한다고 가정
     size: String(size),
+    status: status.toLowerCase(), // "ALL" → "all"
+    dateRange: dateRange,
   });
-
-  if (status !== 'ALL') {
-    params.append('status', status);
-  }
 
   console.log('📤 API 요청:', {
     hospitalId,
     page: page - 1,
     size,
-    status,
+    status: status.toLowerCase(),
+    dateRange,
     url: `/api/hospitals/${hospitalId}/patients?${params}`,
   });
 

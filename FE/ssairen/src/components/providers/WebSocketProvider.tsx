@@ -1,6 +1,7 @@
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useHospitalWebSocket } from "@/features/patients/hooks/useHospitalWebSocket";
+import { getWebSocketClient } from "@/lib/websocketClient";
 import { Modal } from "@/components";
 import leftArrow from "@/assets/left-arrow.png";
 import rightArrow from "@/assets/right-arrow.png";
@@ -30,23 +31,22 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
   // 페이지 로드 시 LocalStorage에서 미처리 요청 복구
   useEffect(() => {
-    const savedRequests = localStorage.getItem(STORAGE_KEY);
-    if (savedRequests) {
-      try {
-        const parsed = JSON.parse(savedRequests);
-        if (parsed.length > 0) {
-          console.log("📦 LocalStorage에서 미처리 요청 복구:", parsed);
-          setRequestQueue(parsed);
-          setIsModalOpen(true);
-        }
-      } catch (error) {
-        console.error("❌ LocalStorage 복구 실패:", error);
-        localStorage.removeItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        console.log("📦 LocalStorage에서 미처리 요청 복구:", parsed);
+        setRequestQueue(parsed);
+        setIsModalOpen(true);
       }
+    } catch (e) {
+      console.error("❌ LocalStorage 복구 실패:", e);
+      localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
 
-  // requestQueue가 변경될 때마다 LocalStorage에 저장
+  // requestQueue 변경 시 LocalStorage 동기화
   useEffect(() => {
     if (requestQueue.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(requestQueue));
@@ -66,70 +66,142 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     }
   }, [isAuthenticated]);
 
+  // ✅ 공통: id로 현재 요청 제거 (타입과 무관하게 동일 id 모두 제거)
+  const removeById = useCallback(
+    (hospitalSelectionId: number | string) => {
+      setRequestQueue((prev) => {
+        const newQueue = prev.filter(
+          (r) => r.hospitalSelectionId !== hospitalSelectionId
+        );
+
+        if (newQueue.length === 0) {
+          // 큐가 비면 모달 닫기 및 상태 초기화
+          setIsModalOpen(false);
+          setCurrentIndex(0);
+          setIsExpanded(false);
+
+          // 테이블 갱신 이벤트
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("patientRequestHandled"));
+            console.log("✅ 테이블 새로고침 이벤트 발생 (큐 비움)");
+          }, 0);
+
+          return [];
+        }
+
+        // 현재 인덱스 보정
+        const newIndex = Math.min(currentIndex, newQueue.length - 1);
+        if (newIndex !== currentIndex) setCurrentIndex(newIndex);
+
+        // 상태 업데이트 후 테이블 갱신 이벤트
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("patientRequestHandled"));
+          console.log("✅ 테이블 새로고침 이벤트 발생");
+        }, 0);
+
+        return newQueue;
+      });
+    },
+    [currentIndex]
+  );
+
   // WebSocket으로 새로운 수용 요청 수신
+  // ✅ 자기 자신이 보낸 응답/알림은 무시 (origin 필드) + request 타입만 큐에 쌓기 + id 중복차단
   const handleNewRequest = useCallback((request: any) => {
-    console.log("🚨 [전역] 새로운 수용 요청 수신:", request);
+    console.log("🚨 [전역] WebSocket 메시지 수신:", request);
 
-    // 요청 배열에 추가 (늦게 온 요청이 뒤에 추가됨)
+    // 내가 방금 보낸 메시지는 무시
+    if (request?.origin === "hospital-web") {
+      console.log("↩️ 내가 보낸 메시지 무시(origin == hospital-web)");
+      return;
+    }
+
+    // type이 명시적으로 "request" 또는 "REQUEST"일 때만 큐에 쌓기
+    // response, notice 등은 무시 (type이 없는 경우도 무시)
+    const incomingType = request?.type?.toUpperCase();
+    if (incomingType !== "REQUEST") {
+      console.log("↩️ REQUEST 타입이 아니므로 무시 (type:", request?.type, ")");
+      return;
+    }
+
+    console.log("✅ 환자 수용 요청 → localStorage 큐에 추가");
+
     setRequestQueue((prev) => {
-      const isFirstRequest = prev.length === 0;
+      const isFirst = prev.length === 0;
 
-      // 이미 모달이 열려있는 상태에서 새 요청이 오면 토스트 표시
-      if (!isFirstRequest) {
+      // hospitalSelectionId 기준 중복 차단
+      const exists = prev.some(
+        (r) => r.hospitalSelectionId === request?.hospitalSelectionId
+      );
+      if (exists) {
+        console.log("↩️ 중복 요청 무시:", request?.hospitalSelectionId);
+        return prev;
+      }
+
+      if (!isFirst) {
         setShowToast(true);
-        // 3초 후 자동으로 토스트 숨김
         setTimeout(() => setShowToast(false), 3000);
       }
 
       return [...prev, request];
     });
+
     setIsModalOpen(true);
 
-    // 커스텀 이벤트 발생 - 다른 컴포넌트에서 리스닝 가능
+    // 커스텀 이벤트 발생
     window.dispatchEvent(
       new CustomEvent("newPatientRequest", { detail: request })
     );
 
-    // 브라우저 알림 표시
+    // 브라우저 알림
     if (Notification.permission === "granted") {
       new Notification("새로운 수용 요청", {
-        body: `환자 정보: ${request.patientInfo?.age}세 / ${request.patientInfo?.gender}`,
+        body: `환자 정보: ${request?.patientInfo?.age}세 / ${request?.patientInfo?.gender}`,
         icon: "/favicon.ico",
         badge: "/favicon.ico",
-        tag: "patient-request",
+        tag: `patient-request-${request?.hospitalSelectionId}`,
         requireInteraction: true,
       });
     }
   }, []);
 
-  // WebSocket으로 완료 알림 수신
-  const handleCompleted = useCallback((message: any) => {
-    console.log("❌ [전역] 요청 완료 알림 수신:", message);
-
-    // 해당 hospitalSelectionId를 가진 요청 삭제
-    setRequestQueue((prev) => {
-      const newQueue = prev.filter(
-        (req) => req.hospitalSelectionId !== message.hospitalSelectionId
+  // WebSocket으로 완료 알림 수신 (키 방어적으로 파싱 + id로 삭제)
+  const handleCompleted = useCallback(
+    (message: any) => {
+      const parsedId =
+        message?.hospitalSelectionId ?? message?.selectionId ?? message?.id;
+      console.log(
+        "❌ [전역] 요청 완료 알림 수신:",
+        message,
+        "→ parsedId:",
+        parsedId
       );
 
-      // 모든 요청이 삭제되면 모달 닫기
-      if (newQueue.length === 0) {
-        setIsModalOpen(false);
-        setCurrentIndex(0);
-        setIsExpanded(false);
-        return [];
-      }
+      if (parsedId == null) return;
 
-      // 현재 보던 요청이 삭제된 경우 인덱스 조정
-      if (currentIndex >= newQueue.length) {
-        setCurrentIndex(newQueue.length - 1);
-      }
+      setRequestQueue((prev) => {
+        const newQueue = prev.filter(
+          (req) => req.hospitalSelectionId !== parsedId
+        );
 
-      return newQueue;
-    });
-  }, [currentIndex]);
+        if (newQueue.length === 0) {
+          setIsModalOpen(false);
+          setCurrentIndex(0);
+          setIsExpanded(false);
+          return [];
+        }
 
-  // Hook은 항상 호출되어야 함 (조건문 밖에서)
+        if (currentIndex >= newQueue.length) {
+          setCurrentIndex(newQueue.length - 1);
+        }
+
+        return newQueue;
+      });
+    },
+    [currentIndex]
+  );
+
+  // Hook은 항상 호출되어야 함
   useHospitalWebSocket({
     onNewRequest: isAuthenticated ? handleNewRequest : undefined,
     onCompleted: isAuthenticated ? handleCompleted : undefined,
@@ -138,66 +210,70 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     },
   });
 
-  // 이전 요청으로 이동
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => Math.max(0, prev - 1));
-  };
-
-  // 다음 요청으로 이동
-  const handleNext = () => {
+  // 이전/다음
+  const handlePrevious = () => setCurrentIndex((prev) => Math.max(0, prev - 1));
+  const handleNext = () =>
     setCurrentIndex((prev) => Math.min(requestQueue.length - 1, prev + 1));
-  };
 
-  // 현재 요청 삭제
-  const handleCloseCurrentRequest = () => {
-    const newQueue = requestQueue.filter((_, index) => index !== currentIndex);
-
-    // 삭제 후 배열이 비었으면 모달 닫기
-    if (newQueue.length === 0) {
-      setIsModalOpen(false);
-      setCurrentIndex(0);
-      setRequestQueue([]);
-      // 모달이 닫힐 때 테이블 새로고침 이벤트 발생
-      window.dispatchEvent(new CustomEvent("patientRequestHandled"));
-      return;
-    }
-
-    // 마지막 요청을 삭제한 경우 인덱스 조정
-    if (currentIndex >= newQueue.length) {
-      setCurrentIndex(newQueue.length - 1);
-    }
-
-    setRequestQueue(newQueue);
-    // 요청 처리 시 테이블 새로고침 이벤트 발생
-    window.dispatchEvent(new CustomEvent("patientRequestHandled"));
-  };
-
-  // 모든 요청 닫기
+  // 전체 닫기
   const handleCloseAll = () => {
     setRequestQueue([]);
     setCurrentIndex(0);
     setIsModalOpen(false);
     setIsExpanded(false);
+
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("patientRequestHandled"));
+      console.log("✅ 테이블 새로고침 이벤트 발생 (전체 닫기)");
+    }, 0);
   };
 
-  // 수용가능 버튼 클릭
+  // 수용가능
   const handleAccept = async () => {
-    if (!currentRequest?.hospitalSelectionId) {
+    const id = currentRequest?.hospitalSelectionId;
+    if (!id) {
       console.error("❌ hospitalSelectionId가 없습니다.");
       return;
     }
 
     try {
-      console.log("✅ 수용가능 버튼 클릭:", currentRequest.hospitalSelectionId);
-
-      const result = await acceptPatientApi(currentRequest.hospitalSelectionId);
-
+      console.log("✅ 수용가능 버튼 클릭:", id);
+      const result = await acceptPatientApi(id);
       console.log("✅ 수용 성공:", result);
 
-      // 성공 시 현재 요청 삭제
-      handleCloseCurrentRequest();
+      if (currentRequest?.paramedicId) {
+        const wsClient = getWebSocketClient();
+        const { user } = useAuthStore.getState();
 
-      // 성공 알림 (선택적)
+        // 구급대원 채널로 응답 전송
+        const replyChannel = `/topic/paramedic.${currentRequest.paramedicId}`;
+
+        const responseMessage = {
+          type: "response",
+          status: "ACCEPTED",
+          hospitalSelectionId: id,
+          emergencyReportId: currentRequest.emergencyReportId,
+          hospitalName: user?.officialName || "병원",
+          origin: "hospital-web", // ✅ 내가 보낸 응답 표시
+        };
+
+        console.log("📤 수용 응답 WebSocket 전송 시작");
+        console.log("  → 구급대원 ID:", currentRequest.paramedicId);
+        console.log("  → 응답 채널:", replyChannel);
+        console.log("  → 메시지:", responseMessage);
+
+        wsClient.send(replyChannel, responseMessage);
+
+        console.log("✅ 구급대원 채널로 WebSocket 전송 완료!");
+      } else {
+        console.warn(
+          "⚠️ paramedicId가 없어서 WebSocket 응답을 보낼 수 없습니다!"
+        );
+        console.warn("  → currentRequest:", currentRequest);
+      }
+
+      removeById(id);
+
       if (Notification.permission === "granted") {
         new Notification("수용 완료", {
           body: "환자 수용이 완료되었습니다.",
@@ -210,24 +286,40 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     }
   };
 
-  // 거절 버튼 클릭
+  // 거절
   const handleReject = async () => {
-    if (!currentRequest?.hospitalSelectionId) {
+    const id = currentRequest?.hospitalSelectionId;
+    if (!id) {
       console.error("❌ hospitalSelectionId가 없습니다.");
       return;
     }
 
     try {
-      console.log("❌ 거절 버튼 클릭:", currentRequest.hospitalSelectionId);
-
-      const result = await rejectPatientApi(currentRequest.hospitalSelectionId);
-
+      console.log("❌ 거절 버튼 클릭:", id);
+      const result = await rejectPatientApi(id);
       console.log("❌ 거절 성공:", result);
 
-      // 성공 시 현재 요청 삭제
-      handleCloseCurrentRequest();
+      if (currentRequest?.paramedicId) {
+        const wsClient = getWebSocketClient();
+        const { user } = useAuthStore.getState();
 
-      // 성공 알림 (선택적)
+        const replyChannel = `/topic/paramedic.${currentRequest.paramedicId}`;
+
+        const responseMessage = {
+          type: "response",
+          status: "REJECTED",
+          hospitalSelectionId: id,
+          emergencyReportId: currentRequest.emergencyReportId,
+          hospitalName: user?.officialName || "병원",
+          origin: "hospital-web",
+        };
+
+        console.log("📤 거절 응답 WebSocket 전송:", replyChannel);
+        wsClient.send(replyChannel, responseMessage);
+      }
+
+      removeById(id);
+
       if (Notification.permission === "granted") {
         new Notification("거절 완료", {
           body: "환자 거절이 완료되었습니다.",
@@ -240,24 +332,35 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     }
   };
 
-  // 전화요망 버튼 클릭
+  // 전화요망
   const handleCallRequest = async () => {
-    if (!currentRequest?.hospitalSelectionId) {
+    const id = currentRequest?.hospitalSelectionId;
+    if (!id) {
       console.error("❌ hospitalSelectionId가 없습니다.");
       return;
     }
 
     try {
-      console.log("📞 전화요망 버튼 클릭:", currentRequest.hospitalSelectionId);
-
-      const result = await callRequestApi(currentRequest.hospitalSelectionId);
-
+      console.log("📞 전화요망 버튼 클릭:", id);
+      const result = await callRequestApi(id);
       console.log("📞 전화요망 성공:", result);
 
-      // 성공 시 현재 요청 삭제
-      handleCloseCurrentRequest();
+      if (currentRequest?.sourceDestination) {
+        const wsClient = getWebSocketClient();
+        const { user } = useAuthStore.getState();
 
-      // 성공 알림 (선택적)
+        wsClient.send(currentRequest.sourceDestination, {
+          type: "response",
+          status: "CALL_REQUESTED",
+          hospitalSelectionId: id,
+          emergencyReportId: currentRequest.emergencyReportId,
+          hospitalName: user?.officialName || "병원",
+          origin: "hospital-web", // ✅ 내가 보낸 응답 표시
+        });
+      }
+
+      removeById(id);
+
       if (Notification.permission === "granted") {
         new Notification("전화요망 완료", {
           body: "전화 요청이 완료되었습니다.",
@@ -293,7 +396,9 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
                 d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
               />
             </svg>
-            <span className="font-semibold text-lg">새로운 수용 요청이 도착했습니다!</span>
+            <span className="font-semibold text-lg">
+              새로운 수용 요청이 도착했습니다!
+            </span>
           </div>
         </div>
       )}
@@ -334,7 +439,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
             {currentRequest && (
               <>
-                {/* 기본 정보 (항상 표시) */}
+                {/* 기본 정보 */}
                 <div className="space-y-2">
                   {/* 성별, 나이 */}
                   <div className="grid grid-cols-2 gap-2">
@@ -363,7 +468,10 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
                         시간 <span className="text-danger-500">*</span>
                       </label>
                       <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
-                        {currentRequest.patientInfo?.recordTime?.replace("T", " ") || "-"}
+                        {currentRequest.patientInfo?.recordTime?.replace(
+                          "T",
+                          " "
+                        ) || "-"}
                       </div>
                     </div>
                     <div>
@@ -415,7 +523,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
                 {/* 펼쳐졌을 때 추가 정보 */}
                 {isExpanded && (
                   <div className="space-y-2 border-t border-neutral-200 pt-3 my-5 relative">
-                    {/* 접기 버튼을 구분선 위에 배치 */}
+                    {/* 접기 버튼 */}
                     <button
                       onClick={() => setIsExpanded(false)}
                       className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-neutral-200 hover:bg-neutral-300 transition-colors"
@@ -510,7 +618,12 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
                           발병 시간 <span className="text-danger-500">*</span>
                         </label>
                         <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
-                          {currentRequest.patientInfo?.onsetTime?.replace("T", " ") || currentRequest.patientInfo?.onsetTime || "-"}
+                          {currentRequest.patientInfo?.onsetTime?.replace(
+                            "T",
+                            " "
+                          ) ||
+                            currentRequest.patientInfo?.onsetTime ||
+                            "-"}
                         </div>
                       </div>
                       <div>
@@ -518,7 +631,9 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
                           LNT <span className="text-danger-500">*</span>
                         </label>
                         <div className="bg-neutral-100 px-3 py-1.5 rounded text-sm text-neutral-800">
-                          {currentRequest.patientInfo?.lnt?.replace("T", " ") || currentRequest.patientInfo?.lnt || "-"}
+                          {currentRequest.patientInfo?.lnt?.replace("T", " ") ||
+                            currentRequest.patientInfo?.lnt ||
+                            "-"}
                         </div>
                       </div>
                     </div>

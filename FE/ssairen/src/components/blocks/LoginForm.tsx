@@ -22,9 +22,12 @@ export default function LoginForm({
   return (
     <div className="space-y-6">
       {/* 타이틀 */}
-      <h1 className="text-3xl font-bold text-center text-blue-500">
-        로그인
-      </h1>
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold text-gray-900">
+          환자 관리 시스템
+        </h1>
+        <p className="text-sm text-gray-500">병원 계정으로 로그인하세요</p>
+      </div>
 
       {/* 로그인 폼 */}
       <form onSubmit={onSubmit} className="space-y-4">
@@ -44,7 +47,7 @@ export default function LoginForm({
           fullWidth
           required
           disabled={isLoading}
-          className="bg-white text-gray-900 placeholder:text-gray-400"
+          className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
         />
 
         {/* PW 입력 */}
@@ -56,7 +59,7 @@ export default function LoginForm({
           fullWidth
           required
           disabled={isLoading}
-          className="bg-white text-gray-900 placeholder:text-gray-400"
+          className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
         />
 
         {/* 로그인 버튼 */}
@@ -75,7 +78,7 @@ export default function LoginForm({
             <button
               type="button"
               onClick={onForgotPassword}
-              className="text-sm text-neutral-400 hover:text-neutral-200 transition-colors"
+              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
             >
               비밀번호 찾기
             </button>

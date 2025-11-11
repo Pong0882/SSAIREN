@@ -50,7 +50,7 @@ export class WebSocketClient {
    */
   subscribe<T = any>(
     destination: string,
-    callback: (message: T) => void
+    callback: (message: T, source: string) => void
   ): string | null {
     if (!this.client?.connected) {
       console.error('❌ WebSocket이 연결되지 않았습니다.');
@@ -66,8 +66,9 @@ export class WebSocketClient {
     const subscription = this.client.subscribe(destination, (message) => {
       try {
         const parsedMessage = JSON.parse(message.body);
-        console.log(`📩 메시지 수신 [${destination}]:`, parsedMessage);
-        callback(parsedMessage);
+        const sourceDestination = message.headers.destination || destination;
+        console.log(`📩 메시지 수신 [${sourceDestination}]:`, parsedMessage);
+        callback(parsedMessage, sourceDestination);
       } catch (error) {
         console.error('❌ 메시지 파싱 에러:', error);
       }
