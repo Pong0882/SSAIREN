@@ -321,7 +321,7 @@ def extract_structured_information(
                 }
             ],
             response_format={"type": "json_object"},  # JSON 모드 강제
-            temperature=0.1,  # 매우 낮은 temperature로 정확한 추출
+            temperature=0.05,  # 매우 낮은 temperature로 정확한 추출
             max_tokens=3000
         )
         
@@ -385,6 +385,52 @@ def remove_empty_fields(data: Any) -> Any:
         ]
     else:
         return data
+
+
+# ============================================================
+# 화자 분리 및 대화 포맷팅 헬퍼 함수
+# ============================================================
+
+def format_conversation_for_llm(segments: List[STTSegment]) -> str:
+    """
+    화자별 세그먼트를 대화 형식으로 변환
+    
+    Args:
+        segments: STT 세그먼트 리스트
+        
+    Returns:
+        "[화자 A]: 텍스트\n[화자 B]: 텍스트" 형식의 대화 문자열
+    """
+    conversation_lines = []
+    for seg in segments:
+        speaker = seg.speaker or "Unknown"
+        text = seg.text.strip()
+        if text:  # 빈 텍스트 제외
+            conversation_lines.append(f"[화자 {speaker}]: {text}")
+    
+    return "\n".join(conversation_lines)
+
+
+def parse_segments_by_speaker(segments: List[STTSegment]) -> Dict[str, List[str]]:
+    """
+    화자별로 발화 텍스트를 그룹화
+    
+    Args:
+        segments: STT 세그먼트 리스트
+        
+    Returns:
+        {speaker: [text1, text2, ...]} 형식의 딕셔너리
+    """
+    speaker_groups = {}
+    for seg in segments:
+        speaker = seg.speaker or "Unknown"
+        text = seg.text.strip()
+        if text:
+            if speaker not in speaker_groups:
+                speaker_groups[speaker] = []
+            speaker_groups[speaker].append(text)
+    
+    return speaker_groups
 
 
 # ============================================================
