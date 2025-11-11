@@ -2,7 +2,7 @@
 LLM 기반 STT 정제 결과물 스키마 정의
 
 이 파일은 8개의 주요 카테고리로 구성된 응급 환자 정보 스키마를 정의합니다.
-GPT-4.1 모델이 STT 결과물을 정제하여 생성하는 JSON 형식의 Pydantic 모델입니다.
+GPT-5 모델이 STT 결과물을 정제하여 생성하는 JSON 형식의 Pydantic 모델입니다.
 """
 
 from pydantic import BaseModel, Field
