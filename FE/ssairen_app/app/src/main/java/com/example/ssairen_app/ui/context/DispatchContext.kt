@@ -14,7 +14,8 @@ data class DispatchItem(
     val type: String,
     val date: String,
     val location: String,
-    val isActive: Boolean = false
+    val isActive: Boolean = false,
+    val emergencyReportId: Int = 0  // ✅ 출동보고서 ID 추가
 )
 
 // ==========================================
@@ -50,7 +51,8 @@ class DispatchState {
             type = "구급출동 | 긴급",
             date = currentDate,
             location = "서울특별시 강남구 테헤란로 212 거리 3.2km",
-            isActive = true
+            isActive = true,
+            emergencyReportId = 0  // 새 일지 생성 필요 (0 = 미생성)
         )
 
         _activeDispatch = newDispatch
@@ -88,7 +90,8 @@ class DispatchState {
             type = typeString,                     // "화재 | 실전 - 고층건물"
             date = formattedDate,                  // "2025-11-09 09:16"
             location = message.locationAddress,    // 출동 위치
-            isActive = true
+            isActive = true,
+            emergencyReportId = 0  // 새 일지 생성 필요 (0 = 미생성)
         )
 
         _activeDispatch = newDispatch

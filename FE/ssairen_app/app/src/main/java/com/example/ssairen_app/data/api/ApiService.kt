@@ -7,9 +7,13 @@ import com.example.ssairen_app.data.model.response.LoginResponse
 import com.example.ssairen_app.data.model.response.CreateReportResponse
 import com.example.ssairen_app.data.model.response.ReportListResponse
 import com.example.ssairen_app.data.model.response.PatientInfoResponse
-//import com.example.ssairen_app.data.model.response.PatientTypeResponse
-//import com.example.ssairen_app.data.model.response.FirstAidResponse
-//import com.example.ssairen_app.data.model.response.PatientEvaResponse
+import com.example.ssairen_app.data.model.response.PatientTypeResponse
+import com.example.ssairen_app.data.model.response.PatientEvaResponse
+import com.example.ssairen_app.data.model.response.FirstAidResponse
+import com.example.ssairen_app.data.model.request.PatientInfoRequest
+import com.example.ssairen_app.data.model.request.PatientTypeRequest
+import com.example.ssairen_app.data.model.request.PatientEvaRequest
+import com.example.ssairen_app.data.model.request.FirstAidRequest
 
 import retrofit2.Response
 import retrofit2.http.*
@@ -40,6 +44,7 @@ interface ApiService {
     // 보고서 API
     // ==========================================
 
+    // 새 일지 등록 API
     @POST("api/emergency-reports/{dispatch_id}")
     suspend fun createReport(
         @Path("dispatch_id") dispatchId: Int,
@@ -64,21 +69,52 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<PatientInfoResponse>
 
-//    // 환자발생유형
-//    @GET("api/emergency-reports/{emergencyReportId}/sections/INCIDENT_TYPE")
-//    suspend fun getPatientType(
-//        @Path("emergencyReportId") emergencyReportId: Int
-//    ): Response<PatientTypeResponse>
+    // 환자발생유형
+    @GET("api/emergency-reports/{emergencyReportId}/sections/INCIDENT_TYPE")
+    suspend fun getPatientType(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String
+    ): Response<PatientTypeResponse>
 //
-//    // 환자평가
-//    @GET("api/emergency-reports/{emergencyReportId}/sections/ASSESSMENT")
-//    suspend fun getPatientEva(
-//        @Path("emergencyReportId") emergencyReportId: Int
-//    ): Response<PatientEvaResponse>
+    // 환자평가
+    @GET("api/emergency-reports/{id}/sections/ASSESSMENT")
+    suspend fun getPatientEva(
+        @Path("id") emergencyReportId: Int,
+        @Header("Authorization") token: String  // ✅ Bearer 토큰 헤더 추가
+    ): Response<PatientEvaResponse>
 //
-//    // 응급처치
-//    @GET("api/emergency-reports/{emergencyReportId}/sections/TREATMENT")
-//    suspend fun getFirstAid(
-//        @Path("emergencyReportId") emergencyReportId: Int
-//    ): Response<FirstAidResponse>
+    // 응급처치
+    @GET("api/emergency-reports/{emergencyReportId}/sections/TREATMENT")
+    suspend fun getFirstAid(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String
+    ): Response<FirstAidResponse>
+
+    @PATCH("api/emergency-reports/{emergencyReportId}/sections/PATIENT_INFO")
+    suspend fun updatePatientInfo(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String,
+        @Body request: PatientInfoRequest
+    ): Response<PatientInfoResponse>
+
+    @PATCH("api/emergency-reports/{emergencyReportId}/sections/INCIDENT_TYPE")
+    suspend fun updatePatientType(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String,
+        @Body request: PatientTypeRequest
+    ): Response<PatientTypeResponse>
+
+    @PATCH("api/emergency-reports/{emergencyReportId}/sections/ASSESSMENT")
+    suspend fun updatePatientEva(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String,
+        @Body request: PatientEvaRequest
+    ): Response<PatientEvaResponse>
+
+    @PATCH("api/emergency-reports/{emergencyReportId}/sections/TREATMENT")
+    suspend fun updateFirstAid(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String,
+        @Body request: FirstAidRequest
+    ): Response<FirstAidResponse>
 }

@@ -14,6 +14,9 @@ data class PatientEvaResponse(
     @SerializedName("data")
     val data: PatientEvaSectionData,
 
+    @SerializedName("message")
+    val message: String?,
+
     @SerializedName("timestamp")
     val timestamp: String
 )
@@ -42,8 +45,8 @@ data class PatientEvaDataWrapper(
     @SerializedName("schemaVersion")
     val schemaVersion: Int,
 
-    @SerializedName("patientAssessment")
-    val patientAssessment: PatientAssessmentData
+    @SerializedName("assessment")  // ✅ patientAssessment → assessment로 수정
+    val assessment: PatientAssessmentData
 )
 
 data class PatientAssessmentData(
@@ -59,14 +62,26 @@ data class PatientAssessmentData(
     @SerializedName("patientLevel")
     val patientLevel: String?,  // "LEVEL1", "LEVEL2", "LEVEL3"
 
-    @SerializedName("notes")
-    val notes: String?,
+    @SerializedName("notes")  // ✅ 객체 구조로 수정
+    val notes: NotesData?,
 
     @SerializedName("createdAt")
     val createdAt: String?,
 
     @SerializedName("updatedAt")
     val updatedAt: String?
+)
+
+// ✅ Notes 객체 추가
+data class NotesData(
+    @SerializedName("note")
+    val note: String?,
+
+    @SerializedName("onset")
+    val onset: String?,  // 발병 시각
+
+    @SerializedName("cheifComplaint")
+    val cheifComplaint: String?  // 주 호소 (오타는 API 그대로 유지)
 )
 
 data class ConsciousnessData(

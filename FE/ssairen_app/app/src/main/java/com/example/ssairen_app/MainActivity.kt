@@ -37,9 +37,13 @@ import com.example.ssairen_app.ui.screens.emergencyact.ActivityLogHome
 import com.example.ssairen_app.ui.screens.Summation
 import com.example.ssairen_app.ui.screens.Login  // ⭐ 추가
 import com.example.ssairen_app.viewmodel.AuthViewModel  // ⭐ 추가
+import com.example.ssairen_app.viewmodel.ReportViewModel  // ⭐ 새 일지 등록용
+import com.example.ssairen_app.viewmodel.CreateReportState  // ⭐ 일지 생성 상태
 import com.example.ssairen_app.data.api.RetrofitClient  // ⭐ 바디캠 업로드용
 import com.example.ssairen_app.ui.components.DispatchModal  // ⭐ 모달 추가
 import com.example.ssairen_app.ui.components.HospitalResponseModal  // ⭐ 병원 응답 모달 추가
+import com.example.ssairen_app.ui.screens.report.DispatchDetail  // ⭐ 출동 상세 모달
+import com.example.ssairen_app.ui.screens.report.DispatchDetailData  // ⭐ 출동 상세 데이터
 import com.example.ssairen_app.service.MyFirebaseMessagingService  // ⭐ FCM 서비스
 
 class MainActivity : ComponentActivity() {
@@ -85,6 +89,7 @@ class MainActivity : ComponentActivity() {
         Log.d(TAG, "📱 pendingDispatchFromNotification: ${pendingDispatchFromNotification != null}")
 
         setContent {
+            // 실제 출동지령(FCM/WebSocket)만 모달 표시
             DispatchProvider(autoCreateDispatch = false) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -369,22 +374,53 @@ fun AppNavigation(
     // ✅ DispatchContext 가져오기
     val dispatchState = rememberDispatchState()
 
-    // ✅ 출동 모달 표시
-    if (dispatchState.showDispatchModal && dispatchState.activeDispatch != null) {
-        DispatchModal(
-            dispatch = dispatchState.activeDispatch!!,
-            onAccept = {
-                // 출동 수락 처리
-                Log.d("MainActivity", "✅ 출동 수락: ${dispatchState.activeDispatch?.id}")
-                dispatchState.closeDispatchModal()
+    // ✅ ReportViewModel 가져오기
+    val reportViewModel: ReportViewModel = viewModel()
+    val createReportState by reportViewModel.createReportState.observeAsState(CreateReportState.Idle)
 
-                // TODO: 출동 수락 후 액티비티 화면으로 이동
-                navController.navigate("activity_main")
-            },
+    // ✅ 일지 생성 성공 시 화면 이동
+    LaunchedEffect(createReportState) {
+        if (createReportState is CreateReportState.Success) {
+            val emergencyReportId = (createReportState as CreateReportState.Success).reportData.emergencyReportId
+            Log.d("MainActivity", "✅ 일지 생성 완료, 화면 이동: emergencyReportId=$emergencyReportId")
+            navController.navigate("activity_log/$emergencyReportId/0?isReadOnly=false")
+            reportViewModel.resetCreateState()
+        }
+    }
+
+    // ✅ 출동 모달 표시 (전역으로 모든 화면에서 표시)
+    if (dispatchState.showDispatchModal && dispatchState.activeDispatch != null) {
+        val dispatch = dispatchState.activeDispatch!!
+        DispatchDetail(
+            dispatchData = DispatchDetailData(
+                dispatchNumber = dispatch.id,
+                status = "실전/1차",
+                type = dispatch.type,
+                area = "관할구역",
+                location = dispatch.location,
+                reporter = "신고자명",
+                reporterPhone = "010-0000-0000",
+                dispatchTime = dispatch.date,
+                address = dispatch.location,
+                cause = "사고 원인 정보"
+            ),
             onDismiss = {
-                // 모달 닫기
                 Log.d("MainActivity", "❌ 출동 모달 닫기")
                 dispatchState.closeDispatchModal()
+            },
+            onCreateNewReport = {
+                // 새 일지 등록 API 호출
+                Log.d("MainActivity", "✅ 새 일지 등록 요청: dispatch.id=${dispatch.id}")
+
+                // dispatch.id를 Int로 변환 (disasterNumber는 String)
+                val dispatchId = dispatch.id.toIntOrNull()
+                if (dispatchId != null) {
+                    dispatchState.closeDispatchModal()
+                    reportViewModel.createReport(dispatchId)
+                } else {
+                    Log.e("MainActivity", "❌ dispatch.id를 Int로 변환 실패: ${dispatch.id}")
+                    // TODO: 에러 메시지 표시
+                }
             }
         )
     }
@@ -410,8 +446,8 @@ fun AppNavigation(
     ) {
         composable("report_home") {
             ReportHome(
-                onNavigateToActivityLog = {
-                    navController.navigate("activity_log/0")
+                onNavigateToActivityLog = { emergencyReportId, isReadOnly ->
+                    navController.navigate("activity_log/$emergencyReportId/0?isReadOnly=$isReadOnly")
                 },
                 onLogout = onLogout  // ✅ 로그아웃 연결
             )
@@ -420,48 +456,74 @@ fun AppNavigation(
         composable("activity_main") {
             ActivityMain(
                 onNavigateToActivityLog = {
-                    navController.navigate("activity_log/0")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/0")
                 },
                 onNavigateToPatientInfo = {
-                    navController.navigate("activity_log/0")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/0")
                 },
                 onNavigateToPatientType = {
-                    navController.navigate("activity_log/2")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/2")
                 },
                 onNavigateToPatientEva = {
-                    navController.navigate("activity_log/3")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/3")
                 },
                 onNavigateToFirstAid = {
-                    navController.navigate("activity_log/4")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/4")
                 },
                 onNavigateToDispatch = {
-                    navController.navigate("activity_log/1")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/1")
                 },
                 onNavigateToMedicalGuidance = {
-                    navController.navigate("activity_log/5")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/5")
                 },
                 onNavigateToPatientTransport = {
-                    navController.navigate("activity_log/6")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/6")
                 },
                 onNavigateToReportDetail = {
-                    navController.navigate("activity_log/7")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/7")
                 }
             )
         }
 
         composable(
-            route = "activity_log/{tab}",
-            arguments = listOf(navArgument("tab") { defaultValue = 0 })
+            route = "activity_log/{emergencyReportId}/{tab}?isReadOnly={isReadOnly}",
+            arguments = listOf(
+                navArgument("emergencyReportId") { defaultValue = 0 },
+                navArgument("tab") { defaultValue = 0 },
+                navArgument("isReadOnly") { defaultValue = false }
+            )
         ) { backStackEntry ->
+            val emergencyReportId = backStackEntry.arguments?.getInt("emergencyReportId") ?: 0
             val tabIndex = backStackEntry.arguments?.getInt("tab") ?: 0
+            val isReadOnly = backStackEntry.arguments?.getBoolean("isReadOnly") ?: false
             ActivityLogHome(
+                emergencyReportId = emergencyReportId,
                 initialTab = tabIndex,
+                isReadOnly = isReadOnly,
                 onNavigateBack = {
                     navController.popBackStack()
                 },
                 onNavigateToHome = {
                     navController.navigate("activity_main") {
-                        popUpTo("activity_log/{tab}") { inclusive = true }
+                        popUpTo("activity_log/{emergencyReportId}/{tab}?isReadOnly={isReadOnly}") { inclusive = true }
                     }
                 },
                 onNavigateToSummation = {
@@ -481,7 +543,7 @@ fun AppNavigation(
                     }
                 },
                 onNavigateToActivityLog = {
-                    navController.navigate("activity_log/0")
+                    navController.navigate("activity_log/0/0")
                 }
             )
         }
