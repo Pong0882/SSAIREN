@@ -9,6 +9,27 @@ services:
       - ./config/.env
     environment:
       - TZ=Asia/Seoul
+      # PyTorch 스레드 제한 (4코어 CPU 환경 최적화)
+      - OMP_NUM_THREADS=2
+      - MKL_NUM_THREADS=2
+      - OPENBLAS_NUM_THREADS=2
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+    # 리소스 제한 (6GB RAM, 4코어 CPU 환경)
+    deploy:
+      resources:
+        limits:
+          cpus: '3'           # 4코어 중 3코어 할당 (1코어는 시스템용)
+          memory: 5G          # 6GB 중 5GB 할당 (안전 마진)
+        reservations:
+          cpus: '1'           # 최소 1코어 보장
+          memory: 2G          # 최소 2GB 보장
+    # 메모리 스왑 비활성화
+    mem_swappiness: 0
+    # OOM 방지
+    oom_kill_disable: false
     networks:
       - ssairen-net
     healthcheck:
