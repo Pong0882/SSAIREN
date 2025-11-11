@@ -270,4 +270,146 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime
     );
+
+    // ===== 환자 통계 관련 쿼리 =====
+
+    /**
+     * 성별별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     *
+     * @param hospitalId 병원 ID
+     * @param startDateTime 시작 날짜
+     * @param endDateTime 종료 날짜
+     * @return 성별별 건수 (M, F)
+     */
+    @Query(value = "SELECT pi.gender, COUNT(*) " +
+            "FROM hospital_selection hs " +
+            "INNER JOIN emergency_reports er ON hs.emergency_report_id = er.id " +
+            "INNER JOIN patient_info pi ON er.id = pi.emergency_report_id " +
+            "WHERE hs.hospital_id = :hospitalId " +
+            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.response_at >= :startDateTime " +
+            "AND hs.response_at < :endDateTime " +
+            "GROUP BY pi.gender",
+            nativeQuery = true)
+    List<Object[]> countByGender(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    /**
+     * 연령대별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     * 10년 단위: 0-9, 10-19, 20-29, ..., 80+
+     *
+     * @param hospitalId 병원 ID
+     * @param startDateTime 시작 날짜
+     * @param endDateTime 종료 날짜
+     * @return 연령대별 건수
+     */
+    @Query(value = "SELECT " +
+            "  CASE " +
+            "    WHEN pi.age < 10 THEN '0-9' " +
+            "    WHEN pi.age < 20 THEN '10-19' " +
+            "    WHEN pi.age < 30 THEN '20-29' " +
+            "    WHEN pi.age < 40 THEN '30-39' " +
+            "    WHEN pi.age < 50 THEN '40-49' " +
+            "    WHEN pi.age < 60 THEN '50-59' " +
+            "    WHEN pi.age < 70 THEN '60-69' " +
+            "    WHEN pi.age < 80 THEN '70-79' " +
+            "    ELSE '80+' " +
+            "  END AS age_group, " +
+            "  COUNT(*) " +
+            "FROM hospital_selection hs " +
+            "INNER JOIN emergency_reports er ON hs.emergency_report_id = er.id " +
+            "INNER JOIN patient_info pi ON er.id = pi.emergency_report_id " +
+            "WHERE hs.hospital_id = :hospitalId " +
+            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.response_at >= :startDateTime " +
+            "AND hs.response_at < :endDateTime " +
+            "GROUP BY age_group " +
+            "ORDER BY age_group",
+            nativeQuery = true)
+    List<Object[]> countByAgeGroup(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    /**
+     * 의식 상태별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     *
+     * @param hospitalId 병원 ID
+     * @param startDateTime 시작 날짜
+     * @param endDateTime 종료 날짜
+     * @return 의식 상태별 건수 (ALERT, VERBAL, PAIN, UNRESPONSIVE)
+     */
+    @Query(value = "SELECT pi.mental_status, COUNT(*) " +
+            "FROM hospital_selection hs " +
+            "INNER JOIN emergency_reports er ON hs.emergency_report_id = er.id " +
+            "INNER JOIN patient_info pi ON er.id = pi.emergency_report_id " +
+            "WHERE hs.hospital_id = :hospitalId " +
+            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.response_at >= :startDateTime " +
+            "AND hs.response_at < :endDateTime " +
+            "GROUP BY pi.mental_status",
+            nativeQuery = true)
+    List<Object[]> countByMentalStatus(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    // ===== 재난 유형 통계 관련 쿼리 =====
+
+    /**
+     * 재난 유형별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     *
+     * @param hospitalId 병원 ID
+     * @param startDateTime 시작 날짜
+     * @param endDateTime 종료 날짜
+     * @return 재난 유형별 건수
+     */
+    @Query(value = "SELECT d.disaster_type, COUNT(*) " +
+            "FROM hospital_selection hs " +
+            "INNER JOIN emergency_reports er ON hs.emergency_report_id = er.id " +
+            "INNER JOIN dispatches d ON er.dispatches_id = d.id " +
+            "WHERE hs.hospital_id = :hospitalId " +
+            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.response_at >= :startDateTime " +
+            "AND hs.response_at < :endDateTime " +
+            "AND d.disaster_type IS NOT NULL " +
+            "GROUP BY d.disaster_type " +
+            "ORDER BY COUNT(*) DESC",
+            nativeQuery = true)
+    List<Object[]> countByDisasterType(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    /**
+     * 재난 세부 유형별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     *
+     * @param hospitalId 병원 ID
+     * @param startDateTime 시작 날짜
+     * @param endDateTime 종료 날짜
+     * @return 재난 세부 유형별 건수
+     */
+    @Query(value = "SELECT d.disaster_subtype, COUNT(*) " +
+            "FROM hospital_selection hs " +
+            "INNER JOIN emergency_reports er ON hs.emergency_report_id = er.id " +
+            "INNER JOIN dispatches d ON er.dispatches_id = d.id " +
+            "WHERE hs.hospital_id = :hospitalId " +
+            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.response_at >= :startDateTime " +
+            "AND hs.response_at < :endDateTime " +
+            "AND d.disaster_subtype IS NOT NULL " +
+            "GROUP BY d.disaster_subtype " +
+            "ORDER BY COUNT(*) DESC",
+            nativeQuery = true)
+    List<Object[]> countByDisasterSubtype(
+            @Param("hospitalId") Integer hospitalId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
 }
