@@ -29,7 +29,7 @@ async def process_conversation(request: ConversationRequest):
     
     전체 프로세스:
     1. 대본(텍스트) 입력
-    2. GPT-5로 정제 및 응급 정보 추출
+    2. GPT-4o로 정제 및 응급 정보 추출
     3. 구조화된 JSON 반환
     
     Args:
@@ -123,7 +123,7 @@ async def process_conversation(request: ConversationRequest):
         
         print(f"[통합 API] 대본 처리 시작 (길이: {len(request.conversation)}자)")
         
-        # GPT-5로 응급 정보 추출
+        # GPT-4o로 응급 정보 추출
         result = extract_ems_data_from_conversation(
             conversation=request.conversation,
             temperature=request.temperature
@@ -162,7 +162,7 @@ async def integrated_health_check():
         "status": "healthy" if api_key_configured else "warning",
         "service": "Integrated Conversation Processing Service",
         "features": [
-            "LLM (GPT-5, 텍스트 정제 + 응급 정보 구조화)"
+            "LLM (GPT-4o, 텍스트 정제 + 응급 정보 구조화)"
         ],
         "api_key_configured": api_key_configured,
         "message": "통합 서비스가 정상 작동 중입니다." if api_key_configured 

@@ -239,7 +239,7 @@ def get_information_extraction_prompt() -> str:
 
 def correct_conversation_text(
     conversation: str,
-    model: str = "gpt-5"
+    model: str = "gpt-4o"
 ) -> str:
     """
     1단계: 화자별 대화의 텍스트 교정
@@ -285,7 +285,7 @@ def correct_conversation_text(
 
 def extract_structured_information(
     corrected_conversation: str,
-    model: str = "gpt-5"
+    model: str = "gpt-4o"
 ) -> Dict[str, Any]:
     """
     2단계: 교정된 대화에서 구조화된 정보 추출
@@ -440,7 +440,7 @@ def parse_segments_by_speaker(segments: List[STTSegment]) -> Dict[str, List[str]
 def refine_stt_result(
     transcription: str,
     segments: List[STTSegment],
-    model: str = "gpt-5",
+    model: str = "gpt-4o",
     context: Optional[str] = None
 ) -> Dict[str, Any]:
     """
@@ -553,7 +553,6 @@ def get_ems_extraction_prompt() -> str:
 5. 화자 구분 없이 대화 전체에서 환자 정보 추출
 
 **JSON 출력 스키마**:
-```json
 {
   "ReportSectionType": {
     "patientInfo": {
@@ -596,7 +595,7 @@ def get_ems_extraction_prompt() -> str:
         "disease": [
           {
             "name": "두통 | 흉통 | 복통 | 요통 | 분만진통 | 그 밖의 통증",
-            "value": "'그 밖의 통증' 선택 시 상세 내용"
+            "value": "'그 밖의 통증' 선택 시 상세 내용 / (두통 | 흉통 | 복통 | 요통 | 분만진통) 이라면 null"
           }
         ],
         "trauma": [
@@ -607,7 +606,7 @@ def get_ems_extraction_prompt() -> str:
         "otherSymptoms": [
           {
             "name": "의식장애 | 기도이물 | 기침 | 호흡곤란 | 호흡정지 | 두근거림 | 가슴불편감 | 심정지 | 경련/발작 | 실신 | 오심 | 구토 | 설사 | 변비 | 배뇨장애 | 객혈 | 토혈 | 혈변 | 비출혈 | 질출혈 | 그 밖의 출혈 | 고열 | 저체온증 | 어지러움 | 마비 | 전신쇠약 | 정신장애 | 그 밖의 이물감 | 기타",
-            "value": "'기타' 선택 시 상세 내용"
+            "value": "'기타' 선택 시 상세 내용 / (의식장애 | 기도이물 | 기침 | 호흡곤란 | 호흡정지 | 두근거림 | 가슴불편감 | 심정지 | 경련/발작 | 실신 | 오심 | 구토 | 설사 | 변비 | 배뇨장애 | 객혈 | 토혈 | 혈변 | 비출혈 | 질출혈 | 그 밖의 출혈 | 고열 | 저체온증 | 어지러움 | 마비 | 전신쇠약 | 정신장애 | 그 밖의 이물감 |) 이라면 null"
           }
         ]
       }
@@ -618,7 +617,7 @@ def get_ems_extraction_prompt() -> str:
         "items": [
           {
             "name": "고혈압 | 당뇨 | 뇌혈관질환 | 심장질환 | 폐질환 | 결핵 | 간염 | 간경화 | 알레르기 | 암 | 신부전 | 감염병 | 기타",
-            "value": "'암/신부전/감염병/기타' 선택 시 필수"
+            "value": "'암/신부전/감염병/기타' 선택 시 세부 내용 필수 / (고혈압 | 당뇨 | 뇌혈관질환 | 심장질환 | 폐질환 | 결핵 | 간염 | 간경화 | 알레르기) 이라면 null"
           }
         ]
       },
@@ -678,12 +677,11 @@ def get_ems_extraction_prompt() -> str:
       "notes": {
         "cheifComplaint": "주호소",
         "onset": "발병 시간/상황",
-        "note": "기타 특이사항"
+        "note": "전체적으로 들어간 내용을 요약을 보여줌"
       }
     }
   }
 }
-```
 
 **상세 분류 규칙**:
 
@@ -842,12 +840,19 @@ def get_ems_extraction_prompt() -> str:
 **입력 대본**:
 {conversation}
 
-**출력 (순수 JSON만)**:"""
+**지시사항**:
+- 위의 전체 스키마 구조를 그대로 따라서 JSON을 생성하세요
+- 반드시 순수 JSON만 출력하세요
+- 코드 블록(```) 사용 금지
+- 설명이나 주석 금지
+- 바로 {"ReportSectionType": {...}}로 시작하세요
+
+**출력**:"""
 
 
 def extract_ems_data_from_conversation(
     conversation: str,
-    model: str = "gpt-5",
+    model: str = "gpt-4o",
     temperature: float = 0.1
 ) -> Dict[str, Any]:
     """
@@ -856,7 +861,7 @@ def extract_ems_data_from_conversation(
     Args:
         conversation: 응급 상황 대본 텍스트
         model: 사용할 GPT 모델명
-        temperature: 생성 temperature
+        temperature: 생성 temperature (기본값: 0.1)
         
     Returns:
         Dict[str, Any]: ReportSectionType 스키마 형식의 데이터
@@ -866,17 +871,18 @@ def extract_ems_data_from_conversation(
     """
     client = get_openai_client()
     
-    prompt = get_ems_extraction_prompt().format(conversation=conversation)
+    # .format() 대신 .replace() 사용 (JSON 스키마의 중괄호 충돌 방지)
+    prompt = get_ems_extraction_prompt().replace("{conversation}", conversation)
     
     try:
-        print(f"[EMS 추출] GPT-5 호출 시작...")
+        print(f"[EMS 추출] {model} 호출 시작...")
         
         response = client.chat.completions.create(
             model=model,
             messages=[
                 {
                     "role": "system",
-                    "content": "당신은 119 응급 의료 정보를 구조화하는 전문가입니다. 반드시 유효한 JSON만 출력하세요."
+                    "content": "당신은 119 응급 의료 정보를 구조화하는 전문가입니다. 반드시 유효한 JSON만 출력하세요. 코드 블록이나 설명 없이 순수 JSON만 반환하세요."
                 },
                 {
                     "role": "user",
@@ -885,32 +891,45 @@ def extract_ems_data_from_conversation(
             ],
             response_format={"type": "json_object"},
             temperature=temperature,
-            max_tokens=3000
+            max_tokens=4000
         )
         
         content = response.choices[0].message.content.strip()
         
+        print(f"[EMS 추출] 원본 응답 길이: {len(content)}자")
+        print(f"[EMS 추출] 응답 시작 부분: {content[:200]}...")
+        
         # 마크다운 코드 블록 제거
         if content.startswith("```"):
+            print(f"[EMS 추출] 코드 블록 감지 - 제거 중...")
             lines = content.split('\n')
             if lines[0].startswith("```"):
                 lines = lines[1:]
             if lines and lines[-1].strip() == "```":
                 lines = lines[:-1]
             content = '\n'.join(lines).strip()
+            print(f"[EMS 추출] 정리 후: {content[:200]}...")
         
         # JSON 파싱
-        result_data = json.loads(content)
+        try:
+            result_data = json.loads(content)
+            print(f"[EMS 추출] JSON 파싱 성공")
+        except json.JSONDecodeError as e:
+            print(f"[EMS 추출] JSON 파싱 실패: {str(e)}")
+            print(f"[EMS 추출] 문제 위치: {e.pos}")
+            print(f"[EMS 추출] 응답 내용 (처음 1000자):\n{content[:1000]}")
+            print(f"[EMS 추출] 응답 내용 (마지막 200자):\n{content[-200:]}")
+            
+            raise Exception(f"LLM이 유효한 JSON을 반환하지 않았습니다: {str(e)}")
         
         print(f"[EMS 추출] 완료")
         
         # 전체 스키마 구조를 그대로 반환 (빈 필드 제거 안 함)
         return result_data
         
-    except json.JSONDecodeError as e:
-        print(f"JSON 파싱 실패: {str(e)}")
-        print(f"응답 내용: {content}")
-        raise Exception(f"LLM이 유효한 JSON을 반환하지 않았습니다: {str(e)}")
+    except json.JSONDecodeError:
+        # 이미 위에서 처리됨
+        raise
     except Exception as e:
         print(f"EMS 데이터 추출 중 오류 발생: {str(e)}")
         raise
