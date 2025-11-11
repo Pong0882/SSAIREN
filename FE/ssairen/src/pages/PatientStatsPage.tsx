@@ -296,13 +296,13 @@ export default function PatientStatsPage() {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={(entry) => (entry.value > 0 ? `${entry.value}명` : "")}
+                          label={(entry: any) => (entry.value > 0 ? `${entry.value}명` : "")}
                           outerRadius={80}
                           fill="#8884d8"
                           dataKey="value"
                           animationBegin={0}
                         >
-                          {genderData.map((entry, index) => (
+                          {genderData.map((_entry, index) => (
                             <Cell
                               key={`cell-${index}`}
                               fill={GENDER_COLORS[index % GENDER_COLORS.length]}
@@ -357,14 +357,14 @@ export default function PatientStatsPage() {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={(entry) => (entry.value > 0 ? `${entry.value}명` : "")}
+                          label={(entry: any) => (entry.value > 0 ? `${entry.value}명` : "")}
                           outerRadius={80}
                           innerRadius={40}
                           fill="#8884d8"
                           dataKey="value"
                           animationBegin={0}
                         >
-                          {mentalStatusData.map((entry, index) => (
+                          {mentalStatusData.map((_entry, index) => (
                             <Cell
                               key={`cell-${index}`}
                               fill={MENTAL_STATUS_COLORS[index % MENTAL_STATUS_COLORS.length]}
@@ -432,19 +432,19 @@ function PopoverSummary({
     return { age, count: Number(count), ratio };
   }, [byAgeGroup, totalCount]);
 
-  // 주요 의식 상태 (Top 1)
-  const topMentalStatus = useMemo(() => {
-    const entries = Object.entries(byMentalStatus || {});
-    if (!entries.length) return { status: "-", statusKr: "-", count: 0, ratio: 0 };
-    const [status, count] = entries.reduce((a, b) => (Number(a[1]) >= Number(b[1]) ? a : b));
-    const ratio = totalCount > 0 ? Math.round((Number(count) / totalCount) * 100) : 0;
-    return {
-      status,
-      statusKr: mentalStatusNames[status] || status,
-      count: Number(count),
-      ratio,
-    };
-  }, [byMentalStatus, totalCount]);
+  // 주요 의식 상태 (Top 1) - 현재 미사용
+  // const topMentalStatus = useMemo(() => {
+  //   const entries = Object.entries(byMentalStatus || {});
+  //   if (!entries.length) return { status: "-", statusKr: "-", count: 0, ratio: 0 };
+  //   const [status, count] = entries.reduce((a, b) => (Number(a[1]) >= Number(b[1]) ? a : b));
+  //   const ratio = totalCount > 0 ? Math.round((Number(count) / totalCount) * 100) : 0;
+  //   return {
+  //     status,
+  //     statusKr: mentalStatusNames[status] || status,
+  //     count: Number(count),
+  //     ratio,
+  //   };
+  // }, [byMentalStatus, totalCount]);
 
   // 연령대 분포 미니 바 데이터
   const ageDistribution = useMemo(() => {

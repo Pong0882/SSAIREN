@@ -290,13 +290,13 @@ export default function PatientTypePage() {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={(entry) => (entry.value > 0 ? `${entry.name}: ${entry.value}건` : "")}
+                          label={(entry: any) => (entry.value > 0 ? `${entry.name}: ${entry.value}건` : "")}
                           outerRadius={100}
                           fill="#8884d8"
                           dataKey="value"
                           animationBegin={0}
                         >
-                          {disasterTypeData.map((entry, index) => (
+                          {disasterTypeData.map((_entry, index) => (
                             <Cell
                               key={`cell-${index}`}
                               fill={DISASTER_TYPE_COLORS[index % DISASTER_TYPE_COLORS.length]}

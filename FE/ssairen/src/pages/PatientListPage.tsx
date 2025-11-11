@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, forwardRef } from "react";
 import {
   Header,
-  Tabs,
-  TabButton,
   Table,
   TableHeader,
   TableBody,
