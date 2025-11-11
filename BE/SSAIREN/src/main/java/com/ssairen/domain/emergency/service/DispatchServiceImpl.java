@@ -14,6 +14,7 @@ import com.ssairen.global.exception.ErrorCode;
 import com.ssairen.global.utils.CursorUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,7 @@ public class DispatchServiceImpl implements DispatchService {
     private final ParamedicRepository paramedicRepository;
     private final DispatchMapper dispatchMapper;
     private final FcmService fcmService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     /**
      * 출동 지령 생성
@@ -59,51 +61,113 @@ public class DispatchServiceImpl implements DispatchService {
         log.info(LOG_PREFIX + "출동 지령 생성 완료 - ID: {}, 소방서: {}, 재난분류: {}, 주소: {}",
                 savedDispatch.getId(), fireState.getName(), savedDispatch.getDisasterType(), savedDispatch.getLocationAddress());
 
-        // 해당 소방서 소속 구급대원들에게 FCM 알림 전송
-        sendDispatchNotificationToParamedics(fireState, savedDispatch);
+        // 해당 구급대원에게 FCM 푸시 알림 전송 (모든 출동지령 정보 포함)
+        sendDispatchNotificationToParamedic(paramedic.getId(), savedDispatch, request);
+
+        // 해당 구급대원에게 WebSocket 실시간 알림 전송 (모든 출동지령 정보 포함)
+        sendWebSocketNotification(paramedic.getId(), request);
 
         return dispatchMapper.toResponse(savedDispatch);
     }
 
     /**
-     * 출동 지령이 생성되면 해당 소방서 소속 구급대원 전체에게 푸시 알림 전송
+     * 출동 지령이 생성되면 지정한 구급대원 1명에게만 푸시 알림 전송
      *
-     * @param fireState 소방서
-     * @param dispatch  출동 지령
+     * @param paramedicId 대상 구급대원 ID
+     * @param dispatch    출동 지령
+     * @param request     출동 지령 생성 요청 데이터
      */
-    private void sendDispatchNotificationToParamedics(FireState fireState, Dispatch dispatch) {
+    private void sendDispatchNotificationToParamedic(Integer paramedicId, Dispatch dispatch, DispatchCreateRequest request) {
         try {
-            // 해당 소방서 소속 구급대원 전체 조회
-            List<Paramedic> paramedics = paramedicRepository.findAll().stream()
-                    .filter(p -> p.getFireState().getId().equals(fireState.getId()))
-                    .toList();
+            Paramedic paramedic = paramedicRepository.findById(paramedicId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.PARAMEDIC_NOT_FOUND));
 
-            log.info(LOG_PREFIX + "FCM 알림 대상 구급대원 수: {} (소방서: {})", paramedics.size(), fireState.getName());
-
-            // 각 구급대원에게 알림 전송
-            for (Paramedic paramedic : paramedics) {
-                Map<String, String> data = new HashMap<>();
-                data.put("type", "DISPATCH");
-                data.put("dispatchId", dispatch.getId().toString());
-                data.put("disasterType", dispatch.getDisasterType());
-                data.put("locationAddress", dispatch.getLocationAddress());
-
-                fcmService.sendNotification(
-                        paramedic.getId(),
-                        "🚨 출동 지령",
-                        String.format("[%s] %s - %s",
-                                dispatch.getDisasterType(),
-                                dispatch.getLocationAddress(),
-                                dispatch.getIncidentDescription() != null ? dispatch.getIncidentDescription() : ""),
-                        data
-                );
+            // (선택) 출동의 소방서와 구급대원의 소방서가 다르면 보내지 않음
+            if (dispatch.getFireState() != null
+                    && paramedic.getFireState() != null
+                    && !paramedic.getFireState().getId().equals(dispatch.getFireState().getId())) {
+                log.warn("[DISPATCH] FCM 대상 제외 - 서로 다른 소방서. dispatchId={}, paramedicId={}, dispatch.fireState={}, paramedic.fireState={}",
+                        dispatch.getId(), paramedicId,
+                        dispatch.getFireState().getId(), paramedic.getFireState().getId());
+                return;
             }
 
-            log.info(LOG_PREFIX + "FCM 알림 전송 완료 - 출동 ID: {}", dispatch.getId());
+            // FCM data에 출동지령의 모든 정보 포함
+            Map<String, String> data = new HashMap<>();
+            data.put("type", "DISPATCH");
+            data.put("dispatchId", String.valueOf(dispatch.getId()));
+            data.put("fireStateId", String.valueOf(request.fireStateId()));
+            data.put("paramedicId", String.valueOf(request.paramedicId()));
+
+            if (request.disasterNumber() != null) {
+                data.put("disasterNumber", request.disasterNumber());
+            }
+            data.put("disasterType", request.disasterType());
+            if (request.disasterSubtype() != null) {
+                data.put("disasterSubtype", request.disasterSubtype());
+            }
+            if (request.reporterName() != null) {
+                data.put("reporterName", request.reporterName());
+            }
+            if (request.reporterPhone() != null) {
+                data.put("reporterPhone", request.reporterPhone());
+            }
+            data.put("locationAddress", request.locationAddress());
+            if (request.incidentDescription() != null) {
+                data.put("incidentDescription", request.incidentDescription());
+            }
+            if (request.dispatchLevel() != null) {
+                data.put("dispatchLevel", request.dispatchLevel());
+            }
+            if (request.dispatchOrder() != null) {
+                data.put("dispatchOrder", String.valueOf(request.dispatchOrder()));
+            }
+            if (request.dispatchStation() != null) {
+                data.put("dispatchStation", request.dispatchStation());
+            }
+            if (request.date() != null) {
+                data.put("date", request.date().toString());
+            }
+
+            fcmService.sendNotification(
+                    paramedic.getId(),
+                    "🚨 출동 지령",
+                    String.format("[%s] %s - %s",
+                            request.disasterType(),
+                            request.locationAddress(),
+                            request.incidentDescription() != null ? request.incidentDescription() : ""),
+                    data
+            );
+
+            log.info("[DISPATCH] FCM 전송 완료 - dispatchId={}, paramedicId={}",
+                    dispatch.getId(), paramedicId);
 
         } catch (Exception e) {
-            // FCM 전송 실패가 출동 지령 생성을 방해하지 않도록 예외를 로그만 남김
-            log.error(LOG_PREFIX + "FCM 알림 전송 실패 - 출동 ID: {}, 에러: {}", dispatch.getId(), e.getMessage(), e);
+            // FCM 전송 실패가 출동 생성 로직을 막지 않도록 예외는 로깅만
+            log.error("[DISPATCH] FCM 전송 실패 - dispatchId={}, paramedicId={}, error={}",
+                    dispatch.getId(), paramedicId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * WebSocket으로 출동지령 정보를 구급대원에게 실시간 전송
+     *
+     * @param paramedicId 구급대원 ID
+     * @param request 출동지령 생성 요청 데이터
+     */
+    private void sendWebSocketNotification(Integer paramedicId, DispatchCreateRequest request) {
+        try {
+            String destination = "/topic/paramedic." + paramedicId;
+
+            messagingTemplate.convertAndSend(destination, request);
+
+            log.info("[DISPATCH] WebSocket 전송 완료 - destination={}, paramedicId={}",
+                    destination, paramedicId);
+
+        } catch (Exception e) {
+            // WebSocket 전송 실패가 출동 생성 로직을 막지 않도록 예외는 로깅만
+            log.error("[DISPATCH] WebSocket 전송 실패 - paramedicId={}, error={}",
+                    paramedicId, e.getMessage(), e);
         }
     }
 
