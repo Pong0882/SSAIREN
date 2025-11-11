@@ -143,7 +143,33 @@ export default function PatientStatsPage() {
         <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 min-h-0">
           <div className="max-w-full h-full flex flex-col gap-4">
             {/* 상단: 필터 행 */}
-            <div className="flex gap-3 items-stretch">
+            <div className="flex gap-3 items-stretch justify-between">
+              {/* 총 수용 건수 */}
+              <div className="relative h-14 bg-white rounded-lg shadow-sm border border-gray-200 px-5 flex items-center justify-between min-w-[280px]">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm leading-none text-gray-600 whitespace-nowrap">
+                    총 수용 건수
+                  </span>
+                  <span className="text-xl leading-none font-bold text-sky-500 whitespace-nowrap">
+                    {data ? `${data.totalCount}건` : "-"}
+                  </span>
+                </div>
+
+                {/* 우측: 상세 팝오버 트리거 */}
+                {data && (
+                  <PopoverSummary
+                    startDate={data.startDate}
+                    endDate={data.endDate}
+                    byGender={data.byGender}
+                    byAgeGroup={data.byAgeGroup}
+                    byMentalStatus={data.byMentalStatus}
+                    totalCount={data.totalCount}
+                  />
+                )}
+              </div>
+
+              {/* 날짜 필터 버튼들 */}
+              <div className="flex gap-3">
               <button
                 className={`h-14 px-5 text-base leading-none font-medium rounded-lg transition-colors ${
                   dateRange === "week"
@@ -190,6 +216,7 @@ export default function PatientStatsPage() {
                 maxDate={new Date()}
                 dateFormat="yyyy-MM-dd"
                 wrapperClassName="self-stretch"
+                withPortal
                 customInput={
                   <DateButton
                     className={
@@ -222,6 +249,7 @@ export default function PatientStatsPage() {
                 maxDate={new Date()}
                 dateFormat="yyyy-MM-dd"
                 wrapperClassName="self-stretch"
+                withPortal
                 customInput={
                   <DateButton
                     className={
@@ -239,32 +267,7 @@ export default function PatientStatsPage() {
                   </DateButton>
                 }
               />
-
-              {/* 총 수용 건수 */}
-              {data && (
-                <div className="relative flex-1 h-14 bg-white rounded-lg shadow-sm border border-gray-200 px-5 flex items-center justify-between">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm leading-none text-gray-600 whitespace-nowrap">
-                        총 수용 건수
-                      </span>
-                      <span className="text-xl leading-none font-bold text-sky-500 whitespace-nowrap">
-                        {data.totalCount}건
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 우측: 상세 팝오버 트리거 */}
-                  <PopoverSummary
-                    startDate={data.startDate}
-                    endDate={data.endDate}
-                    byGender={data.byGender}
-                    byAgeGroup={data.byAgeGroup}
-                    byMentalStatus={data.byMentalStatus}
-                    totalCount={data.totalCount}
-                  />
-                </div>
-              )}
+              </div>
             </div>
 
             {/* 로딩/에러 상태 */}
@@ -297,6 +300,7 @@ export default function PatientStatsPage() {
                           outerRadius={80}
                           fill="#8884d8"
                           dataKey="value"
+                          animationBegin={0}
                         >
                           {genderData.map((entry, index) => (
                             <Cell
@@ -336,7 +340,7 @@ export default function PatientStatsPage() {
                           labelStyle={{ color: "#111827" }}
                           contentStyle={{ borderRadius: 10, borderColor: "#E5E7EB" }}
                         />
-                        <Bar dataKey="count" fill="#0ea5e9" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                        <Bar dataKey="count" fill="#0ea5e9" radius={[6, 6, 0, 0]} maxBarSize={40} animationBegin={0} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -358,6 +362,7 @@ export default function PatientStatsPage() {
                           innerRadius={40}
                           fill="#8884d8"
                           dataKey="value"
+                          animationBegin={0}
                         >
                           {mentalStatusData.map((entry, index) => (
                             <Cell
@@ -398,26 +403,6 @@ function PopoverSummary({
 }) {
   const [open, setOpen] = useState(false);
 
-  // 성별 비율 계산
-  const genderRatio = useMemo(() => {
-    const total = (byGender.M || 0) + (byGender.F || 0);
-    if (total === 0) return { male: 0, female: 0 };
-    return {
-      male: Math.round(((byGender.M || 0) / total) * 100),
-      female: Math.round(((byGender.F || 0) / total) * 100),
-    };
-  }, [byGender]);
-
-  // Top 3 연령대
-  const topAgeGroups = useMemo(() => {
-    const entries = Object.entries(byAgeGroup || {});
-    return entries
-      .sort((a, b) => Number(b[1]) - Number(a[1]))
-      .slice(0, 3)
-      .map(([k, v]) => `${k}세(${v})`);
-  }, [byAgeGroup]);
-
-  // 주요 의식 상태
   const mentalStatusNames: Record<string, string> = {
     ALERT: "의식 명료",
     VERBAL: "언어 반응",
@@ -425,21 +410,73 @@ function PopoverSummary({
     UNRESPONSIVE: "무반응",
   };
 
+  // 성별 비율 및 데이터
+  const genderData = useMemo(() => {
+    const maleCount = byGender.M || 0;
+    const femaleCount = byGender.F || 0;
+    const total = maleCount + femaleCount;
+    return {
+      male: maleCount,
+      female: femaleCount,
+      maleRatio: total > 0 ? Math.round((maleCount / total) * 100) : 0,
+      femaleRatio: total > 0 ? Math.round((femaleCount / total) * 100) : 0,
+    };
+  }, [byGender]);
+
+  // 주요 연령대 (Top 1)
+  const topAgeGroup = useMemo(() => {
+    const entries = Object.entries(byAgeGroup || {});
+    if (!entries.length) return { age: "-", count: 0, ratio: 0 };
+    const [age, count] = entries.reduce((a, b) => (Number(a[1]) >= Number(b[1]) ? a : b));
+    const ratio = totalCount > 0 ? Math.round((Number(count) / totalCount) * 100) : 0;
+    return { age, count: Number(count), ratio };
+  }, [byAgeGroup, totalCount]);
+
+  // 주요 의식 상태 (Top 1)
   const topMentalStatus = useMemo(() => {
     const entries = Object.entries(byMentalStatus || {});
-    if (!entries.length) return "-";
+    if (!entries.length) return { status: "-", statusKr: "-", count: 0, ratio: 0 };
     const [status, count] = entries.reduce((a, b) => (Number(a[1]) >= Number(b[1]) ? a : b));
-    return `${mentalStatusNames[status] || status}(${count})`;
-  }, [byMentalStatus]);
+    const ratio = totalCount > 0 ? Math.round((Number(count) / totalCount) * 100) : 0;
+    return {
+      status,
+      statusKr: mentalStatusNames[status] || status,
+      count: Number(count),
+      ratio,
+    };
+  }, [byMentalStatus, totalCount]);
 
-  // 연령대 스파크라인 데이터
-  const ageGroupChart = useMemo(() => {
+  // 연령대 분포 미니 바 데이터
+  const ageDistribution = useMemo(() => {
     const ageOrder = ["0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"];
-    return ageOrder.map((age, i) => ({ x: i, y: Number(byAgeGroup?.[age] || 0) }));
+    const data = ageOrder.map((age) => ({
+      age,
+      count: Number(byAgeGroup?.[age] || 0),
+    }));
+    const maxCount = Math.max(...data.map((d) => d.count), 1);
+    return data.map((item) => ({
+      ...item,
+      percentage: (item.count / maxCount) * 100,
+    }));
   }, [byAgeGroup]);
 
+  // 의식 상태 분포 미니 바 데이터
+  const mentalStatusDistribution = useMemo(() => {
+    const statusOrder = ["ALERT", "VERBAL", "PAIN", "UNRESPONSIVE"];
+    const data = statusOrder.map((status) => ({
+      status,
+      statusKr: mentalStatusNames[status],
+      count: Number(byMentalStatus?.[status] || 0),
+    }));
+    const maxCount = Math.max(...data.map((d) => d.count), 1);
+    return data.map((item) => ({
+      ...item,
+      percentage: (item.count / maxCount) * 100,
+    }));
+  }, [byMentalStatus]);
+
   return (
-    <div className="relative">
+    <>
       <button
         onClick={() => setOpen((o) => !o)}
         className="text-xs leading-none px-3 py-2 rounded-md border border-gray-200 hover:bg-gray-50 text-gray-600"
@@ -450,13 +487,14 @@ function PopoverSummary({
 
       {open && (
         <div
-          className="absolute right-0 top-12 z-20 w-96 bg-white border border-gray-200 rounded-xl shadow-xl p-4"
+          className="absolute left-0 top-14 z-20 w-[500px] bg-white border border-gray-200 rounded-xl shadow-xl p-4 max-h-[80vh] overflow-y-auto"
           role="dialog"
         >
-          <div className="flex items-start justify-between">
+          {/* 헤더 */}
+          <div className="flex items-start justify-between mb-3">
             <div>
-              <div className="text-sm text-gray-500">선택 기간</div>
-              <div className="text-sm font-medium text-gray-900">
+              <div className="text-xs text-gray-500">선택 기간</div>
+              <div className="text-xs font-medium text-gray-900">
                 {startDate} ~ {endDate}
               </div>
             </div>
@@ -469,66 +507,104 @@ function PopoverSummary({
             </button>
           </div>
 
-          <div className="mt-3 grid grid-cols-3 gap-3">
-            <StatPill label="총 건수" value={`${totalCount}건`} />
-            <StatPill
-              label="성별 비율"
-              value={`남 ${genderRatio.male}% / 여 ${genderRatio.female}%`}
-            />
-            <StatPill label="주요 의식" value={topMentalStatus} />
-          </div>
-
-          {/* 미니 연령대 스파크라인 */}
-          <div className="mt-4">
-            <div className="text-xs text-gray-500 mb-1">연령대 분포</div>
-            <div className="h-16 w-full">
-              <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-full">
-                {(() => {
-                  const maxY = Math.max(1, ...ageGroupChart.map((p) => p.y));
-                  const points = ageGroupChart
-                    .map((p, i) => {
-                      const x = (i / 8) * 100;
-                      const y = 30 - (p.y / maxY) * 28;
-                      return `${x},${y}`;
-                    })
-                    .join(" ");
-                  return (
-                    <>
-                      <polyline
-                        points={points}
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        className="text-sky-500"
-                      />
-                      {ageGroupChart.map((p, i) => {
-                        const x = (i / 8) * 100;
-                        const y = 30 - (p.y / maxY) * 28;
-                        return <circle key={i} cx={x} cy={y} r="0.9" className="fill-sky-500" />;
-                      })}
-                    </>
-                  );
-                })()}
-              </svg>
+          {/* 메인 통계 카드 */}
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-lg p-2.5 border border-sky-100">
+              <div className="text-[10px] text-sky-600 font-medium">총 수용 건수</div>
+              <div className="text-lg font-bold text-sky-700">{totalCount}건</div>
+              <div className="text-[10px] text-sky-500">
+                남 {genderData.male} / 여 {genderData.female}
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-2.5 border border-purple-100">
+              <div className="text-[10px] text-purple-600 font-medium">주요 연령대</div>
+              <div className="text-lg font-bold text-purple-700">{topAgeGroup.age}세</div>
+              <div className="text-[10px] text-purple-500">
+                {topAgeGroup.count}건 ({topAgeGroup.ratio}%)
+              </div>
             </div>
           </div>
 
-          {/* Top3 연령대 리스트 */}
-          <div className="mt-3">
-            <div className="text-xs text-gray-500 mb-1">연령대 Top3</div>
-            <div className="text-sm text-gray-800">{topAgeGroups.join(" · ") || "-"}</div>
+          {/* 2열 그리드: 성별 분포 + 의식 상태 */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            {/* 성별 분포 */}
+            <div>
+              <div className="text-xs text-gray-600 font-medium mb-1.5">성별 분포</div>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-8 text-[9px] text-gray-600">남</div>
+                  <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full"
+                      style={{ width: `${genderData.maleRatio}%` }}
+                      title={`${genderData.male}명 (${genderData.maleRatio}%)`}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-8 text-[9px] text-gray-600">여</div>
+                  <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-orange-400 to-pink-500 rounded-full"
+                      style={{ width: `${genderData.femaleRatio}%` }}
+                      title={`${genderData.female}명 (${genderData.femaleRatio}%)`}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 의식 상태 분포 */}
+            <div>
+              <div className="text-xs text-gray-600 font-medium mb-1.5">의식 상태 분포</div>
+              <div className="space-y-1.5">
+                {mentalStatusDistribution.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-1.5">
+                    <div className="w-12 text-[9px] text-gray-600 truncate" title={item.statusKr}>
+                      {item.statusKr}
+                    </div>
+                    <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          item.status === "ALERT"
+                            ? "bg-gradient-to-r from-green-400 to-emerald-500"
+                            : item.status === "VERBAL"
+                            ? "bg-gradient-to-r from-yellow-400 to-orange-500"
+                            : item.status === "PAIN"
+                            ? "bg-gradient-to-r from-orange-400 to-red-500"
+                            : "bg-gradient-to-r from-gray-400 to-gray-600"
+                        }`}
+                        style={{ width: `${item.percentage}%` }}
+                        title={`${item.count}건`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 연령대 분포 */}
+          <div>
+            <div className="text-xs text-gray-600 font-medium mb-1.5">연령대 분포</div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {ageDistribution.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-1">
+                  <div className="w-10 text-[9px] text-gray-600">{item.age}</div>
+                  <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full"
+                      style={{ width: `${item.percentage}%` }}
+                      title={`${item.count}건`}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
-function StatPill({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-gray-200 px-3 py-2">
-      <div className="text-[11px] text-gray-500">{label}</div>
-      <div className="text-sm font-medium text-gray-900 mt-0.5">{value}</div>
-    </div>
-  );
-}

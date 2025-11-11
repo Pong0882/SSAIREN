@@ -138,7 +138,32 @@ export default function PatientTypePage() {
         <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 min-h-0">
           <div className="max-w-full h-full flex flex-col gap-4">
             {/* 상단: 필터 행 */}
-            <div className="flex gap-3 items-stretch">
+            <div className="flex gap-3 items-stretch justify-between">
+              {/* 총 수용 건수 */}
+              <div className="relative h-14 bg-white rounded-lg shadow-sm border border-gray-200 px-5 flex items-center justify-between min-w-[280px]">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm leading-none text-gray-600 whitespace-nowrap">
+                    총 수용 건수
+                  </span>
+                  <span className="text-xl leading-none font-bold text-sky-500 whitespace-nowrap">
+                    {data ? `${data.totalCount}건` : "-"}
+                  </span>
+                </div>
+
+                {/* 우측: 상세 팝오버 트리거 */}
+                {data && (
+                  <PopoverSummary
+                    startDate={data.startDate}
+                    endDate={data.endDate}
+                    byDisasterType={data.byDisasterType}
+                    byDisasterSubtype={data.byDisasterSubtype}
+                    totalCount={data.totalCount}
+                  />
+                )}
+              </div>
+
+              {/* 날짜 필터 버튼들 */}
+              <div className="flex gap-3">
               <button
                 className={`h-14 px-5 text-base leading-none font-medium rounded-lg transition-colors ${
                   dateRange === "week"
@@ -185,6 +210,7 @@ export default function PatientTypePage() {
                 maxDate={new Date()}
                 dateFormat="yyyy-MM-dd"
                 wrapperClassName="self-stretch"
+                withPortal
                 customInput={
                   <DateButton
                     className={
@@ -217,6 +243,7 @@ export default function PatientTypePage() {
                 maxDate={new Date()}
                 dateFormat="yyyy-MM-dd"
                 wrapperClassName="self-stretch"
+                withPortal
                 customInput={
                   <DateButton
                     className={
@@ -234,31 +261,7 @@ export default function PatientTypePage() {
                   </DateButton>
                 }
               />
-
-              {/* 총 수용 건수 */}
-              {data && (
-                <div className="relative flex-1 h-14 bg-white rounded-lg shadow-sm border border-gray-200 px-5 flex items-center justify-between">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm leading-none text-gray-600 whitespace-nowrap">
-                        총 수용 건수
-                      </span>
-                      <span className="text-xl leading-none font-bold text-sky-500 whitespace-nowrap">
-                        {data.totalCount}건
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 우측: 상세 팝오버 트리거 */}
-                  <PopoverSummary
-                    startDate={data.startDate}
-                    endDate={data.endDate}
-                    byDisasterType={data.byDisasterType}
-                    byDisasterSubtype={data.byDisasterSubtype}
-                    totalCount={data.totalCount}
-                  />
-                </div>
-              )}
+              </div>
             </div>
 
             {/* 로딩/에러 상태 */}
@@ -291,6 +294,7 @@ export default function PatientTypePage() {
                           outerRadius={100}
                           fill="#8884d8"
                           dataKey="value"
+                          animationBegin={0}
                         >
                           {disasterTypeData.map((entry, index) => (
                             <Cell
@@ -338,7 +342,7 @@ export default function PatientTypePage() {
                           labelStyle={{ color: "#111827" }}
                           contentStyle={{ borderRadius: 10, borderColor: "#E5E7EB" }}
                         />
-                        <Bar dataKey="count" fill="#0ea5e9" radius={[6, 6, 0, 0]} maxBarSize={60} />
+                        <Bar dataKey="count" fill="#0ea5e9" radius={[6, 6, 0, 0]} maxBarSize={60} animationBegin={0} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -413,7 +417,7 @@ function PopoverSummary({
   }, [byDisasterType]);
 
   return (
-    <div className="relative">
+    <>
       <button
         onClick={() => setOpen((o) => !o)}
         className="text-xs leading-none px-3 py-2 rounded-md border border-gray-200 hover:bg-gray-50 text-gray-600"
@@ -424,7 +428,7 @@ function PopoverSummary({
 
       {open && (
         <div
-          className="absolute right-0 top-12 z-20 w-[420px] bg-white border border-gray-200 rounded-xl shadow-xl p-5"
+          className="absolute left-0 top-14 z-20 w-[420px] bg-white border border-gray-200 rounded-xl shadow-xl p-5"
           role="dialog"
         >
           {/* 헤더 */}
@@ -515,6 +519,6 @@ function PopoverSummary({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
