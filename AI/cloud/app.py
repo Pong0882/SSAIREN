@@ -7,7 +7,8 @@ load_dotenv(Path(__file__).parent / "config" / ".env")
 
 from routers.integrated_router import router as integrated_router
 from routers.emergency_router import router as emergency_router
-from routers.stt_to_json_router import router as stt_to_json_router  
+from routers.stt_to_json_router import router as stt_to_json_router
+from routers.stt_router_local import router as stt_router_local  
 
 app = FastAPI(title='CLOUD AI', description = "클라우드 AI를 기반으로 한 서비스를 제공하는 서버")
 
@@ -18,4 +19,9 @@ def read_root():
 # 라우터 등록
 app.include_router(integrated_router, prefix="/api")  # 통합 API (STT + LLM)
 app.include_router(emergency_router, prefix="/api")  # 응급실 추천 API
+<<<<<<< HEAD
 app.include_router(stt_to_json_router, prefix="/api")  # 파인튜닝 LoRA 모델 (텍스트 → JSON)
+=======
+app.include_router(stt_to_json_router, prefix="/api")  # ✨ 파인튜닝 LoRA 모델
+app.include_router(stt_router_local, prefix="/api")  # 로컬 Whisper STT
+>>>>>>> 6677e939acbd392f2838cd80808dbb3bb8d48d64
