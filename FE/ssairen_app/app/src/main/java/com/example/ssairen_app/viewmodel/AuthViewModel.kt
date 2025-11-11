@@ -7,19 +7,30 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.example.ssairen_app.data.api.RetrofitClient
 import com.example.ssairen_app.data.local.AuthManager
 import com.example.ssairen_app.data.repository.AuthRepository
+import com.example.ssairen_app.data.websocket.DispatchMessage
+import com.example.ssairen_app.data.websocket.WebSocketManager
 import kotlinx.coroutines.launch
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val authManager = AuthManager(application)
+
     private val repository = AuthRepository(
-        authManager = AuthManager(application),
+        authManager = authManager,
         context = application
     )
 
     companion object {
         private const val TAG = "AuthViewModel"
+    }
+
+    init {
+        // ✅ WebSocketManager 초기화 (RetrofitClient의 BASE_URL 사용)
+        WebSocketManager.init(RetrofitClient.BASE_URL)
+        Log.d(TAG, "🔌 WebSocket initialized with: ${RetrofitClient.BASE_URL}")
     }
 
     // 로그인 상태
@@ -34,13 +45,39 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val _logoutState = MutableLiveData<LogoutState>()
     val logoutState: LiveData<LogoutState> = _logoutState
 
+    // ✅ WebSocket 연결 성공 LiveData 추가
+    private val _webSocketConnected = MutableLiveData<Boolean>()
+    val webSocketConnected: LiveData<Boolean> = _webSocketConnected
+
+    // ✅ 수신된 출동 메시지 LiveData 추가
+    private val _dispatchMessage = MutableLiveData<DispatchMessage?>()
+    val dispatchMessage: LiveData<DispatchMessage?> = _dispatchMessage
+
     init {
         checkLoginStatus()
+        // ✅ 로그인 상태면 웹소켓 자동 연결
+        autoConnectWebSocketIfLoggedIn()
     }
 
     // DB에서 로그인 상태 확인
     fun checkLoginStatus() {
         _isLoggedIn.value = repository.isLoggedIn()
+    }
+
+    // ✅ 로그인 상태면 웹소켓 자동 연결
+    private fun autoConnectWebSocketIfLoggedIn() {
+        if (repository.isLoggedIn()) {
+            val accessToken = authManager.getAccessToken()
+            val userId = authManager.getSavedUserId()
+
+            if (accessToken != null && userId != null) {
+                Log.d(TAG, "🔄 Auto-connecting WebSocket for paramedic ID (PK): $userId")
+                Log.d(TAG, "🔌 Subscribing to topic: /topic/paramedic.$userId")
+                connectWebSocket(accessToken, userId.toLong())
+            } else {
+                Log.w(TAG, "⚠️ Cannot auto-connect WebSocket: missing token or userId")
+            }
+        }
     }
 
     // 로그인
@@ -58,6 +95,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             result.onSuccess { loginData ->
                 _loginState.value = LoginState.Success(loginData)
                 _isLoggedIn.value = true
+
+                // ✅ 로그인 성공 시 WebSocket 연결
+                Log.d(TAG, "🔌 Connecting WebSocket for paramedic ID (PK): ${loginData.userId}")
+                Log.d(TAG, "📡 Topic: /topic/paramedic.${loginData.userId}")
+                connectWebSocket(loginData.accessToken, loginData.userId.toLong())
             }.onFailure { error ->
                 _loginState.value = LoginState.Error(error.message ?: "로그인 실패")
                 _isLoggedIn.value = false
@@ -72,6 +114,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             Log.d(TAG, "🚪 로그아웃 시작...")
 
             try {
+                // ✅ WebSocket 연결 해제
+                disconnectWebSocket()
+
                 val result = repository.logout()
 
                 result.onSuccess { message ->
@@ -94,6 +139,47 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 Log.e(TAG, "❌ 로그아웃 예외", e)
             }
         }
+    }
+
+    // ✅ WebSocket 연결
+    private fun connectWebSocket(accessToken: String, paramedicId: Long) {
+        Log.d(TAG, "🔌 Connecting WebSocket for paramedic ID: $paramedicId")
+
+        WebSocketManager.connect(
+            accessToken = accessToken,
+            paramedicId = paramedicId,
+            onDispatchReceived = { dispatch ->
+                Log.d(TAG, "📩 Dispatch received: $dispatch")
+                // ✅ 출동 메시지를 LiveData로 전달 (MainActivity에서 관찰)
+                _dispatchMessage.postValue(dispatch)
+            },
+            onError = { error ->
+                Log.e(TAG, "❌ WebSocket error: $error")
+                _webSocketConnected.postValue(false)
+            },
+            onConnectionStatusChanged = { connected ->
+                Log.d(TAG, "🔌 WebSocket connection status: $connected")
+                _webSocketConnected.postValue(connected)
+            }
+        )
+    }
+
+    // ✅ 출동 메시지 처리 완료 (모달 띄운 후 호출)
+    fun clearDispatchMessage() {
+        _dispatchMessage.value = null
+    }
+
+    // ✅ WebSocket 연결 해제
+    private fun disconnectWebSocket() {
+        Log.d(TAG, "🔌 Disconnecting WebSocket...")
+        WebSocketManager.disconnect()
+        _webSocketConnected.value = false
+    }
+
+    // ViewModel 종료 시 WebSocket 연결 해제
+    override fun onCleared() {
+        super.onCleared()
+        disconnectWebSocket()
     }
 }
 

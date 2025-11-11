@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -125,4 +126,13 @@ dependencies {
 
 // 3. Navigation (보고서 클릭 시 페이지 이동)
     implementation("androidx.navigation:navigation-compose:2.7.6")
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+
+    // WebSocket (STOMP)
+    implementation(libs.stomp.protocol)
+    implementation("io.reactivex.rxjava2:rxjava:2.2.21")
+    implementation("io.reactivex.rxjava2:rxandroid:2.1.1")
 }

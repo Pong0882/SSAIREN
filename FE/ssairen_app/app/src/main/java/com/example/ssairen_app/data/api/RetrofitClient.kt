@@ -26,12 +26,12 @@ object RetrofitClient {
 
     private const val TAG = "RetrofitClient"
 
-    // 배포 서버
-    private const val BASE_URL = "https://api.ssairen.site"
+    // ✅ 배포 서버 (실제 사용)
+    const val BASE_URL = "https://api.ssairen.site"
 
     // 로컬 백엔드 테스트용 (USB 연결 + ADB 포트 포워딩)
     // adb reverse tcp:9090 tcp:8080
-    // private const val BASE_URL = "http://localhost:9090"
+    // const val BASE_URL = "http://localhost:9090"
 
     /**
      * AuthManager (로그인 정보 및 토큰 관리)
