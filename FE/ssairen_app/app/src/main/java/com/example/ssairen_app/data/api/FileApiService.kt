@@ -6,6 +6,7 @@ import com.example.ssairen_app.data.model.request.LoginRequest
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
@@ -24,6 +25,17 @@ interface FileApiService {
     @POST("/api/auth/login")
     suspend fun login(
         @Body loginRequest: LoginRequest
+    ): Response<ApiResponse<TokenResponse>>
+
+    /**
+     * 토큰 갱신
+     *
+     * @param refreshToken 갱신 토큰 (Bearer 포함)
+     * @return 새로운 토큰 응답 (accessToken, refreshToken 등)
+     */
+    @POST("/api/auth/refresh")
+    suspend fun refreshToken(
+        @Header("Authorization") refreshToken: String
     ): Response<ApiResponse<TokenResponse>>
 
     /**

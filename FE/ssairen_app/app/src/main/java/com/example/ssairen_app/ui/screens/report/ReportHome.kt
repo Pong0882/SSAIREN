@@ -2,10 +2,12 @@
 package com.example.ssairen_app.ui.screens.report
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -25,7 +27,7 @@ import com.example.ssairen_app.viewmodel.ReportListState
 
 @Composable
 fun ReportHome(
-    onNavigateToActivityLog: (emergencyReportId: Int) -> Unit = {},
+    onNavigateToActivityLog: (emergencyReportId: Int, isReadOnly: Boolean) -> Unit = { _, _ -> },
     onLogout: () -> Unit = {},
     reportViewModel: ReportViewModel = viewModel()
 ) {
@@ -41,72 +43,51 @@ fun ReportHome(
         reportViewModel.getReports()
     }
 
-    LaunchedEffect(createReportState) {
-        if (createReportState is CreateReportState.Success) {
-            val reportId = (createReportState as CreateReportState.Success).reportData.emergencyReportId
-            reportViewModel.getReports()
-            onNavigateToActivityLog(reportId)
-            reportViewModel.resetCreateState()
-        }
-    }
+    // ✅ 임시로 주석처리 - API 대신 모달창에서 직접 이동
+//    LaunchedEffect(createReportState) {
+//        if (createReportState is CreateReportState.Success) {
+//            val reportId = (createReportState as CreateReportState.Success).reportData.emergencyReportId
+//            reportViewModel.getReports()
+//            onNavigateToActivityLog(reportId, false)  // 새로 생성된 보고서는 수정 가능
+//            reportViewModel.resetCreateState()
+//        }
+//    }
+//
+//    if (createReportState is CreateReportState.Error) {
+//        val errorMessage = (createReportState as CreateReportState.Error).message
+//        AlertDialog(
+//            onDismissRequest = { reportViewModel.resetCreateState() },
+//            title = { Text("일지 생성 실패", color = Color.White) },
+//            text = { Text(errorMessage, color = Color.White) },
+//            confirmButton = {
+//                TextButton(onClick = { reportViewModel.resetCreateState() }) {
+//                    Text("확인")
+//                }
+//            },
+//            containerColor = Color(0xFF2a2a2a)
+//        )
+//    }
+//
+//    if (createReportState is CreateReportState.Loading) {
+//        AlertDialog(
+//            onDismissRequest = { },
+//            title = { Text("일지 생성 중...", color = Color.White) },
+//            text = {
+//                Row(
+//                    horizontalArrangement = Arrangement.Center,
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    CircularProgressIndicator()
+//                }
+//            },
+//            confirmButton = { },
+//            containerColor = Color(0xFF2a2a2a)
+//        )
+//    }
 
-    if (createReportState is CreateReportState.Error) {
-        val errorMessage = (createReportState as CreateReportState.Error).message
-        AlertDialog(
-            onDismissRequest = { reportViewModel.resetCreateState() },
-            title = { Text("일지 생성 실패", color = Color.White) },
-            text = { Text(errorMessage, color = Color.White) },
-            confirmButton = {
-                TextButton(onClick = { reportViewModel.resetCreateState() }) {
-                    Text("확인")
-                }
-            },
-            containerColor = Color(0xFF2a2a2a)
-        )
-    }
-
-    if (createReportState is CreateReportState.Loading) {
-        AlertDialog(
-            onDismissRequest = { },
-            title = { Text("일지 생성 중...", color = Color.White) },
-            text = {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    CircularProgressIndicator()
-                }
-            },
-            confirmButton = { },
-            containerColor = Color(0xFF2a2a2a)
-        )
-    }
-
-    if (dispatchState.showDispatchModal && dispatchState.activeDispatch != null) {
-        val dispatch = dispatchState.activeDispatch!!
-        DispatchDetail(
-            dispatchData = DispatchDetailData(
-                dispatchNumber = dispatch.id,
-                status = "실전/1차",
-                type = dispatch.type,
-                area = "관할구역",
-                location = dispatch.location,
-                reporter = "신고자명",
-                reporterPhone = "010-0000-0000",
-                dispatchTime = dispatch.date,
-                address = dispatch.location,
-                cause = "사고 원인 정보"
-            ),
-            onDismiss = {
-                dispatchState.closeDispatchModal()
-            },
-            onCreateNewReport = {
-                dispatchState.closeDispatchModal()
-                reportViewModel.getReports()
-            }
-        )
-    }
+    // ✅ 출동 모달은 AppNavigation에서 전역으로 처리하므로 여기서는 제거
+    // (중복 모달 방지)
 
     Column(
         modifier = Modifier
@@ -160,7 +141,9 @@ fun ReportHome(
                     onRefresh = { reportViewModel.getReports() },
                     onLoadMore = { reportViewModel.loadMoreReports() },
                     onReportClick = { emergencyReportId ->
-                        onNavigateToActivityLog(emergencyReportId)
+                        // ✅ 전역 현재 활성 보고서 ID 저장
+                        com.example.ssairen_app.viewmodel.ActivityViewModel.setGlobalReportId(emergencyReportId)
+                        onNavigateToActivityLog(emergencyReportId, true)  // GET으로 불러온 보고서는 읽기 전용
                     },
                     isLoadingMore = isLoadingMore,
                     hasMoreData = hasMoreData,
@@ -255,14 +238,10 @@ private fun ReportListContent(
         is ReportListState.Success -> {
             val reportsData = reportListState.reportListData
 
-            // ✅ 원래 코드: 모든 보고서 표시
-            // val reports = reportsData.emergencyReports
-
-            // ✅ 임시 코드: 보고서 21번만 필터링
-            val reports = reportsData.emergencyReports.filter { it.id == 21 }
+            // ✅ 모든 보고서 표시 (필터링 제거)
+            val reports = reportsData.emergencyReports
 
             Log.d("ReportHome", "✅ ReportListState.Success - 보고서 개수: ${reports.size}")
-            Log.d("ReportHome", "📌 필터링된 보고서: ID 21번만 표시")
 
             if (reports.isEmpty()) {
                 Box(
@@ -270,7 +249,7 @@ private fun ReportListContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "보고서 21번을 찾을 수 없습니다",
+                        text = "보고서가 없습니다",
                         color = Color(0xFF999999),
                         fontSize = 14.sp
                     )
@@ -367,13 +346,35 @@ private fun ReportCard(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // ✅ 상단: 재난번호 | 상태만 표시
-            Text(
-                text = "${reportData.reportNumber} | ${reportData.status}",
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
+            // ✅ 상단: 재난번호 | 상태 + 작성완료 뱃지
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${reportData.reportNumber} | ${reportData.status}",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+
+                // 작성완료 뱃지
+                Box(
+                    modifier = Modifier
+                        .background(
+                            color = Color(0xFF28a745),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "작성완료",
+                        fontSize = 12.sp,
+                        color = Color.White
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 

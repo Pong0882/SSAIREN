@@ -20,8 +20,6 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
     companion object {
         private const val TAG = "ReportViewModel"
-        // ✅ 임시: 필터링할 dispatch_id
-        private const val FILTER_DISPATCH_ID = 21
     }
 
     // 일지 생성 상태
@@ -55,7 +53,6 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             Log.d(TAG, "🔄 초기화: 보고서 목록 조회 시작")
             Log.d(TAG, "🧵 현재 스레드: ${Thread.currentThread().name}")
-            Log.d(TAG, "📌 필터링: dispatch_id = $FILTER_DISPATCH_ID 만 표시")
 
             // 초기화
             currentPage = 0
@@ -124,33 +121,17 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             }
 
             result.onSuccess { reportListData: MyReportsData ->
-                // ✅ 원래 코드: 모든 보고서 사용
-                // val newReports = reportListData.emergencyReports
-
-                // ✅ 임시 코드: dispatch_id 21번만 필터링
-                // 먼저 데이터 구조 확인을 위한 로그
-                if (reportListData.emergencyReports.isNotEmpty()) {
-                    val sampleReport = reportListData.emergencyReports.first()
-                    Log.d(TAG, "📋 샘플 보고서 데이터 구조:")
-                    Log.d(TAG, "   - report.id: ${sampleReport.id}")
-                    Log.d(TAG, "   - dispatchInfo: ${sampleReport.dispatchInfo}")
-                    Log.d(TAG, "   - dispatchInfo.disasterNumber: ${sampleReport.dispatchInfo.disasterNumber}")
-                }
-
-                // 일단 report.id == 21로 필터링 (emergency_report의 id)
-                val newReports = reportListData.emergencyReports.filter { report ->
-                    report.id == FILTER_DISPATCH_ID
-                }
+                // ✅ 모든 보고서 사용 (필터링 제거)
+                val newReports = reportListData.emergencyReports
 
                 Log.d(TAG, "✅ API 응답 성공!")
                 Log.d(TAG, "   - API에서 받은 전체 데이터 개수: ${reportListData.emergencyReports.size}")
-                Log.d(TAG, "   - 필터링 후 데이터 개수: ${newReports.size}")
                 Log.d(TAG, "   - 기존 데이터 개수: ${allReports.size}")
 
                 if (newReports.isEmpty()) {
                     // ✅ postValue 사용
                     _hasMoreData.postValue(false)
-                    Log.d(TAG, "🏁 더 이상 로드할 데이터가 없습니다 (필터링 결과 없음)")
+                    Log.d(TAG, "🏁 더 이상 로드할 데이터가 없습니다")
                 } else {
                     val existingIds = allReports.map { it.id }.toSet()
                     val uniqueNewReports = newReports.filter { it.id !in existingIds }
@@ -170,17 +151,10 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                         Log.d(TAG, "⚠️ 모든 데이터가 중복입니다")
                     }
 
-                    // ✅ 원래 코드: 10개 미만이면 마지막 페이지
-                    // if (newReports.size < 10) {
-                    //     _hasMoreData.postValue(false)
-                    //     Log.d(TAG, "🏁 마지막 페이지 도달 (${newReports.size}개 < 10개)")
-                    // }
-
-                    // ✅ 임시 코드: 필터링 결과가 10개 미만이면 더 로드
-                    if (reportListData.emergencyReports.size < 10) {
-                        // API에서 받은 원본 데이터가 10개 미만이면 마지막 페이지
+                    // 10개 미만이면 마지막 페이지
+                    if (newReports.size < 10) {
                         _hasMoreData.postValue(false)
-                        Log.d(TAG, "🏁 마지막 페이지 도달")
+                        Log.d(TAG, "🏁 마지막 페이지 도달 (${newReports.size}개 < 10개)")
                     }
                 }
 
