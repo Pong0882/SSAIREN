@@ -7,6 +7,7 @@ interface EmergencyRequest {
   hospitalSelectionId: number;
   emergencyReportId: number;
   status?: string;        // COMPLETED 메시지용
+  sourceDestination?: string; // 메시지를 보낸 채널 (응답용)
   patientInfo?: {
     emergencyReportId: number;
     age: number;
@@ -51,7 +52,7 @@ export function useHospitalWebSocket(options?: UseHospitalWebSocketOptions) {
 
   // 메시지 핸들러
   const handleMessage = useCallback(
-    (message: EmergencyRequest | CompletedMessage) => {
+    (message: EmergencyRequest | CompletedMessage, source: string) => {
       // COMPLETED 메시지 처리
       if (message.type === 'COMPLETED') {
         console.log('❌ 요청 완료 알림:', message);
@@ -62,9 +63,11 @@ export function useHospitalWebSocket(options?: UseHospitalWebSocketOptions) {
       }
 
       // 새로운 요청 처리
-      console.log('🚨 새로운 수용 요청:', message);
+      console.log('🚨 새로운 수용 요청:', message, '채널:', source);
       if (onNewRequest) {
-        onNewRequest(message as EmergencyRequest);
+        // source destination 정보 추가
+        const requestWithSource = { ...message, sourceDestination: source } as EmergencyRequest;
+        onNewRequest(requestWithSource);
       }
     },
     [onNewRequest, onCompleted]
