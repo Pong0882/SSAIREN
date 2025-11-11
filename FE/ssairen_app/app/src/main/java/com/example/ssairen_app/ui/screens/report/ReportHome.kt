@@ -164,6 +164,8 @@ fun ReportHome(
                     onRefresh = { reportViewModel.getReports() },
                     onLoadMore = { reportViewModel.loadMoreReports() },
                     onReportClick = { emergencyReportId ->
+                        // ✅ 전역 현재 활성 보고서 ID 저장
+                        com.example.ssairen_app.viewmodel.ActivityViewModel.setGlobalReportId(emergencyReportId)
                         onNavigateToActivityLog(emergencyReportId, true)  // GET으로 불러온 보고서는 읽기 전용
                     },
                     isLoadingMore = isLoadingMore,

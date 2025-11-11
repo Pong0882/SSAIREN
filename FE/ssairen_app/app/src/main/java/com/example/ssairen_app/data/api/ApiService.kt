@@ -10,7 +10,10 @@ import com.example.ssairen_app.data.model.response.PatientInfoResponse
 import com.example.ssairen_app.data.model.response.PatientTypeResponse
 import com.example.ssairen_app.data.model.response.PatientEvaResponse
 import com.example.ssairen_app.data.model.response.FirstAidResponse
-
+import com.example.ssairen_app.data.model.request.PatientInfoRequest
+import com.example.ssairen_app.data.model.request.PatientTypeRequest
+import com.example.ssairen_app.data.model.request.PatientEvaRequest
+import com.example.ssairen_app.data.model.request.FirstAidRequest
 
 import retrofit2.Response
 import retrofit2.http.*
@@ -85,5 +88,33 @@ interface ApiService {
     suspend fun getFirstAid(
         @Path("emergencyReportId") emergencyReportId: Int,
         @Header("Authorization") token: String
+    ): Response<FirstAidResponse>
+
+    @PATCH("api/emergency-reports/{emergencyReportId}/sections/PATIENT_INFO")
+    suspend fun updatePatientInfo(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String,
+        @Body request: PatientInfoRequest
+    ): Response<PatientInfoResponse>
+
+    @PATCH("api/emergency-reports/{emergencyReportId}/sections/INCIDENT_TYPE")
+    suspend fun updatePatientType(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String,
+        @Body request: PatientTypeRequest
+    ): Response<PatientTypeResponse>
+
+    @PATCH("api/emergency-reports/{emergencyReportId}/sections/ASSESSMENT")
+    suspend fun updatePatientEva(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String,
+        @Body request: PatientEvaRequest
+    ): Response<PatientEvaResponse>
+
+    @PATCH("api/emergency-reports/{emergencyReportId}/sections/TREATMENT")
+    suspend fun updateFirstAid(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String,
+        @Body request: FirstAidRequest
     ): Response<FirstAidResponse>
 }

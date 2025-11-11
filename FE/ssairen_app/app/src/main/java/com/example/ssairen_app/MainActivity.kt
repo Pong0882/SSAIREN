@@ -140,31 +140,49 @@ fun AppNavigation(
         composable("activity_main") {
             ActivityMain(
                 onNavigateToActivityLog = {
-                    navController.navigate("activity_log/0/0")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/0")
                 },
                 onNavigateToPatientInfo = {
-                    navController.navigate("activity_log/0/0")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/0")
                 },
                 onNavigateToPatientType = {
-                    navController.navigate("activity_log/0/2")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/2")
                 },
                 onNavigateToPatientEva = {
-                    navController.navigate("activity_log/0/3")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/3")
                 },
                 onNavigateToFirstAid = {
-                    navController.navigate("activity_log/0/4")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/4")
                 },
                 onNavigateToDispatch = {
-                    navController.navigate("activity_log/0/1")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/1")
                 },
                 onNavigateToMedicalGuidance = {
-                    navController.navigate("activity_log/0/5")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/5")
                 },
                 onNavigateToPatientTransport = {
-                    navController.navigate("activity_log/0/6")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/6")
                 },
                 onNavigateToReportDetail = {
-                    navController.navigate("activity_log/0/7")
+                    // ✅ 전역 현재 활성 보고서 ID 사용
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/7")
                 }
             )
         }

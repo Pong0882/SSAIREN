@@ -19,6 +19,7 @@ import com.example.ssairen_app.ui.navigation.ActivityLogNavigationBar
 import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.viewmodel.LogViewModel
 import com.example.ssairen_app.viewmodel.ActivityViewModel
+import com.example.ssairen_app.viewmodel.SaveState
 
 @Composable
 fun ActivityLogHome(
@@ -36,14 +37,47 @@ fun ActivityLogHome(
 
     val activityLogData by viewModel.activityLogData.collectAsState()
     val lastSavedTime by viewModel.lastSavedTime.collectAsState()
+    val saveState by viewModel.saveState.collectAsState()
 
-    // ✅ emergencyReportId를 ActivityViewModel에 설정
+    // ✅ Snackbar 상태
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // ✅ emergencyReportId를 두 ViewModel에 모두 설정
     LaunchedEffect(emergencyReportId) {
         if (emergencyReportId > 0) {
             Log.d("ActivityLogHome", "📝 emergencyReportId 설정: $emergencyReportId")
+
+            // ActivityViewModel에 설정
             activityViewModel.setEmergencyReportId(emergencyReportId)
+            com.example.ssairen_app.viewmodel.ActivityViewModel.setGlobalReportId(emergencyReportId)
+
+            // ✅ LogViewModel에도 설정
+            viewModel.setEmergencyReportId(emergencyReportId)
         } else {
             Log.w("ActivityLogHome", "⚠️ 유효하지 않은 emergencyReportId: $emergencyReportId")
+        }
+    }
+
+    // ✅ SaveState 관찰 및 UI 피드백
+    LaunchedEffect(saveState) {
+        when (saveState) {
+            is SaveState.Success -> {
+                val message = (saveState as SaveState.Success).message
+                Log.d("ActivityLogHome", "✅ 저장 성공: $message")
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    duration = SnackbarDuration.Short
+                )
+            }
+            is SaveState.Error -> {
+                val message = (saveState as SaveState.Error).message
+                Log.e("ActivityLogHome", "❌ 저장 실패: $message")
+                snackbarHostState.showSnackbar(
+                    message = "저장 실패: $message",
+                    duration = SnackbarDuration.Short
+                )
+            }
+            else -> {}
         }
     }
 
@@ -58,116 +92,147 @@ fun ActivityLogHome(
 
         viewModel.saveToBackend(selectedLogTab)
 
-        Log.d("ActivityLogHome", "✅ 백엔드 저장 완료")
+        Log.d("ActivityLogHome", "✅ 백엔드 저장 요청 완료")
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF1a1a1a))
-            .statusBarsPadding()
-    ) {
-        // 1. 상단 타이틀 + 뒤로가기
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "뒤로가기",
-                    tint = Color.White
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = Color(0xFF2a2a2a),
+                    contentColor = Color.White
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(
-                    text = "구급활동일지",
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                if (lastSavedTime.isNotEmpty()) {
-                    Text(
-                        text = "마지막 저장: $lastSavedTime",
-                        color = Color.Gray,
-                        fontSize = 12.sp
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF1a1a1a))
+                .statusBarsPadding()
+                .padding(paddingValues)
+        ) {
+            // 1. 상단 타이틀 + 뒤로가기
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onNavigateBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "뒤로가기",
+                        tint = Color.White
                     )
                 }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 2. 8개 탭 네비게이션
-        ActivityLogNavigationBar(
-            selectedTab = selectedLogTab,
-            onTabSelected = { newTab ->
-                if (selectedLogTab != newTab) {
-                    saveCurrentTabToBackend()
-                    selectedLogTab = newTab
-                    Log.d("ActivityLogHome", "📑 상단 탭 변경: $selectedLogTab → $newTab")
-                }
-            },
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 3. 내용 영역
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-        ) {
-            when (selectedLogTab) {
-                0 -> PatientInfo(
-                    viewModel = viewModel,
-                    data = activityLogData,
-                    isReadOnly = isReadOnly
-                )
-                1 -> Text("구급출동", color = Color.White)  // TODO: DispatchSection()
-                2 -> PatientType(
-                    viewModel = viewModel,
-                    data = activityLogData,
-                    isReadOnly = isReadOnly
-                )
-                3 -> PatientEva(
-                    viewModel = viewModel,
-                    data = activityLogData,
-                    isReadOnly = isReadOnly
-                )
-                4 -> FirstAid(
-                    viewModel = viewModel,
-                    data = activityLogData,
-                    isReadOnly = isReadOnly
-                )
-                5 -> Text("의료지도", color = Color.White)  // TODO: MedicalGuidance()
-                6 -> Text("환자이송", color = Color.White)  // TODO: PatientTransport()
-                7 -> Text("세부상황표", color = Color.White)  // TODO: ReportDetail()
-            }
-        }
-
-        // 4. 하단 네비게이션
-        EmergencyNav(
-            selectedTab = selectedBottomTab,
-            onTabSelected = { newTab ->
-                if (selectedBottomTab != newTab) {
-                    saveCurrentTabToBackend()
-                    selectedBottomTab = newTab
-                    Log.d("ActivityLogHome", "📑 하단 탭 변경: $selectedBottomTab → $newTab")
-
-                    when (newTab) {
-                        0 -> onNavigateToHome()         // 홈
-                        1 -> { /* 현재 화면 유지 */ }  // 구급활동일지
-                        2 -> onNavigateToSummation()    // 요약
-                        3 -> { /* TODO: 메모 */ }
-                        4 -> { /* TODO: 병원이송 */ }
+                Spacer(modifier = Modifier.width(8.dp))
+                Column {
+                    Text(
+                        text = "구급활동일지",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (lastSavedTime.isNotEmpty()) {
+                            Text(
+                                text = "마지막 저장: $lastSavedTime",
+                                color = Color.Gray,
+                                fontSize = 12.sp
+                            )
+                        }
+                        // ✅ 저장 중 표시
+                        if (saveState is SaveState.Saving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(12.dp),
+                                strokeWidth = 2.dp,
+                                color = Color(0xFF3b7cff)
+                            )
+                            Text(
+                                text = "저장 중...",
+                                color = Color(0xFF3b7cff),
+                                fontSize = 12.sp
+                            )
+                        }
                     }
                 }
             }
-        )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 2. 8개 탭 네비게이션
+            ActivityLogNavigationBar(
+                selectedTab = selectedLogTab,
+                onTabSelected = { newTab ->
+                    if (selectedLogTab != newTab) {
+                        saveCurrentTabToBackend()
+                        selectedLogTab = newTab
+                        Log.d("ActivityLogHome", "📑 상단 탭 변경: $selectedLogTab → $newTab")
+                    }
+                },
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 3. 내용 영역
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                when (selectedLogTab) {
+                    0 -> PatientInfo(
+                        viewModel = viewModel,
+                        data = activityLogData,
+                        isReadOnly = isReadOnly
+                    )
+                    1 -> Text("구급출동", color = Color.White)  // TODO: DispatchSection()
+                    2 -> PatientType(
+                        viewModel = viewModel,
+                        data = activityLogData,
+                        isReadOnly = isReadOnly
+                    )
+                    3 -> PatientEva(
+                        viewModel = viewModel,
+                        data = activityLogData,
+                        isReadOnly = isReadOnly
+                    )
+                    4 -> FirstAid(
+                        viewModel = viewModel,
+                        data = activityLogData,
+                        isReadOnly = isReadOnly
+                    )
+                    5 -> Text("의료지도", color = Color.White)  // TODO: MedicalGuidance()
+                    6 -> Text("환자이송", color = Color.White)  // TODO: PatientTransport()
+                    7 -> Text("세부상황표", color = Color.White)  // TODO: ReportDetail()
+                }
+            }
+
+            // 4. 하단 네비게이션
+            EmergencyNav(
+                selectedTab = selectedBottomTab,
+                onTabSelected = { newTab ->
+                    if (selectedBottomTab != newTab) {
+                        saveCurrentTabToBackend()
+                        selectedBottomTab = newTab
+                        Log.d("ActivityLogHome", "📑 하단 탭 변경: $selectedBottomTab → $newTab")
+
+                        when (newTab) {
+                            0 -> onNavigateToHome()         // 홈
+                            1 -> { /* 현재 화면 유지 */ }  // 구급활동일지
+                            2 -> onNavigateToSummation()    // 요약
+                            3 -> { /* TODO: 메모 */ }
+                            4 -> { /* TODO: 병원이송 */ }
+                        }
+                    }
+                }
+            )
+        }
     }
 }
