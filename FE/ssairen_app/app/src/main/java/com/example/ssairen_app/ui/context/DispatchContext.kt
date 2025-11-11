@@ -2,6 +2,7 @@
 package com.example.ssairen_app.ui.context
 
 import androidx.compose.runtime.*
+import com.example.ssairen_app.data.websocket.DispatchMessage
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -61,6 +62,39 @@ class DispatchState {
     fun completeDispatch() {
         _activeDispatch = null
         _showDispatchModal = false
+    }
+
+    // ✅ WebSocket 메시지로부터 출동 생성
+    fun createDispatchFromWebSocket(message: DispatchMessage) {
+        // 출동 유형 문자열 생성
+        val typeString = buildString {
+            append(message.disasterType)
+            message.dispatchLevel?.let { append(" | $it") }
+            message.disasterSubtype?.let { append(" - $it") }
+        }
+
+        // 날짜 포맷 변환 (ISO 8601 → 읽기 쉬운 형식)
+        val formattedDate = message.date?.let {
+            try {
+                val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.KOREA)
+                val displayFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.KOREA)
+                val date = isoFormat.parse(it)
+                date?.let { displayFormat.format(it) }
+            } catch (e: Exception) {
+                it // 파싱 실패 시 원본 반환
+            }
+        } ?: SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.KOREA).format(Date())
+
+        val newDispatch = DispatchItem(
+            id = message.disasterNumber,           // 재난 번호를 ID로 사용
+            type = typeString,                     // "화재 | 실전 - 고층건물"
+            date = formattedDate,                  // "2025-11-09 09:16"
+            location = message.locationAddress,    // 출동 위치
+            isActive = true
+        )
+
+        _activeDispatch = newDispatch
+        _showDispatchModal = true
     }
 }
 

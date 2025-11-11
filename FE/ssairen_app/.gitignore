@@ -14,6 +14,9 @@
 .cxx
 local.properties
 
+# Firebase
+google-services.json
+
 # Wear module
 wear/.gradle/
 wear/.idea/
