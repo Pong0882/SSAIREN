@@ -1,0 +1,9 @@
+version: "2"
+authtoken: 34pGTvx3yEC5ixsXKSVOE1iQXq2_7rXrVF1brmEHhoyDoxvVC
+tunnels:
+  ai-service:
+    addr: ai-cloud:8000
+    proto: http
+    schemes:
+      - https
+    inspect: true

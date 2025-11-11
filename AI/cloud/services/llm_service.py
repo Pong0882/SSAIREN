@@ -22,57 +22,6 @@ def get_openai_client():
     """OpenAI 클라이언트 인스턴스 반환 (lazy initialization)"""
     return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-
-# ============================================================
-# 화자 분리 및 그룹핑
-# ============================================================
-
-def parse_segments_by_speaker(segments: List[STTSegment]) -> Dict[str, List[str]]:
-    """
-    화자별로 세그먼트를 그룹핑합니다.
-    
-    Args:
-        segments: STT 세그먼트 리스트
-        
-    Returns:
-        Dict[str, List[str]]: 화자별 발화 내용 {'A': ['텍스트1', '텍스트2'], 'B': [...]}
-    """
-    speaker_texts = {}
-    for segment in segments:
-        speaker = segment.speaker
-        text = segment.text.strip()
-        
-        if speaker not in speaker_texts:
-            speaker_texts[speaker] = []
-        
-        if text:  # 빈 텍스트 제외
-            speaker_texts[speaker].append(text)
-    
-    return speaker_texts
-
-
-def format_conversation_for_llm(segments: List[STTSegment]) -> str:
-    """
-    세그먼트를 LLM이 이해하기 쉬운 대화 형식으로 변환합니다.
-    
-    Args:
-        segments: STT 세그먼트 리스트
-        
-    Returns:
-        str: 포맷팅된 대화 텍스트
-    """
-    conversation_lines = []
-    
-    for segment in segments:
-        speaker = segment.speaker
-        text = segment.text.strip()
-        
-        if text:
-            conversation_lines.append(f"[화자 {speaker}]: {text}")
-    
-    return "\n".join(conversation_lines)
-
-
 # ============================================================
 # 프롬프트 템플릿 관리
 # ============================================================
@@ -191,28 +140,6 @@ def get_information_extraction_prompt() -> str:
 
 [보온]: 온 | 냉
 
-[의료지도 연결 여부]: 연결 | 미연결
-
-[의료지도 요청 방법(type)]: 일반전화 | 휴대전화 | 무전기 | 기타(value 필수)
-
-[휴대전화 세부]: 음성 | 화상 (휴대전화 선택 시 value에 입력)
-
-[의료지도 기관]: 소방 | 병원 | 기타(value 필수)
-
-[이송 구역]: 관할 | 타시·도
-
-[의료기관 선정자]: 구급대 | 119상황실 | 구급상황센터 | 환자보호자 | 병원수용곤란등 | 기타(value 필수)
-
-[재이송 사유]: 병상부족(name에 세부 리스트) | 전문의부재 | 검사불가 | 원내 CPR | 기타(value 필수)
-
-[환자 인수자]: 의사 | 간호사 | 응급구조사 | 기타(value 필수)
-
-[구급대원 등급]: 1급 | 2급 | 간호사 | 구급교육 | 기타(value 필수)
-
-[계급]: 사 | 교 | 장 | 위 | 경 | 령 | 정 |
-
-[장애 요인]: 없음 | 장거리 이송 | 보호자 요구 | 원거리 병원 | 원거리 출동 | 만취자 | 폭행 | 언어폭력 | 환자 과체중 | 기관협조 미흡 | 환자위치 불명확 | 교통정체 | 폭우 | 폭설 | 기타(value 필요)
-
 **추출 예시 1** (기본 선택지 사용):
 
 입력:
@@ -268,26 +195,6 @@ def get_information_extraction_prompt() -> str:
 출력:
 {{"medicalGuidance": {{"schema_version": 1, "contactStatus": "연결", "guidanceAgency": {{"type": "병원"}}, "guidanceDoctor": {{"name": "이의사"}}, "guidanceContent": {{"emergencyTreatment": [{{"name": "기관삽관"}}, {{"name": "기타", "value": "드레싱"}}], "medication": [{{"name": "기타", "value": "활성탄"}}], "hospitalRequest": true}}}}}}
 
-**추출 예시 6** (환자 이송):
-
-입력:
-[화자 B]: 첫 번째로 OO병원 갔는데 응급실, 중환자실 병상이 없다고 재이송 요청했습니다.
-[화자 B]: 상황실에서 선정했고 의사 선생님께 인계했어요.
-[화자 B]: 이후 △△병원으로 다시 가서 간호사에게 인계하고 서명 받았습니다.
-
-출력:
-{{"patientTransport": {{"schema_version": 1, "firstTransport": {{"hospitalName": "OO병원", "regionType": "관할", "retransportReason": [{{"type": "병상부족", "name": ["응급실", "중환자실"]}}], "selectedBy": "119상황실", "receiver": "의사"}}, "secondTransport": {{"hospitalName": "△△병원", "regionType": "타시·도", "receiver": "간호사"}}}}}}
-
-**추출 예시 7** (세부상황표):
-
-입력:
-[화자 B]: 의사 홍길동 선생님께 확인 받았습니다.
-[화자 B]: 1급 소방교 김철수, 2급 소방사 박영희가 탑승했고 운전은 구급교육 소방교 이운전이 맡았습니다.
-[화자 B]: 기타로 최지원 대원이 함께 했고 장애요인은 보호자 요구였습니다.
-
-출력:
-{{"detailReport": {{"schema_version": 1, "doctor": {{"affiliation": "소방", "name": "홍길동"}}, "paramedic1": {{"grade": "1급", "rank": "교", "name": "김철수"}}, "paramedic2": {{"grade": "2급", "rank": "사", "name": "박영희"}}, "driver": {{"grade": "구급교육", "rank": "소방교", "name": "이운전"}}, "other": {{"grade": "기타", "name": "최지원"}}, "obstacles": {{"type": "보호자 요구"}}}}}}
-
 **중요 규칙**:
 1. 반드시 순수 JSON만 출력 (코드 블록이나 설명 금지)
 2. 언급된 정보만 포함 (추측 금지)
@@ -318,13 +225,6 @@ def get_information_extraction_prompt() -> str:
    - 신고 방법="기타" → reporter.value 필수
    - 환자 발생 장소="기타" → sceneLocation.value 필수
    - AED 사용="기타" → aed.value 필수
-   - 의료지도 요청 방법="기타" → requestMethod.value 필수
-   - 의료지도 기관="기타" → guidanceAgency.value 필수
-   - 의료지도 emergencyTreatment/medication 항목이 "기타"이면 value에 상세 내용 필수
-   - 의료기관 선정자="기타" → selectedByValue 필수
-   - 환자 인수자="기타" → receiverValue 필수
-   - 재이송 사유 type="기타" → value 필수
-   - 장애 요인="기타" → obstacles.value 필수
 9. **서명 데이터**: receiverSign.data 및 detailReport.*.signature는 Base64 문자열만 허용 (설명 텍스트 금지)
 
 **입력 대화**:

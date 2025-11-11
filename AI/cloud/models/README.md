@@ -44,17 +44,18 @@ BASE_MODEL_NAME=Qwen/Qwen2.5-3B-Instruct
 
 ## 🔄 모델 버전 관리
 
-새로운 파인튜닝 모델로 교체:
+새로운 모델로 교체:
 
 ```bash
-# 1. 새 체크포인트 복사
-cp -r checkpoint-600 models/ems-lora-checkpoint-v2
+# 1. 새 GGUF 모델을 models/gguf/ 폴더에 복사
+cp ems-lora-checkpoint10000-q5_k_m.gguf models/gguf/
 
-# 2. API로 모델 교체
-curl -X POST http://localhost:8000/stt-to-json/reload-model?adapter_path=./models/ems-lora-checkpoint-v2
+# 2. config/.env 파일 수정
+GGUF_MODEL_PATH=/app/models/gguf/ems-lora-checkpoint10000-q5_k_m.gguf
 
-# 또는 환경 변수 수정 후 서버 재시작
-LORA_ADAPTER_PATH=./models/ems-lora-checkpoint-v2
+# 3. Docker 재시작
+docker-compose down
+docker-compose up -d
 ```
 
 ---
