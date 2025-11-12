@@ -5,12 +5,14 @@ import com.ssairen.domain.ai.entity.SttTranscript;
 import com.ssairen.domain.ai.repository.SttTranscriptRepository;
 import com.ssairen.domain.ai.service.LocalWhisperSttService;
 import com.ssairen.domain.ai.service.SttService;
+import com.ssairen.domain.ai.service.TextToJsonService;
 import com.ssairen.domain.emergency.entity.EmergencyReport;
 import com.ssairen.domain.emergency.repository.EmergencyReportRepository;
 import com.ssairen.domain.file.dto.AudioUploadWithSttResponse;
 import com.ssairen.domain.file.dto.FileUploadResponse;
 import com.ssairen.domain.file.dto.LocalWhisperSttResponse;
 import com.ssairen.domain.file.dto.SttResponse;
+import com.ssairen.domain.file.dto.TextToJsonResponse;
 import com.ssairen.domain.file.service.MinioService;
 import com.ssairen.global.dto.ApiResponse;
 import com.ssairen.global.exception.CustomException;
@@ -42,6 +44,7 @@ public class FileController {
     private final MinioService minioService;
     private final SttService sttService;
     private final LocalWhisperSttService localWhisperSttService;
+    private final TextToJsonService textToJsonService;
     private final SttTranscriptRepository sttTranscriptRepository;
     private final EmergencyReportRepository emergencyReportRepository;
     private final ObjectMapper objectMapper;
@@ -317,6 +320,61 @@ public class FileController {
 
         return ResponseEntity.ok(
                 ApiResponse.success(response, "로컬 Whisper STT 변환이 완료되었습니다.")
+        );
+    }
+
+    /**
+     * 오디오 파일 STT + JSON 변환 통합 API
+     * - 로컬 Whisper STT로 음성을 텍스트로 변환
+     * - AI 서버의 Text to JSON API로 텍스트를 JSON으로 변환
+     */
+    @PostMapping(value = "/stt/local/full-to-json", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "로컬 Whisper STT + JSON 변환",
+            description = "로컬 Faster-Whisper로 음성을 텍스트로 변환한 후, AI 서버를 통해 대화 내용을 구조화된 JSON으로 변환합니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "STT 및 JSON 변환 성공",
+                    content = @Content(schema = @Schema(implementation = TextToJsonResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (빈 파일, 지원하지 않는 형식 등)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "STT 또는 JSON 변환 실패"
+            )
+    })
+    public ResponseEntity<ApiResponse<TextToJsonResponse>> convertSpeechToJsonWithLocalWhisper(
+            @Parameter(description = "오디오 파일 (mp3, wav, m4a 등)", required = true)
+            @RequestParam("file") MultipartFile file,
+            @Parameter(description = "언어 코드 (예: ko, en, ja)")
+            @RequestParam(value = "language", required = false, defaultValue = "ko") String language,
+            @Parameter(description = "최대 생성 토큰 수")
+            @RequestParam(value = "maxNewTokens", required = false, defaultValue = "700") Integer maxNewTokens,
+            @Parameter(description = "생성 온도 (0.0 ~ 1.0)")
+            @RequestParam(value = "temperature", required = false, defaultValue = "0.1") Double temperature
+    ) {
+        log.info("로컬 Whisper STT + JSON 변환 요청 - 파일명: {}, 언어: {}, 크기: {} bytes",
+                file.getOriginalFilename(), language, file.getSize());
+
+        // 1. 로컬 Whisper STT로 음성을 텍스트로 변환
+        LocalWhisperSttResponse sttResponse = localWhisperSttService.convertSpeechToText(file, language);
+        log.info("STT 변환 완료 - 텍스트 길이: {} 문자", sttResponse.getText().length());
+
+        // 2. AI 서버로 텍스트를 JSON으로 변환
+        TextToJsonResponse jsonResponse = textToJsonService.convertTextToJson(
+                sttResponse.getText(),
+                maxNewTokens,
+                temperature
+        );
+        log.info("JSON 변환 완료 - 성공: {}", jsonResponse.getSuccess());
+
+        return ResponseEntity.ok(
+                ApiResponse.success(jsonResponse, "STT 및 JSON 변환이 완료되었습니다.")
         );
     }
 }
