@@ -192,7 +192,7 @@ fun ActivityLogHome(
                         data = activityLogData,
                         isReadOnly = isReadOnly
                     )
-                    1 -> Text("구급출동", color = Color.White)  // TODO: DispatchSection()
+                    1 -> DispatchSection()
                     2 -> PatientType(
                         viewModel = viewModel,
                         data = activityLogData,
@@ -208,9 +208,9 @@ fun ActivityLogHome(
                         data = activityLogData,
                         isReadOnly = isReadOnly
                     )
-                    5 -> Text("의료지도", color = Color.White)  // TODO: MedicalGuidance()
-                    6 -> Text("환자이송", color = Color.White)  // TODO: PatientTransport()
-                    7 -> Text("세부상황표", color = Color.White)  // TODO: ReportDetail()
+                    5 -> MedicalGuidance()
+                    6 -> PatientTransport()
+                    7 -> ReportDetail(logViewModel = viewModel)
                 }
             }
 
