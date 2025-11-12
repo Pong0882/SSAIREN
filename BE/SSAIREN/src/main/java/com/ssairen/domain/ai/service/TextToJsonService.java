@@ -21,7 +21,7 @@ public class TextToJsonService {
 
     private final WebClient aiServerWebClient;
 
-    private static final String TEXT_TO_JSON_ENDPOINT = "/api/stt-to-json/text-to-json";
+    private static final String TEXT_TO_JSON_ENDPOINT = "/api/integrated/process-conversation";
 
     /**
      * 대화 텍스트를 JSON으로 변환
