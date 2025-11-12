@@ -29,7 +29,7 @@ public class TextToJsonService {
      * @param conversation 대화 텍스트
      * @return 변환된 JSON 결과
      */
-    public TextToJsonResponse convertTextToJson(String conversation) {
+    public Object convertTextToJson(String conversation) {
         return convertTextToJson(conversation, 700, 0.1);
     }
 
@@ -41,7 +41,7 @@ public class TextToJsonService {
      * @param temperature 생성 온도
      * @return 변환된 JSON 결과
      */
-    public TextToJsonResponse convertTextToJson(String conversation, Integer maxNewTokens, Double temperature) {
+    public Object convertTextToJson(String conversation, Integer maxNewTokens, Double temperature) {
         try {
             log.info("Text to JSON 변환 시작 - 텍스트 길이: {} 문자", conversation.length());
 
@@ -52,20 +52,20 @@ public class TextToJsonService {
                     .temperature(temperature != null ? temperature : 0.1)
                     .build();
 
-            // AI 서버로 요청
-            TextToJsonResponse response = aiServerWebClient.post()
+            // AI 서버로 요청 - Object로 받아서 그대로 반환
+            Object response = aiServerWebClient.post()
                     .uri(TEXT_TO_JSON_ENDPOINT)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(request)
                     .retrieve()
-                    .bodyToMono(TextToJsonResponse.class)
+                    .bodyToMono(Object.class)
                     .block();
 
             if (response == null) {
                 throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "AI 서버로부터 응답을 받지 못했습니다.");
             }
 
-            log.info("Text to JSON 변환 완료 - 성공: {}", response.getSuccess());
+            log.info("Text to JSON 변환 완료");
 
             return response;
 

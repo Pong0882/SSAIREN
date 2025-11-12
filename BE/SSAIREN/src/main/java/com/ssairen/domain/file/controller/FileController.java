@@ -336,8 +336,7 @@ public class FileController {
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
-                    description = "STT 및 JSON 변환 성공",
-                    content = @Content(schema = @Schema(implementation = TextToJsonResponse.class))
+                    description = "STT 및 JSON 변환 성공"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
@@ -348,7 +347,7 @@ public class FileController {
                     description = "STT 또는 JSON 변환 실패"
             )
     })
-    public ResponseEntity<ApiResponse<TextToJsonResponse>> convertSpeechToJsonWithLocalWhisper(
+    public ResponseEntity<ApiResponse<Object>> convertSpeechToJsonWithLocalWhisper(
             @Parameter(description = "오디오 파일 (mp3, wav, m4a 등)", required = true)
             @RequestParam("file") MultipartFile file,
             @Parameter(description = "언어 코드 (예: ko, en, ja)")
@@ -366,12 +365,12 @@ public class FileController {
         log.info("STT 변환 완료 - 텍스트 길이: {} 문자", sttResponse.getText().length());
 
         // 2. AI 서버로 텍스트를 JSON으로 변환
-        TextToJsonResponse jsonResponse = textToJsonService.convertTextToJson(
+        Object jsonResponse = textToJsonService.convertTextToJson(
                 sttResponse.getText(),
                 maxNewTokens,
                 temperature
         );
-        log.info("JSON 변환 완료 - 성공: {}", jsonResponse.getSuccess());
+        log.info("JSON 변환 완료");
 
         return ResponseEntity.ok(
                 ApiResponse.success(jsonResponse, "STT 및 JSON 변환이 완료되었습니다.")
