@@ -153,6 +153,7 @@ class MainActivity : ComponentActivity() {
 
             // Intent에서 출동 데이터 추출
             val dispatch = DispatchMessage(
+                id = intent.getStringExtra("id")?.toIntOrNull() ?: 0,
                 fireStateId = intent.getStringExtra("fireStateId")?.toIntOrNull() ?: 0,
                 paramedicId = intent.getStringExtra("paramedicId")?.toIntOrNull() ?: 0,
                 disasterNumber = intent.getStringExtra("disasterNumber") ?: "UNKNOWN",
@@ -383,6 +384,7 @@ fun AppNavigation(
         if (createReportState is CreateReportState.Success) {
             val emergencyReportId = (createReportState as CreateReportState.Success).reportData.emergencyReportId
             Log.d("MainActivity", "✅ 일지 생성 완료, 화면 이동: emergencyReportId=$emergencyReportId")
+            dispatchState.closeDispatchModal() // 모달 닫기
             navController.navigate("activity_log/$emergencyReportId/0?isReadOnly=false")
             reportViewModel.resetCreateState()
         }
@@ -410,17 +412,8 @@ fun AppNavigation(
             },
             onCreateNewReport = {
                 // 새 일지 등록 API 호출
-                Log.d("MainActivity", "✅ 새 일지 등록 요청: dispatch.id=${dispatch.id}")
-
-                // dispatch.id를 Int로 변환 (disasterNumber는 String)
-                val dispatchId = dispatch.id.toIntOrNull()
-                if (dispatchId != null) {
-                    dispatchState.closeDispatchModal()
-                    reportViewModel.createReport(dispatchId)
-                } else {
-                    Log.e("MainActivity", "❌ dispatch.id를 Int로 변환 실패: ${dispatch.id}")
-                    // TODO: 에러 메시지 표시
-                }
+                Log.d("MainActivity", "✅ 새 일지 등록 요청: dispatchId=${dispatch.dispatchId}")
+                reportViewModel.createReport(dispatch.dispatchId)
             }
         )
     }

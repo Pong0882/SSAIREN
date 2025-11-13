@@ -33,6 +33,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.data.api.RetrofitClient
 import com.example.ssairen_app.service.VideoRecordingService
+import com.example.ssairen_app.service.AudioRecordingService
 import com.example.ssairen_app.ui.components.DarkCard
 import com.example.ssairen_app.ui.components.MainButton
 import com.example.ssairen_app.ui.components.HeartRateChart
@@ -110,12 +111,15 @@ private fun HomeContent(
     onNavigateToPatientTransport: () -> Unit = {},
     onNavigateToReportDetail: () -> Unit = {}
 ) {
-    var isAudioRecording by remember { mutableStateOf(false) }  // ✅ 오디오 녹음 상태
-    var isVideoRecording by remember { mutableStateOf(false) }  // ✅ 비디오 녹화 상태
+    var isAudioRecording by remember { mutableStateOf(false) }
+    var isVideoRecording by remember { mutableStateOf(false) }
     var videoService by remember { mutableStateOf<VideoRecordingService?>(null) }
     var isBound by remember { mutableStateOf(false) }
 
-    // ✅ Wear 데이터 ViewModel (Singleton 사용)
+    // ✅ 오디오 서비스 변수 추가
+    var audioService by remember { mutableStateOf<AudioRecordingService?>(null) }
+    var isAudioBound by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
     val application = context.applicationContext as android.app.Application
     val wearViewModel: WearDataViewModel = remember {
@@ -131,7 +135,6 @@ private fun HomeContent(
                 isBound = true
                 Log.d("ActivityMain", "VideoRecordingService connected")
 
-                // 콜백 설정
                 videoService?.setRecordingCallbacks(
                     onStarted = {
                         isVideoRecording = true
@@ -152,7 +155,6 @@ private fun HomeContent(
                     }
                 )
 
-                // 서비스 연결 시 현재 녹화 상태 확인
                 if (videoService?.isCurrentlyRecording() == true) {
                     isVideoRecording = true
                 }
@@ -166,11 +168,54 @@ private fun HomeContent(
         }
     }
 
+    // ✅ 오디오 서비스 연결
+    val audioServiceConnection = remember {
+        object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                val binder = service as AudioRecordingService.LocalBinder
+                audioService = binder.getService()
+                isAudioBound = true
+                Log.d("ActivityMain", "AudioRecordingService connected")
+
+                audioService?.setRecordingCallbacks(
+                    onStarted = {
+                        isAudioRecording = true
+                        Log.d("ActivityMain", "Audio recording started")
+                    },
+                    onStopped = { file ->
+                        isAudioRecording = false
+                        Log.d("ActivityMain", "Audio recording stopped: ${file?.name}")
+                    },
+                    onError = { error ->
+                        isAudioRecording = false
+                        Log.e("ActivityMain", "Audio recording error: $error")
+                    },
+                    onUploadComplete = { sessionName ->
+                        Log.d("ActivityMain", "Audio upload complete: $sessionName")
+                    }
+                )
+
+                if (audioService?.isCurrentlyRecording() == true) {
+                    isAudioRecording = true
+                }
+            }
+
+            override fun onServiceDisconnected(name: ComponentName?) {
+                audioService = null
+                isAudioBound = false
+                Log.d("ActivityMain", "AudioRecordingService disconnected")
+            }
+        }
+    }
+
     // 화면 정리 시 서비스 언바인드
     DisposableEffect(Unit) {
         onDispose {
             if (isBound) {
                 context.unbindService(serviceConnection)
+            }
+            if (isAudioBound) {
+                context.unbindService(audioServiceConnection)
             }
         }
     }
@@ -211,12 +256,10 @@ private fun HomeContent(
         }
 
         if (!isBound) {
-            // 서비스 바인딩
             val intent = Intent(context, VideoRecordingService::class.java)
             context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         }
 
-        // 서비스 시작 및 녹화 시작
         val intent = Intent(context, VideoRecordingService::class.java).apply {
             action = VideoRecordingService.ACTION_START_RECORDING
         }
@@ -228,10 +271,32 @@ private fun HomeContent(
         videoService?.stopRecording()
     }
 
+    // ✅ 오디오 녹음 시작 함수
+    fun startAudioRecording() {
+        if (!checkPermissions()) {
+            permissionLauncher.launch(requiredPermissions.toTypedArray())
+            return
+        }
+
+        if (!isAudioBound) {
+            val intent = Intent(context, AudioRecordingService::class.java)
+            context.bindService(intent, audioServiceConnection, Context.BIND_AUTO_CREATE)
+        }
+
+        val intent = Intent(context, AudioRecordingService::class.java).apply {
+            action = AudioRecordingService.ACTION_START_RECORDING
+        }
+        ContextCompat.startForegroundService(context, intent)
+    }
+
+    // ✅ 오디오 녹음 중지 함수
+    fun stopAudioRecording() {
+        audioService?.stopRecording()
+    }
+
     Log.d("ActivityMain", "🎨 HomeContent Composable 렌더링")
     Log.d("ActivityMain", "📱 ViewModel 인스턴스: $wearViewModel")
 
-    // ✅ Wear에서 전송된 실시간 데이터
     val heartRate by wearViewModel.heartRate.collectAsState()
     val spo2 by wearViewModel.spo2.collectAsState()
     val spo2ErrorMessage by wearViewModel.spo2ErrorMessage.collectAsState()
@@ -280,21 +345,21 @@ private fun HomeContent(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 심박수(맥박) - ✅ Wear에서 실시간 업데이트
+                    // 심박수(맥박)
                     StatCard(
                         title = "심박수(맥박)",
                         value = if (hrStatusMessage.isNotEmpty()) hrStatusMessage
-                               else if (heartRate > 0) "$heartRate bpm" else "--",
+                        else if (heartRate > 0) "$heartRate bpm" else "--",
                         modifier = Modifier.weight(1f),
                         valueColor = if (hrStatusMessage.isNotEmpty()) Color(0xFFFF9800) else Color(0xFF00d9ff),
                         isStatusMessage = hrStatusMessage.isNotEmpty()
                     )
 
-                    // 산소포화도(SpO2) - ✅ Wear에서 실시간 업데이트
+                    // 산소포화도(SpO2)
                     StatCard(
                         title = "산소포화도(SpO2)",
                         value = if (spo2ErrorMessage.isNotEmpty()) spo2ErrorMessage
-                               else if (spo2 > 0) "$spo2%" else "--",
+                        else if (spo2 > 0) "$spo2%" else "--",
                         modifier = Modifier.weight(1f),
                         valueColor = if (spo2ErrorMessage.isNotEmpty()) Color(0xFFFF5252) else Color(0xFF00d9ff),
                         isStatusMessage = spo2ErrorMessage.isNotEmpty()
@@ -309,7 +374,7 @@ private fun HomeContent(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // ✅ 바디캠 녹화 버튼
+                    // 바디캠 녹화 버튼
                     IconButton(
                         onClick = {
                             if (isVideoRecording) {
@@ -338,12 +403,10 @@ private fun HomeContent(
                     // ✅ 오디오 녹음 버튼
                     IconButton(
                         onClick = {
-                            isAudioRecording = !isAudioRecording
-                            // TODO: 오디오 녹음 시작/중지 로직
                             if (isAudioRecording) {
-                                Log.d("ActivityMain", "🎤 오디오 녹음 시작")
+                                stopAudioRecording()
                             } else {
-                                Log.d("ActivityMain", "⏹️ 오디오 녹음 중지")
+                                startAudioRecording()
                             }
                         },
                         modifier = Modifier
@@ -368,7 +431,7 @@ private fun HomeContent(
                 modifier = Modifier.width(140.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 1. 환자정보 버튼 → 탭 0
+                // 1. 환자정보 버튼
                 MainButton(
                     onClick = onNavigateToPatientInfo,
                     modifier = Modifier
@@ -390,7 +453,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 2. 환자평가 버튼 → 탭 3
+                // 2. 환자평가 버튼
                 MainButton(
                     onClick = onNavigateToPatientEva,
                     modifier = Modifier
@@ -412,7 +475,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 3. 환자이송 버튼 → 탭 6
+                // 3. 환자이송 버튼
                 MainButton(
                     onClick = onNavigateToPatientTransport,
                     modifier = Modifier
@@ -434,7 +497,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 4. 구급출동 버튼 → 탭 1
+                // 4. 구급출동 버튼
                 MainButton(
                     onClick = onNavigateToDispatch,
                     modifier = Modifier
@@ -456,7 +519,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 5. 환자 발생 유형 버튼 → 탭 2
+                // 5. 환자 발생 유형 버튼
                 MainButton(
                     onClick = onNavigateToPatientType,
                     modifier = Modifier
@@ -478,7 +541,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 6. 응급처치 버튼 → 탭 4
+                // 6. 응급처치 버튼
                 MainButton(
                     onClick = onNavigateToFirstAid,
                     modifier = Modifier
@@ -500,7 +563,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 7. 의료지도 버튼 → 탭 5
+                // 7. 의료지도 버튼
                 MainButton(
                     onClick = onNavigateToMedicalGuidance,
                     modifier = Modifier
@@ -522,7 +585,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 8. 세부 상황정보 버튼 → 탭 7
+                // 8. 세부 상황정보 버튼
                 MainButton(
                     onClick = onNavigateToReportDetail,
                     modifier = Modifier
@@ -548,9 +611,7 @@ private fun HomeContent(
     }
 }
 
-// ==========================================
 // 통계 카드 컴포넌트
-// ==========================================
 @Composable
 private fun StatCard(
     title: String,
@@ -560,7 +621,7 @@ private fun StatCard(
     isStatusMessage: Boolean = false
 ) {
     DarkCard(
-        modifier = modifier.height(100.dp),  // 높이 고정
+        modifier = modifier.height(100.dp),
         cornerRadius = 8.dp
     ) {
         Column(

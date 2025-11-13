@@ -3,6 +3,7 @@ package com.example.ssairen_app.data.api
 import com.example.ssairen_app.data.dto.ApiResponse
 import com.example.ssairen_app.data.dto.FileUploadResponse
 import com.example.ssairen_app.data.model.request.LoginRequest
+import com.example.ssairen_app.data.dto.SttResponse
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -49,4 +50,17 @@ interface FileApiService {
     suspend fun uploadVideo(
         @Part file: MultipartBody.Part
     ): Response<ApiResponse<FileUploadResponse>>
+
+
+    /**
+     * 오디오 파일 업로드 및 STT 변환
+     *
+     * @param file 업로드할 오디오 파일 (Multipart)
+     * @return 업로드 결과 + STT 변환된 텍스트
+     */
+    @Multipart
+    @POST("/api/files/stt/local/full-to-json")
+    suspend fun uploadAudioAndGetStructuredData(
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<SttResponse>>
 }

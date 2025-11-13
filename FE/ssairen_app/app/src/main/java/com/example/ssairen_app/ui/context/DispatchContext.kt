@@ -15,9 +15,9 @@ data class DispatchItem(
     val date: String,
     val location: String,
     val isActive: Boolean = false,
-    val emergencyReportId: Int = 0  // ✅ 출동보고서 ID 추가
+    val emergencyReportId: Int = 0,
+    val dispatchId: Int = 0
 )
-
 // ==========================================
 // Dispatch 상태 클래스
 // ==========================================
@@ -86,12 +86,13 @@ class DispatchState {
         } ?: SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.KOREA).format(Date())
 
         val newDispatch = DispatchItem(
-            id = message.disasterNumber,           // 재난 번호를 ID로 사용
+            id = message.disasterNumber,           // 재난 번호 (표시용)
             type = typeString,                     // "화재 | 실전 - 고층건물"
             date = formattedDate,                  // "2025-11-09 09:16"
             location = message.locationAddress,    // 출동 위치
             isActive = true,
-            emergencyReportId = 0  // 새 일지 생성 필요 (0 = 미생성)
+            emergencyReportId = 0,  // 새 일지 생성 필요 (0 = 미생성)
+            dispatchId = message.id  // 출동 ID (API 호출용)
         )
 
         _activeDispatch = newDispatch
