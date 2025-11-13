@@ -20,6 +20,7 @@ public class ReportSectionMapper {
         return new ReportSectionCreateResponse(
                 section.getId(),
                 section.getEmergencyReport().getId(),
+                section.getEmergencyReport().getIsCompleted(),
                 section.getType(),
                 section.getData(),
                 section.getVersion(),

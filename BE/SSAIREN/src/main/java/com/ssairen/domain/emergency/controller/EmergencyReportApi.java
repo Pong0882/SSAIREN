@@ -47,6 +47,7 @@ public interface EmergencyReportApi {
                                       "success": true,
                                       "data": {
                                         "emergencyReportId": 123,
+                                        "isCompleted": false,
                                         "paramedicInfo": {
                                           "paramedicId": 1,
                                           "name": "홍길동",
@@ -326,6 +327,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 790,
                                                     "emergencyReportId": 123,
+                                                    "isCompleted": false,
                                                     "type": "DISPATCH",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -369,6 +371,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 791,
                                                     "emergencyReportId": 123,
+                                                    "isCompleted": false,
                                                     "type": "INCIDENT_TYPE",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -417,6 +420,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 792,
                                                     "emergencyReportId": 123,
+                                                    "isCompleted": false,
                                                     "type": "ASSESSMENT",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -483,6 +487,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 793,
                                                     "emergencyReportId": 123,
+                                                    "isCompleted": false,
                                                     "type": "TREATMENT",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -539,6 +544,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 794,
                                                     "emergencyReportId": 123,
+                                                    "isCompleted": false,
                                                     "type": "MEDICAL_GUIDANCE",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -582,6 +588,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 795,
                                                     "emergencyReportId": 123,
+                                                    "isCompleted": false,
                                                     "type": "TRANSPORT",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -625,6 +632,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 796,
                                                     "emergencyReportId": 123,
+                                                    "isCompleted": false,
                                                     "type": "DETAIL_REPORT",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -776,6 +784,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 789,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "PATIENT_INFO",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -818,6 +827,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 790,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "DISPATCH",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -887,6 +897,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 791,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "INCIDENT_TYPE",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -934,6 +945,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 792,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "ASSESSMENT",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -999,6 +1011,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 793,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "TREATMENT",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -1054,6 +1067,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 794,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "MEDICAL_GUIDANCE",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -1106,6 +1120,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 795,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "TRANSPORT",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -1151,6 +1166,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 796,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "DETAIL_REPORT",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -1832,6 +1848,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 789,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "PATIENT_INFO",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -1875,6 +1892,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 790,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "DISPATCH",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -1933,6 +1951,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 791,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "INCIDENT_TYPE",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -1981,6 +2000,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 792,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "ASSESSMENT",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -2047,6 +2067,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 793,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "TREATMENT",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -2103,6 +2124,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 794,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "MEDICAL_GUIDANCE",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -2156,6 +2178,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 795,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "TRANSPORT",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -2202,6 +2225,7 @@ public interface EmergencyReportApi {
                                                 "data": {
                                                     "id": 796,
                                                     "emergencyReportId": 5,
+                                                    "isCompleted": false,
                                                     "type": "DETAIL_REPORT",
                                                     "data": {
                                                         "schemaVersion": 1,
@@ -2334,5 +2358,82 @@ public interface EmergencyReportApi {
             @PathVariable("type") ReportSectionType type,
             @Valid @RequestBody com.ssairen.domain.emergency.dto.ReportSectionUpdateRequest request,
             @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal com.ssairen.global.security.dto.CustomUserPrincipal principal
+    );
+
+    @Operation(
+            summary = "구급일지 완료 상태 변경",
+            description = "구급일지의 완료 상태를 토글합니다. (false -> true 또는 true -> false)"
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "구급일지 완료 상태 변경 성공",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = com.ssairen.domain.emergency.dto.EmergencyReportCompleteResponse.class),
+                    examples = @ExampleObject(
+                            name = "완료 상태 변경 성공",
+                            value = """
+                                    {
+                                      "success": true,
+                                      "data": {
+                                        "emergencyReportId": 123,
+                                        "isCompleted": true
+                                      },
+                                      "message": "구급일지 완료 상태가 변경되었습니다.",
+                                      "timestamp": "2023-11-13T10:30:00Z"
+                                    }
+                                    """
+                    )
+            )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "403",
+            description = "권한 없음",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "권한 없음",
+                            value = """
+                                    {
+                                      "success": false,
+                                      "error": {
+                                        "code": "ACCESS_DENIED",
+                                        "message": "해당 구급일지에 대한 권한이 없습니다. 작성자만 완료 상태를 변경할 수 있습니다."
+                                      },
+                                      "status": 403,
+                                      "timestamp": "2023-11-13T10:30:00Z"
+                                    }
+                                    """
+                    )
+            )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404",
+            description = "구급일지를 찾을 수 없음",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "구급일지 없음",
+                            value = """
+                                    {
+                                      "success": false,
+                                      "error": {
+                                        "code": "EMERGENCY_REPORT_NOT_FOUND",
+                                        "message": "존재하지 않는 구급일지입니다."
+                                      },
+                                      "status": 404,
+                                      "timestamp": "2023-11-13T10:30:00Z"
+                                    }
+                                    """
+                    )
+            )
+    )
+    @ApiUnauthorizedError
+    @ApiInternalServerError
+    @PatchMapping("/{emergencyReportId}/complete")
+    ResponseEntity<? extends ApiResponse> toggleEmergencyReportCompleted(
+            @Parameter(description = "구급일지 ID", required = true, example = "123")
+            @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal principal
     );
 }

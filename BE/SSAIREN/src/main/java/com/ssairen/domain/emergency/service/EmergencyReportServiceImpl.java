@@ -1,5 +1,6 @@
 package com.ssairen.domain.emergency.service;
 
+import com.ssairen.domain.emergency.dto.EmergencyReportCompleteResponse;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
 import com.ssairen.domain.emergency.dto.FireStateEmergencyReportsResponse;
 import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
@@ -155,5 +156,41 @@ public class EmergencyReportServiceImpl implements EmergencyReportService {
                 .toFireStateEmergencyReportsResponse(fireState, emergencyReports);
 
         return Collections.singletonList(response);
+    }
+
+    /**
+     * 구급일지 완료 상태 토글
+     *
+     * @param emergencyReportId 구급일지 ID
+     * @param paramedicId       구급대원 ID
+     * @return 구급일지 ID와 변경된 완료 상태
+     */
+    @Override
+    @Transactional
+    public EmergencyReportCompleteResponse toggleEmergencyReportCompleted(Long emergencyReportId, Integer paramedicId) {
+        // 1. 구급일지 조회
+        EmergencyReport emergencyReport = emergencyReportRepository.findById(emergencyReportId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
+
+        // 2. 권한 검증: 해당 구급일지를 작성한 구급대원인지 확인
+        if (!emergencyReport.getParamedic().getId().equals(paramedicId)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED,
+                    "해당 구급일지에 대한 권한이 없습니다. 작성자만 완료 상태를 변경할 수 있습니다.");
+        }
+
+        // 3. 완료 상태 토글
+        emergencyReport.toggleCompleted();
+
+        // 4. 변경사항 저장 (영속성 컨텍스트에 의해 자동으로 DB 반영)
+        EmergencyReport savedReport = emergencyReportRepository.save(emergencyReport);
+
+        log.info("구급일지 완료 상태 변경 완료 - 구급일지 ID: {}, 구급대원 ID: {}, 변경된 상태: {}",
+                emergencyReportId, paramedicId, savedReport.getIsCompleted());
+
+        // 5. 응답 DTO 생성
+        return new EmergencyReportCompleteResponse(
+                savedReport.getId(),
+                savedReport.getIsCompleted()
+        );
     }
 }
