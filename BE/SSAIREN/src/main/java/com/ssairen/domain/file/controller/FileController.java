@@ -1,7 +1,9 @@
 package com.ssairen.domain.file.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ssairen.domain.ai.entity.LlmSummary;
 import com.ssairen.domain.ai.entity.SttTranscript;
+import com.ssairen.domain.ai.repository.LlmSummaryRepository;
 import com.ssairen.domain.ai.repository.SttTranscriptRepository;
 import com.ssairen.domain.ai.service.AiResponseToReportSectionService;
 import com.ssairen.domain.ai.service.LocalWhisperSttService;
@@ -50,6 +52,7 @@ public class FileController {
     private final EmergencyReportRepository emergencyReportRepository;
     private final ObjectMapper objectMapper;
     private final AiResponseToReportSectionService aiResponseToReportSectionService;
+    private final LlmSummaryRepository llmSummaryRepository;
 
     /**
      * 오디오 파일 업로드
@@ -393,7 +396,21 @@ public class FileController {
         );
         log.info("JSON 변환 완료");
 
-        // 5. AI 응답을 ReportSection에 저장
+        // 5. JSON 응답을 llm_summaries 테이블에 저장
+        try {
+            String jsonDataString = objectMapper.writeValueAsString(jsonResponse);
+            LlmSummary llmSummary = LlmSummary.builder()
+                    .sttTranscript(sttTranscript)
+                    .data(jsonDataString)
+                    .build();
+            llmSummaryRepository.save(llmSummary);
+            log.info("LLM JSON 응답 DB 저장 완료 - STT ID: {}", sttTranscript.getId());
+        } catch (Exception e) {
+            log.error("JSON 응답 저장 실패", e);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "JSON 응답 저장에 실패했습니다.");
+        }
+
+        // 6. AI 응답을 ReportSection에 저장
         int savedCount = aiResponseToReportSectionService.saveAiResponseToReportSections(
                 jsonResponse,
                 emergencyReport
@@ -466,7 +483,21 @@ public class FileController {
         );
         log.info("JSON 변환 완료");
 
-        // 4. AI 응답을 ReportSection에 저장
+        // 4. JSON 응답을 llm_summaries 테이블에 저장
+        try {
+            String jsonDataString = objectMapper.writeValueAsString(jsonResponse);
+            LlmSummary llmSummary = LlmSummary.builder()
+                    .sttTranscript(sttTranscript)
+                    .data(jsonDataString)
+                    .build();
+            llmSummaryRepository.save(llmSummary);
+            log.info("LLM JSON 응답 DB 저장 완료 - STT ID: {}", sttTranscript.getId());
+        } catch (Exception e) {
+            log.error("JSON 응답 저장 실패", e);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "JSON 응답 저장에 실패했습니다.");
+        }
+
+        // 5. AI 응답을 ReportSection에 저장
         int savedCount = aiResponseToReportSectionService.saveAiResponseToReportSections(
                 jsonResponse,
                 emergencyReport
