@@ -1,0 +1,148 @@
+pipeline {
+    agent any
+
+    environment {
+        // Docker 이미지 정보
+        DOCKER_IMAGE = 'ssairen-frontend'
+        CONTAINER_NAME = 'ssairen-frontend'
+
+        // 외부 네트워크 이름
+        DOCKER_NETWORK = 'ssairen-net'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Checking out source code...'
+                checkout scm
+            }
+        }
+
+        stage('Environment Setup') {
+            steps {
+                echo 'Setting up environment variables...'
+                script {
+                    // Jenkins credentials에서 .env 파일 가져오기
+                    withCredentials([file(credentialsId: 'frontend-env-file', variable: 'ENV_FILE')]) {
+                        sh 'cp $ENV_FILE .env'
+                    }
+                }
+            }
+        }
+
+        stage('Environment Check') {
+            steps {
+                echo 'Checking environment...'
+                sh '''
+                    node --version
+                    npm --version
+                    docker --version
+                    docker-compose --version
+                '''
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing dependencies...'
+                sh 'npm ci'
+            }
+        }
+
+        stage('Type Check') {
+            steps {
+                echo 'Running TypeScript type check...'
+                sh 'npx tsc -b --noEmit || true'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                echo 'Running tests...'
+                sh 'npm run test -- --run || true'
+            }
+        }
+
+        stage('Build Application') {
+            steps {
+                echo 'Building application...'
+                sh 'npm run build'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo 'Building Docker image...'
+                sh 'docker-compose build'
+            }
+        }
+
+        stage('Stop Old Container') {
+            steps {
+                echo 'Stopping and removing old container...'
+                script {
+                    sh """
+                        docker-compose down || true
+                    """
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying new container...'
+                script {
+                    // 외부 네트워크 존재 확인 및 생성
+                    sh """
+                        docker network inspect ${DOCKER_NETWORK} >/dev/null 2>&1 || \
+                        docker network create ${DOCKER_NETWORK}
+                    """
+
+                    // 컨테이너 실행
+                    sh 'docker-compose up -d'
+                }
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                echo 'Performing health check...'
+                script {
+                    sleep 5
+                    sh """
+                        docker ps | grep ${CONTAINER_NAME}
+                        docker logs ${CONTAINER_NAME} --tail 50
+                    """
+                }
+            }
+        }
+
+        stage('Clean Up') {
+            steps {
+                echo 'Cleaning up unused Docker resources...'
+                sh '''
+                    docker image prune -f
+                    docker system prune -f --volumes
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Pipeline succeeded! Application deployed successfully.'
+            // Slack 또는 Email 알림 추가 가능
+            // slackSend(color: 'good', message: "Deployment successful: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
+        }
+        failure {
+            echo '❌ Pipeline failed! Please check the logs.'
+            // Slack 또는 Email 알림 추가 가능
+            // slackSend(color: 'danger', message: "Deployment failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
+        }
+        always {
+            echo 'Cleaning workspace...'
+            sh 'rm -f .env'  // 보안을 위해 .env 파일 삭제
+            cleanWs()
+        }
+    }
+}
