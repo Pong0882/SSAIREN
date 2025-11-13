@@ -376,4 +376,51 @@ public class FileController {
                 ApiResponse.success(jsonResponse, "STT 및 JSON 변환이 완료되었습니다.")
         );
     }
+
+    /**
+     * 텍스트를 직접 받아서 JSON으로 변환하는 API
+     * - STT 과정 없이 텍스트를 직접 입력받아 JSON으로 변환
+     * - AI 서버의 Text to JSON API 사용
+     */
+    @PostMapping(value = "/text-to-json")
+    @Operation(
+            summary = "텍스트 → JSON 변환",
+            description = "텍스트를 직접 받아서 AI 서버를 통해 구조화된 JSON으로 변환합니다. STT 과정 없이 텍스트만 변환합니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "JSON 변환 성공"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (빈 텍스트 등)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "JSON 변환 실패"
+            )
+    })
+    public ResponseEntity<ApiResponse<Object>> convertTextToJson(
+            @Parameter(description = "변환할 텍스트 내용", required = true)
+            @RequestParam("text") String text,
+            @Parameter(description = "최대 생성 토큰 수")
+            @RequestParam(value = "maxNewTokens", required = false, defaultValue = "700") Integer maxNewTokens,
+            @Parameter(description = "생성 온도 (0.0 ~ 1.0)")
+            @RequestParam(value = "temperature", required = false, defaultValue = "0.1") Double temperature
+    ) {
+        log.info("텍스트 → JSON 변환 요청 - 텍스트 길이: {} 문자", text.length());
+
+        // 텍스트를 AI 서버로 JSON으로 변환
+        Object jsonResponse = textToJsonService.convertTextToJson(
+                text,
+                maxNewTokens,
+                temperature
+        );
+        log.info("JSON 변환 완료");
+
+        return ResponseEntity.ok(
+                ApiResponse.success(jsonResponse, "텍스트를 JSON으로 변환했습니다.")
+        );
+    }
 }
