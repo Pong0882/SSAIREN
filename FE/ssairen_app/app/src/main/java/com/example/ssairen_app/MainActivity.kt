@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.example.ssairen_app.data.websocket.DispatchMessage
+import com.example.ssairen_app.data.websocket.HospitalResponseMessage
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
@@ -40,6 +41,7 @@ import com.example.ssairen_app.viewmodel.ReportViewModel  // ⭐ 새 일지 등�
 import com.example.ssairen_app.viewmodel.CreateReportState  // ⭐ 일지 생성 상태
 import com.example.ssairen_app.data.api.RetrofitClient  // ⭐ 바디캠 업로드용
 import com.example.ssairen_app.ui.components.DispatchModal  // ⭐ 모달 추가
+import com.example.ssairen_app.ui.components.HospitalResponseModal  // ⭐ 병원 응답 모달 추가
 import com.example.ssairen_app.ui.screens.report.DispatchDetail  // ⭐ 출동 상세 모달
 import com.example.ssairen_app.ui.screens.report.DispatchDetailData  // ⭐ 출동 상세 데이터
 import com.example.ssairen_app.service.MyFirebaseMessagingService  // ⭐ FCM 서비스
@@ -243,8 +245,11 @@ fun AppRoot(
     // ✅ DispatchContext 가져오기
     val dispatchState = rememberDispatchState()
 
-    // ✅ WebSocket 메시지 관찰
+    // ✅ WebSocket 출동 메시지 관찰
     val dispatchMessage by viewModel.dispatchMessage.observeAsState()
+
+    // ✅ WebSocket 병원 응답 메시지 관찰
+    val hospitalResponseMessage by viewModel.hospitalResponseMessage.observeAsState()
 
     // ✅ WebSocket 메시지 수신 시 DispatchContext에 전달
     LaunchedEffect(dispatchMessage) {
@@ -319,11 +324,33 @@ fun AppRoot(
         Log.d("AppRoot", "📌 dispatchState.activeDispatch: ${dispatchState.activeDispatch}")
     }
 
+    // ✅ 병원 응답 LiveData 관찰 로그
+    LaunchedEffect(hospitalResponseMessage) {
+        Log.d("AppRoot", "╔════════════════════════════════════════╗")
+        Log.d("AppRoot", "║   hospitalResponseMessage Changed     ║")
+        Log.d("AppRoot", "╚════════════════════════════════════════╝")
+        Log.d("AppRoot", "Current value: $hospitalResponseMessage")
+
+        hospitalResponseMessage?.let { response ->
+            Log.d("AppRoot", "✅ Hospital response exists!")
+            Log.d("AppRoot", "  - Hospital: ${response.hospitalName}")
+            Log.d("AppRoot", "  - Status: ${response.status}")
+            Log.d("AppRoot", "🎯 Modal should appear now!")
+        } ?: run {
+            Log.d("AppRoot", "ℹ️ Hospital response is null")
+        }
+        Log.d("AppRoot", "========================================")
+    }
+
     if (isLoggedIn) {
         // ✅ 로그인됨 → 메인 네비게이션
         AppNavigation(
             onLogout = {
                 viewModel.logout()  // ✅ ViewModel의 logout 호출
+            },
+            hospitalResponseMessage = hospitalResponseMessage,  // ✅ 병원 응답 전달
+            onClearHospitalResponse = {
+                viewModel.clearHospitalResponseMessage()
             }
         )
     } else {
@@ -339,7 +366,9 @@ fun AppRoot(
 
 @Composable
 fun AppNavigation(
-    onLogout: () -> Unit  // ✅ 로그아웃 콜백 추가
+    onLogout: () -> Unit,  // ✅ 로그아웃 콜백
+    hospitalResponseMessage: HospitalResponseMessage? = null,  // ✅ 병원 응답 메시지
+    onClearHospitalResponse: () -> Unit = {}  // ✅ 병원 응답 클리어 콜백
 ) {
     val navController = rememberNavController()
 
@@ -385,6 +414,21 @@ fun AppNavigation(
                 // 새 일지 등록 API 호출
                 Log.d("MainActivity", "✅ 새 일지 등록 요청: dispatchId=${dispatch.dispatchId}")
                 reportViewModel.createReport(dispatch.dispatchId)
+            }
+        )
+    }
+
+    // ✅ 병원 응답 모달 표시 (모든 화면 위에 표시)
+    hospitalResponseMessage?.let { response ->
+        Log.d("AppNavigation", "🎨 Rendering HospitalResponseModal")
+        Log.d("AppNavigation", "  - Hospital: ${response.hospitalName}")
+        Log.d("AppNavigation", "  - Status: ${response.status}")
+
+        HospitalResponseModal(
+            response = response,
+            onConfirm = {
+                Log.d("AppNavigation", "✅ Hospital response modal confirmed - closing")
+                onClearHospitalResponse()
             }
         )
     }
