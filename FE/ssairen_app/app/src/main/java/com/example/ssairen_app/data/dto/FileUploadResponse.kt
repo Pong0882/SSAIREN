@@ -23,5 +23,5 @@ data class FileUploadResponse(
     val bucketName: String,
 
     @SerializedName("fileUrl")
-    val fileUrl: String
+    val fileUrl: String,
 )

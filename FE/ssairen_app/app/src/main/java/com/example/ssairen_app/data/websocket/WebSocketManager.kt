@@ -214,9 +214,10 @@ object WebSocketManager {
  * WebSocket으로 수신되는 출동 데이터 (백엔드 JSON 형식)
  */
 data class DispatchMessage(
+    val id: Int,                             // 출동 ID (dispatch_id)
     val fireStateId: Int,                    // 소방서 ID
     val paramedicId: Int,                    // 구급대원 ID
-    val disasterNumber: String,              // 재난 번호 (출동 ID로 사용)
+    val disasterNumber: String,              // 재난 번호
     val disasterType: String,                // 재난 유형 (화재, 구조 등)
     val disasterSubtype: String? = null,     // 재난 세부 유형
     val reporterName: String? = null,        // 신고자 이름
