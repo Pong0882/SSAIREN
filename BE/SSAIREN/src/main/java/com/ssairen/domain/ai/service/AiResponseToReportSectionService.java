@@ -99,7 +99,7 @@ public class AiResponseToReportSectionService {
 
     /**
      * ReportSection 저장 또는 업데이트
-     * - 이미 존재하면 기존 데이터와 병합하여 업데이트
+     * - 이미 존재하면 AI 응답 데이터로 완전히 교체 (병합하지 않음)
      * - 존재하지 않으면 새로 생성
      *
      * @param emergencyReport 구급일지
@@ -112,12 +112,11 @@ public class AiResponseToReportSectionService {
         // 기존 섹션이 있는지 확인
         reportSectionRepository.findByEmergencyReportAndType(emergencyReport, sectionType)
                 .ifPresentOrElse(
-                        // 이미 존재하면 병합 업데이트
+                        // 이미 존재하면 AI 응답으로 완전히 교체 (병합하지 않음)
                         existingSection -> {
-                            JsonNode mergedData = jsonMergeUtil.merge(existingSection.getData(), sectionData);
-                            existingSection.updateData(mergedData);
+                            existingSection.updateData(sectionData);
                             reportSectionRepository.save(existingSection);
-                            log.debug("기존 섹션 업데이트 완료 - 타입: {}, 버전: {}",
+                            log.debug("기존 섹션 완전 교체 완료 - 타입: {}, 버전: {}",
                                     sectionType, existingSection.getVersion());
                         },
                         // 존재하지 않으면 새로 생성
