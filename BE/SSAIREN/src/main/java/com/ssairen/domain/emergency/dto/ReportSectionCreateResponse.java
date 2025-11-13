@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public record ReportSectionCreateResponse(
         Long id,
         Long emergencyReportId,
+        Boolean isCompleted,
         ReportSectionType type,
         JsonNode data,
         Integer version,

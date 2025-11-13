@@ -34,7 +34,16 @@ public class EmergencyReport {
     @JoinColumn(name = "dispatches_id", nullable = false)
     private Dispatch dispatch;
 
+    @Column(name = "is_completed", nullable = false)
+    @Builder.Default
+    private Boolean isCompleted = false;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    // 비즈니스 메서드
+    public void toggleCompleted() {
+        this.isCompleted = !this.isCompleted;
+    }
 }

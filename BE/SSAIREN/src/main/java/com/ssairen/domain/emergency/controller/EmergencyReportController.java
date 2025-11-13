@@ -1,5 +1,6 @@
 package com.ssairen.domain.emergency.controller;
 
+import com.ssairen.domain.emergency.dto.EmergencyReportCompleteResponse;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
 import com.ssairen.domain.emergency.dto.FireStateEmergencyReportsResponse;
 import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
@@ -83,5 +84,14 @@ public class EmergencyReportController implements EmergencyReportApi {
             @AuthenticationPrincipal CustomUserPrincipal principal) {
         ReportSectionCreateResponse response = reportSectionService.updateReportSection(emergencyReportId, type, request, principal.getId());
         return ResponseEntity.ok(ApiResponse.success(response, "구급일지 섹션이 수정되었습니다."));
+    }
+
+    @Override
+    @PatchMapping("/{emergencyReportId}/complete")
+    public ResponseEntity<ApiResponse<EmergencyReportCompleteResponse>> toggleEmergencyReportCompleted(
+            @PathVariable("emergencyReportId") @Positive(message = "구급일지 ID는 양의 정수여야 합니다.") Long emergencyReportId,
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
+        EmergencyReportCompleteResponse response = emergencyReportService.toggleEmergencyReportCompleted(emergencyReportId, principal.getId());
+        return ResponseEntity.ok(ApiResponse.success(response, "구급일지 완료 상태가 변경되었습니다."));
     }
 }
