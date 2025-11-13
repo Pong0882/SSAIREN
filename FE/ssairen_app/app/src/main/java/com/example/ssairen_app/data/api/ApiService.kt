@@ -14,6 +14,8 @@ import com.example.ssairen_app.data.model.request.PatientInfoRequest
 import com.example.ssairen_app.data.model.request.PatientTypeRequest
 import com.example.ssairen_app.data.model.request.PatientEvaRequest
 import com.example.ssairen_app.data.model.request.FirstAidRequest
+import com.example.ssairen_app.data.model.request.DispatchRequest
+import com.example.ssairen_app.data.model.response.DispatchResponse
 
 import retrofit2.Response
 import retrofit2.http.*
@@ -90,6 +92,13 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<FirstAidResponse>
 
+    // 구급출동
+    @GET("api/emergency-reports/{emergencyReportId}/sections/DISPATCH")
+    suspend fun getDispatch(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String
+    ): Response<DispatchResponse>
+
     @PATCH("api/emergency-reports/{emergencyReportId}/sections/PATIENT_INFO")
     suspend fun updatePatientInfo(
         @Path("emergencyReportId") emergencyReportId: Int,
@@ -117,4 +126,11 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: FirstAidRequest
     ): Response<FirstAidResponse>
+
+    @PATCH("api/emergency-reports/{emergencyReportId}/sections/DISPATCH")
+    suspend fun updateDispatch(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String,
+        @Body request: DispatchRequest
+    ): Response<DispatchResponse>
 }

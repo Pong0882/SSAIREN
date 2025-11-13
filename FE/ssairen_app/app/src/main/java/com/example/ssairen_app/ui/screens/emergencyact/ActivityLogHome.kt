@@ -192,7 +192,11 @@ fun ActivityLogHome(
                         data = activityLogData,
                         isReadOnly = isReadOnly
                     )
-                    1 -> DispatchSection()
+                    1 -> DispatchSection(
+                        viewModel = viewModel,
+                        data = activityLogData,
+                        isReadOnly = isReadOnly
+                    )
                     2 -> PatientType(
                         viewModel = viewModel,
                         data = activityLogData,

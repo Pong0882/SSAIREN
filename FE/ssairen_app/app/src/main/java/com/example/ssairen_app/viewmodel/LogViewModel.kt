@@ -38,10 +38,22 @@ data class PatientInfoData(
 
 // 1. 구급출동
 data class DispatchData(
-    val dispatchTime: String = "",
-    val arrivalTime: String = "",
-    val departureTime: String = "",
-    val sceneLocation: String = ""
+    val reportDatetime: String = "",          // 신고 일시 (ISO 8601)
+    val departureTime: String = "",           // 출동 시각 (HH:mm)
+    val arrivalSceneTime: String = "",        // 현장 도착 (HH:mm)
+    val departureSceneTime: String = "",      // 현장 출발 (HH:mm)
+    val contactTime: String = "",             // 환자 접촉 (HH:mm)
+    val arrivalHospitalTime: String = "",     // 병원 도착 (HH:mm)
+    val distanceKm: Double = 0.0,             // 거리 (km)
+    val returnTime: String = "",              // 귀소 시간 (HH:mm)
+    val dispatchType: String = "정상",         // 출동 유형
+    val sceneLocationName: String = "집",      // 환자 발생 장소
+    val sceneLocationValue: String? = null,   // 기타 입력값
+    val painSymptoms: Set<String> = setOf(),  // 통증 증상들
+    val traumaSymptoms: Set<String> = setOf(),// 외상 증상들
+    val otherSymptoms: Set<String> = setOf(), // 그 외 증상들
+    val otherPainValue: String? = null,       // "그 밖의 통증" 실제 입력값
+    val otherSymptomValue: String? = null     // "기타" 증상 실제 입력값
 )
 
 // 2. 환자발생유형
@@ -361,6 +373,23 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             }
                     }
 
+                    1 -> {
+                        // 구급출동 저장
+                        Log.d(TAG, "💾 [백엔드 저장] 구급출동 시작")
+                        val request = convertToDispatchRequest(currentData.dispatch)
+
+                        repository.updateDispatch(currentEmergencyReportId, request)
+                            .onSuccess { response ->
+                                Log.d(TAG, "✅ 구급출동 저장 성공")
+                                _saveState.value = SaveState.Success("구급출동 저장 완료")
+                                updateSaveTime()
+                            }
+                            .onFailure { error ->
+                                Log.e(TAG, "❌ 구급출동 저장 실패: ${error.message}")
+                                _saveState.value = SaveState.Error(error.message ?: "저장 실패")
+                            }
+                    }
+
                     2 -> {
                         // 환자발생유형 저장
                         Log.d(TAG, "💾 [백엔드 저장] 환자발생유형 시작")
@@ -475,6 +504,61 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     incidentLocation = IncidentLocation(
                         text = null // 구급출동 섹션에 있으므로 여기선 null
                     )
+                )
+            )
+        )
+    }
+
+    /**
+     * DispatchData → DispatchRequest 변환
+     */
+    private fun convertToDispatchRequest(data: DispatchData): DispatchRequest {
+        // 현재 시간을 ISO 8601 형식으로 생성
+        val currentTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
+
+        // 증상 데이터 변환
+        val painSymptoms = data.painSymptoms.map { symptom ->
+            SymptomItem(
+                name = symptom,
+                value = if (symptom == "그 밖의 통증") data.otherPainValue else null
+            )
+        }
+
+        val traumaSymptoms = data.traumaSymptoms.map { symptom ->
+            SymptomItem(name = symptom, value = null)
+        }
+
+        val otherSymptoms = data.otherSymptoms.map { symptom ->
+            SymptomItem(
+                name = symptom,
+                value = if (symptom == "기타") data.otherSymptomValue else null
+            )
+        }
+
+        return DispatchRequest(
+            data = DispatchRequestData(
+                schemaVersion = 1,
+                dispatch = DispatchInfo(
+                    reportDatetime = data.reportDatetime.ifEmpty { currentTime },
+                    departureTime = data.departureTime.ifEmpty { "00:00" },
+                    arrivalSceneTime = data.arrivalSceneTime.ifEmpty { "00:00" },
+                    contactTime = data.contactTime.ifEmpty { "00:00" },
+                    distanceKm = data.distanceKm,
+                    departureSceneTime = data.departureSceneTime.ifEmpty { "00:00" },
+                    arrivalHospitalTime = data.arrivalHospitalTime.ifEmpty { "00:00" },
+                    returnTime = data.returnTime.ifEmpty { "00:00" },
+                    dispatchType = data.dispatchType.ifEmpty { "정상" },
+                    sceneLocation = SceneLocation(
+                        name = data.sceneLocationName,
+                        value = data.sceneLocationValue
+                    ),
+                    symptoms = Symptoms(
+                        pain = painSymptoms,
+                        trauma = traumaSymptoms,
+                        otherSymptoms = otherSymptoms
+                    ),
+                    createdAt = currentTime,
+                    updatedAt = currentTime
                 )
             )
         )

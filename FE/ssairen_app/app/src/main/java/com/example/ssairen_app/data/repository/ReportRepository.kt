@@ -15,6 +15,8 @@ import com.example.ssairen_app.data.model.request.PatientInfoRequest
 import com.example.ssairen_app.data.model.request.PatientTypeRequest
 import com.example.ssairen_app.data.model.request.PatientEvaRequest
 import com.example.ssairen_app.data.model.request.FirstAidRequest
+import com.example.ssairen_app.data.model.request.DispatchRequest
+import com.example.ssairen_app.data.model.response.DispatchResponse
 
 class ReportRepository(
     private val authManager: AuthManager
@@ -380,6 +382,74 @@ class ReportRepository(
     }
 
     /**
+     * 구급출동 조회
+     * GET /api/emergency-reports/{emergencyReportId}/sections/DISPATCH
+     */
+    suspend fun getDispatch(emergencyReportId: Int): Result<DispatchResponse> {
+        return try {
+            Log.d(TAG, "=== 구급출동 조회 시작 ===")
+            Log.d(TAG, "📄 출동보고서 ID: $emergencyReportId")
+
+            val token = authManager.getAccessToken()
+
+            if (token == null) {
+                Log.e(TAG, "❌ Access Token이 없습니다")
+                return Result.failure(Exception("로그인이 필요합니다"))
+            }
+
+            Log.d(TAG, "🔑 Access Token (앞 20자): ${token.take(20)}...")
+            Log.d(TAG, "API 호출 중... (type: DISPATCH)")
+
+            val response = api.getDispatch(emergencyReportId, "Bearer $token")
+
+            Log.d(TAG, "응답 코드: ${response.code()}")
+
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                Log.d(TAG, "응답 바디 success: ${body.success}")
+
+                if (body.success) {
+                    Log.d(TAG, "✅ 구급출동 조회 성공!")
+                    Log.d(TAG, "섹션 ID: ${body.data.id}")
+                    Log.d(TAG, "출동보고서 ID: ${body.data.emergencyReportId}")
+                    Log.d(TAG, "출동 유형: ${body.data.data.dispatch.dispatchType ?: "없음"}")
+
+                    Result.success(body)
+                } else {
+                    val errorMessage = "구급출동 조회에 실패했습니다"
+                    Log.e(TAG, "❌ 구급출동 조회 실패: $errorMessage")
+                    Result.failure(Exception(errorMessage))
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "❌ HTTP 오류 - 코드: ${response.code()}")
+                Log.e(TAG, "에러 바디: $errorBody")
+
+                val errorMsg = when (response.code()) {
+                    401 -> "인증이 만료되었습니다. 다시 로그인해주세요"
+                    403 -> "구급출동 조회 권한이 없습니다"
+                    404 -> "해당 보고서를 찾을 수 없습니다"
+                    500 -> "서버 내부 오류가 발생했습니다"
+                    else -> "서버 오류: ${response.code()}"
+                }
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "💥 예외 발생!", e)
+
+            val errorMsg = when {
+                e.message?.contains("Unable to resolve host") == true ->
+                    "인터넷 연결을 확인해주세요"
+                e.message?.contains("timeout") == true ->
+                    "서버 응답 시간이 초과되었습니다"
+                else ->
+                    "네트워크 오류: ${e.message}"
+            }
+            Result.failure(Exception(errorMsg))
+        }
+    }
+
+    /**
      * 응급처치 조회
      * GET /api/emergency-reports/{emergencyReportId}/sections/TREATMENT
      */
@@ -659,6 +729,82 @@ class ReportRepository(
                     400 -> "잘못된 요청입니다. 입력값을 확인해주세요"
                     401 -> "인증이 만료되었습니다. 다시 로그인해주세요"
                     403 -> "환자평가 수정 권한이 없습니다"
+                    404 -> "해당 보고서를 찾을 수 없습니다"
+                    500 -> "서버 내부 오류가 발생했습니다"
+                    else -> "서버 오류: ${response.code()}"
+                }
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "💥 예외 발생!", e)
+
+            val errorMsg = when {
+                e.message?.contains("Unable to resolve host") == true ->
+                    "인터넷 연결을 확인해주세요"
+                e.message?.contains("timeout") == true ->
+                    "서버 응답 시간이 초과되었습니다"
+                else ->
+                    "네트워크 오류: ${e.message}"
+            }
+            Result.failure(Exception(errorMsg))
+        }
+    }
+
+    /**
+     * 구급출동 업데이트
+     * PATCH /api/emergency-reports/{emergencyReportId}/sections/DISPATCH
+     */
+    suspend fun updateDispatch(
+        emergencyReportId: Int,
+        request: DispatchRequest
+    ): Result<DispatchResponse> {
+        return try {
+            Log.d(TAG, "=== 구급출동 업데이트 시작 ===")
+            Log.d(TAG, "📄 출동보고서 ID: $emergencyReportId")
+            Log.d(TAG, "📝 요청 데이터: 출동유형=${request.data.dispatch.dispatchType}")
+
+            val token = authManager.getAccessToken()
+
+            if (token == null) {
+                Log.e(TAG, "❌ Access Token이 없습니다")
+                return Result.failure(Exception("로그인이 필요합니다"))
+            }
+
+            Log.d(TAG, "🔑 Access Token (앞 20자): ${token.take(20)}...")
+            Log.d(TAG, "API 호출 중... (PATCH DISPATCH)")
+
+            val response = api.updateDispatch(
+                emergencyReportId = emergencyReportId,
+                token = "Bearer $token",
+                request = request
+            )
+
+            Log.d(TAG, "응답 코드: ${response.code()}")
+
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                Log.d(TAG, "응답 바디 success: ${body.success}")
+
+                if (body.success) {
+                    Log.d(TAG, "✅ 구급출동 업데이트 성공!")
+                    Log.d(TAG, "섹션 ID: ${body.data.id}")
+                    Log.d(TAG, "업데이트 시간: ${body.data.data.dispatch.updatedAt}")
+
+                    Result.success(body)
+                } else {
+                    val errorMessage = "구급출동 업데이트에 실패했습니다"
+                    Log.e(TAG, "❌ 구급출동 업데이트 실패: $errorMessage")
+                    Result.failure(Exception(errorMessage))
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "❌ HTTP 오류 - 코드: ${response.code()}")
+                Log.e(TAG, "에러 바디: $errorBody")
+
+                val errorMsg = when (response.code()) {
+                    400 -> "잘못된 요청입니다. 입력값을 확인해주세요"
+                    401 -> "인증이 만료되었습니다. 다시 로그인해주세요"
+                    403 -> "구급출동 수정 권한이 없습니다"
                     404 -> "해당 보고서를 찾을 수 없습니다"
                     500 -> "서버 내부 오류가 발생했습니다"
                     else -> "서버 오류: ${response.code()}"

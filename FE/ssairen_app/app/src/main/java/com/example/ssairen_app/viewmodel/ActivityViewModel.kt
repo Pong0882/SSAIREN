@@ -16,6 +16,8 @@ import com.example.ssairen_app.data.model.request.PatientInfoRequest
 import com.example.ssairen_app.data.model.request.PatientTypeRequest
 import com.example.ssairen_app.data.model.request.PatientEvaRequest
 import com.example.ssairen_app.data.model.request.FirstAidRequest
+import com.example.ssairen_app.data.model.request.DispatchRequest
+import com.example.ssairen_app.data.model.response.DispatchResponse
 
 import kotlinx.coroutines.launch
 
@@ -62,6 +64,70 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
     fun setEmergencyReportId(reportId: Int) {
         Log.d(TAG, "📝 출동보고서 ID 변경: ${_currentEmergencyReportId.value} → $reportId")
         _currentEmergencyReportId.postValue(reportId)
+    }
+
+    // ==========================================
+    // 구급출동 (조회 + 업데이트)
+    // ==========================================
+    private val _dispatchState = MutableLiveData<DispatchApiState>(DispatchApiState.Idle)
+    val dispatchState: LiveData<DispatchApiState> = _dispatchState
+
+    fun getDispatch() {
+        val reportId = _currentEmergencyReportId.value
+        if (reportId == null) {
+            Log.e(TAG, "❌ emergencyReportId가 설정되지 않았습니다")
+            _dispatchState.postValue(DispatchApiState.Error("보고서 ID가 설정되지 않았습니다"))
+            return
+        }
+        getDispatch(reportId)
+    }
+
+    fun getDispatch(emergencyReportId: Int) {
+        Log.d(TAG, "=== 구급출동 조회 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _dispatchState.postValue(DispatchApiState.Loading)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.getDispatch(emergencyReportId)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 구급출동 조회 성공 (ViewModel)")
+                    _dispatchState.postValue(DispatchApiState.Success(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 구급출동 조회 실패 (ViewModel): ${error.message}")
+                    _dispatchState.postValue(DispatchApiState.Error(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 구급출동 조회 중 예외 발생 (ViewModel)", e)
+                _dispatchState.postValue(DispatchApiState.Error(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    fun updateDispatch(emergencyReportId: Int, request: DispatchRequest) {
+        Log.d(TAG, "=== 구급출동 업데이트 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _dispatchState.postValue(DispatchApiState.Updating)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.updateDispatch(emergencyReportId, request)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 구급출동 업데이트 성공 (ViewModel)")
+                    _dispatchState.postValue(DispatchApiState.UpdateSuccess(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 구급출동 업데이트 실패 (ViewModel): ${error.message}")
+                    _dispatchState.postValue(DispatchApiState.UpdateError(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 구급출동 업데이트 중 예외 발생 (ViewModel)", e)
+                _dispatchState.postValue(DispatchApiState.UpdateError(e.message ?: "알 수 없는 오류"))
+            }
+        }
     }
 
     // ==========================================
@@ -443,4 +509,15 @@ sealed class FirstAidApiState {
     object Updating : FirstAidApiState()
     data class UpdateSuccess(val firstAidResponse: FirstAidResponse) : FirstAidApiState()
     data class UpdateError(val message: String) : FirstAidApiState()
+}
+
+sealed class DispatchApiState {
+    object Idle : DispatchApiState()
+    object Loading : DispatchApiState()
+    data class Success(val dispatchResponse: DispatchResponse) : DispatchApiState()
+    data class Error(val message: String) : DispatchApiState()
+
+    object Updating : DispatchApiState()
+    data class UpdateSuccess(val dispatchResponse: DispatchResponse) : DispatchApiState()
+    data class UpdateError(val message: String) : DispatchApiState()
 }
