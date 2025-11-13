@@ -3,6 +3,7 @@ package com.ssairen.domain.file.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssairen.domain.ai.entity.SttTranscript;
 import com.ssairen.domain.ai.repository.SttTranscriptRepository;
+import com.ssairen.domain.ai.service.AiResponseToReportSectionService;
 import com.ssairen.domain.ai.service.LocalWhisperSttService;
 import com.ssairen.domain.ai.service.SttService;
 import com.ssairen.domain.ai.service.TextToJsonService;
@@ -48,6 +49,7 @@ public class FileController {
     private final SttTranscriptRepository sttTranscriptRepository;
     private final EmergencyReportRepository emergencyReportRepository;
     private final ObjectMapper objectMapper;
+    private final AiResponseToReportSectionService aiResponseToReportSectionService;
 
     /**
      * 오디오 파일 업로드
@@ -327,11 +329,12 @@ public class FileController {
      * 오디오 파일 STT + JSON 변환 통합 API
      * - 로컬 Whisper STT로 음성을 텍스트로 변환
      * - AI 서버의 Text to JSON API로 텍스트를 JSON으로 변환
+     * - ReportSection에 저장
      */
     @PostMapping(value = "/stt/local/full-to-json", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
-            summary = "로컬 Whisper STT + JSON 변환",
-            description = "로컬 Faster-Whisper로 음성을 텍스트로 변환한 후, AI 서버를 통해 대화 내용을 구조화된 JSON으로 변환합니다."
+            summary = "로컬 Whisper STT + JSON 변환 + ReportSection 저장",
+            description = "로컬 Faster-Whisper로 음성을 텍스트로 변환한 후, AI 서버를 통해 대화 내용을 구조화된 JSON으로 변환하고 ReportSection에 저장합니다."
     )
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -343,6 +346,10 @@ public class FileController {
                     description = "잘못된 요청 (빈 파일, 지원하지 않는 형식 등)"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "구급일지를 찾을 수 없음"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "500",
                     description = "STT 또는 JSON 변환 실패"
             )
@@ -350,6 +357,8 @@ public class FileController {
     public ResponseEntity<ApiResponse<Object>> convertSpeechToJsonWithLocalWhisper(
             @Parameter(description = "오디오 파일 (mp3, wav, m4a 등)", required = true)
             @RequestParam("file") MultipartFile file,
+            @Parameter(description = "구급일지 ID", required = true)
+            @RequestParam("emergencyReportId") Long emergencyReportId,
             @Parameter(description = "언어 코드 (예: ko, en, ja)")
             @RequestParam(value = "language", required = false, defaultValue = "ko") String language,
             @Parameter(description = "최대 생성 토큰 수")
@@ -357,14 +366,18 @@ public class FileController {
             @Parameter(description = "생성 온도 (0.0 ~ 1.0)")
             @RequestParam(value = "temperature", required = false, defaultValue = "0.1") Double temperature
     ) {
-        log.info("로컬 Whisper STT + JSON 변환 요청 - 파일명: {}, 언어: {}, 크기: {} bytes",
-                file.getOriginalFilename(), language, file.getSize());
+        log.info("로컬 Whisper STT + JSON 변환 요청 - 파일명: {}, 구급일지 ID: {}, 언어: {}, 크기: {} bytes",
+                file.getOriginalFilename(), emergencyReportId, language, file.getSize());
 
-        // 1. 로컬 Whisper STT로 음성을 텍스트로 변환
+        // 1. 구급일지 존재 여부 확인
+        EmergencyReport emergencyReport = emergencyReportRepository.findById(emergencyReportId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
+
+        // 2. 로컬 Whisper STT로 음성을 텍스트로 변환
         LocalWhisperSttResponse sttResponse = localWhisperSttService.convertSpeechToText(file, language);
         log.info("STT 변환 완료 - 텍스트 길이: {} 문자", sttResponse.getText().length());
 
-        // 2. AI 서버로 텍스트를 JSON으로 변환
+        // 3. AI 서버로 텍스트를 JSON으로 변환
         Object jsonResponse = textToJsonService.convertTextToJson(
                 sttResponse.getText(),
                 maxNewTokens,
@@ -372,8 +385,15 @@ public class FileController {
         );
         log.info("JSON 변환 완료");
 
+        // 4. AI 응답을 ReportSection에 저장
+        int savedCount = aiResponseToReportSectionService.saveAiResponseToReportSections(
+                jsonResponse,
+                emergencyReport
+        );
+        log.info("ReportSection 저장 완료 - 저장된 섹션 수: {}", savedCount);
+
         return ResponseEntity.ok(
-                ApiResponse.success(jsonResponse, "STT 및 JSON 변환이 완료되었습니다.")
+                ApiResponse.success(jsonResponse, "STT 및 JSON 변환이 완료되었으며, " + savedCount + "개의 섹션이 저장되었습니다.")
         );
     }
 
@@ -381,11 +401,12 @@ public class FileController {
      * 텍스트를 직접 받아서 JSON으로 변환하는 API
      * - STT 과정 없이 텍스트를 직접 입력받아 JSON으로 변환
      * - AI 서버의 Text to JSON API 사용
+     * - ReportSection에 저장
      */
     @PostMapping(value = "/text-to-json")
     @Operation(
-            summary = "텍스트 → JSON 변환",
-            description = "텍스트를 직접 받아서 AI 서버를 통해 구조화된 JSON으로 변환합니다. STT 과정 없이 텍스트만 변환합니다."
+            summary = "텍스트 → JSON 변환 + ReportSection 저장",
+            description = "텍스트를 직접 받아서 AI 서버를 통해 구조화된 JSON으로 변환하고 ReportSection에 저장합니다."
     )
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -397,6 +418,10 @@ public class FileController {
                     description = "잘못된 요청 (빈 텍스트 등)"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "구급일지를 찾을 수 없음"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "500",
                     description = "JSON 변환 실패"
             )
@@ -404,14 +429,20 @@ public class FileController {
     public ResponseEntity<ApiResponse<Object>> convertTextToJson(
             @Parameter(description = "변환할 텍스트 내용", required = true)
             @RequestParam("text") String text,
+            @Parameter(description = "구급일지 ID", required = true)
+            @RequestParam("emergencyReportId") Long emergencyReportId,
             @Parameter(description = "최대 생성 토큰 수")
             @RequestParam(value = "maxNewTokens", required = false, defaultValue = "700") Integer maxNewTokens,
             @Parameter(description = "생성 온도 (0.0 ~ 1.0)")
             @RequestParam(value = "temperature", required = false, defaultValue = "0.1") Double temperature
     ) {
-        log.info("텍스트 → JSON 변환 요청 - 텍스트 길이: {} 문자", text.length());
+        log.info("텍스트 → JSON 변환 요청 - 구급일지 ID: {}, 텍스트 길이: {} 문자", emergencyReportId, text.length());
 
-        // 텍스트를 AI 서버로 JSON으로 변환
+        // 1. 구급일지 존재 여부 확인
+        EmergencyReport emergencyReport = emergencyReportRepository.findById(emergencyReportId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
+
+        // 2. 텍스트를 AI 서버로 JSON으로 변환
         Object jsonResponse = textToJsonService.convertTextToJson(
                 text,
                 maxNewTokens,
@@ -419,8 +450,15 @@ public class FileController {
         );
         log.info("JSON 변환 완료");
 
+        // 3. AI 응답을 ReportSection에 저장
+        int savedCount = aiResponseToReportSectionService.saveAiResponseToReportSections(
+                jsonResponse,
+                emergencyReport
+        );
+        log.info("ReportSection 저장 완료 - 저장된 섹션 수: {}", savedCount);
+
         return ResponseEntity.ok(
-                ApiResponse.success(jsonResponse, "텍스트를 JSON으로 변환했습니다.")
+                ApiResponse.success(jsonResponse, "텍스트를 JSON으로 변환했으며, " + savedCount + "개의 섹션이 저장되었습니다.")
         );
     }
 }
