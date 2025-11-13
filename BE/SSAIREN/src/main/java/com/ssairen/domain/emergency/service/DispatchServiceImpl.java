@@ -65,7 +65,7 @@ public class DispatchServiceImpl implements DispatchService {
         sendDispatchNotificationToParamedic(paramedic.getId(), savedDispatch, request);
 
         // 해당 구급대원에게 WebSocket 실시간 알림 전송 (모든 출동지령 정보 포함)
-        sendWebSocketNotification(paramedic.getId(), request);
+        sendWebSocketNotification(paramedic.getId(), savedDispatch, request);
 
         return dispatchMapper.toResponse(savedDispatch);
     }
@@ -153,21 +153,59 @@ public class DispatchServiceImpl implements DispatchService {
      * WebSocket으로 출동지령 정보를 구급대원에게 실시간 전송
      *
      * @param paramedicId 구급대원 ID
+     * @param dispatch    출동 지령
      * @param request 출동지령 생성 요청 데이터
      */
-    private void sendWebSocketNotification(Integer paramedicId, DispatchCreateRequest request) {
+    private void sendWebSocketNotification(Integer paramedicId, Dispatch dispatch, DispatchCreateRequest request) {
         try {
             String destination = "/topic/paramedic." + paramedicId;
 
-            messagingTemplate.convertAndSend(destination, request);
+            // WebSocket data에 출동지령의 모든 정보 포함 (FCM과 동일한 형식)
+            Map<String, String> data = new HashMap<>();
+            data.put("type", "DISPATCH");
+            data.put("dispatchId", String.valueOf(dispatch.getId()));
+            data.put("fireStateId", String.valueOf(request.fireStateId()));
+            data.put("paramedicId", String.valueOf(request.paramedicId()));
 
-            log.info("[DISPATCH] WebSocket 전송 완료 - destination={}, paramedicId={}",
-                    destination, paramedicId);
+            if (request.disasterNumber() != null) {
+                data.put("disasterNumber", request.disasterNumber());
+            }
+            data.put("disasterType", request.disasterType());
+            if (request.disasterSubtype() != null) {
+                data.put("disasterSubtype", request.disasterSubtype());
+            }
+            if (request.reporterName() != null) {
+                data.put("reporterName", request.reporterName());
+            }
+            if (request.reporterPhone() != null) {
+                data.put("reporterPhone", request.reporterPhone());
+            }
+            data.put("locationAddress", request.locationAddress());
+            if (request.incidentDescription() != null) {
+                data.put("incidentDescription", request.incidentDescription());
+            }
+            if (request.dispatchLevel() != null) {
+                data.put("dispatchLevel", request.dispatchLevel());
+            }
+            if (request.dispatchOrder() != null) {
+                data.put("dispatchOrder", String.valueOf(request.dispatchOrder()));
+            }
+            if (request.dispatchStation() != null) {
+                data.put("dispatchStation", request.dispatchStation());
+            }
+            if (request.date() != null) {
+                data.put("date", request.date().toString());
+            }
+
+            messagingTemplate.convertAndSend(destination, data);
+
+            log.info("[DISPATCH] WebSocket 전송 완료 - destination={}, dispatchId={}, paramedicId={}",
+                    destination, dispatch.getId(), paramedicId);
 
         } catch (Exception e) {
             // WebSocket 전송 실패가 출동 생성 로직을 막지 않도록 예외는 로깅만
-            log.error("[DISPATCH] WebSocket 전송 실패 - paramedicId={}, error={}",
-                    paramedicId, e.getMessage(), e);
+            log.error("[DISPATCH] WebSocket 전송 실패 - dispatchId={}, paramedicId={}, error={}",
+                    dispatch.getId(), paramedicId, e.getMessage(), e);
         }
     }
 
