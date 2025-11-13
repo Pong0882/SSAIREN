@@ -56,6 +56,26 @@ data class DispatchData(
     val otherSymptomValue: String? = null     // "기타" 증상 실제 입력값
 )
 
+// 의료지도
+data class MedicalGuidanceData(
+    val contactStatus: String = "연결",                      // 의료지도 연결 여부: 연결 | 미연결
+    val requestTime: String = "",                           // 요청 시각 (HH:mm)
+    val requestMethod: String = "일반전화",                  // 요청 방법
+    val requestMethodValue: String? = null,                 // 기타 요청 방법 입력값
+    val guidanceAgency: String = "소방",                     // 의료지도 기관: 소방 | 병원 | 기타
+    val guidanceAgencyValue: String? = null,                // 기타 기관 입력값
+    val guidanceDoctor: String = "",                        // 의료지도 의사 성명
+    val emergencyTreatment: Set<String> = setOf(),          // 응급처치 (복수 선택)
+    val emergencyTreatmentOtherValue: String? = null,       // 응급처치 기타 입력값
+    val medication: Set<String> = setOf(),                  // 약물투여 (복수 선택)
+    val medicationOtherValue: String? = null,               // 약물투여 기타 입력값
+    val hospitalRequest: Boolean = false,                   // 병원선정
+    val patientEvaluation: Boolean = false,                 // 환자평가
+    val cprTransfer: Boolean = false,                       // CPR유보중단
+    val transferRefusal: Boolean = false,                   // 이송거절
+    val transferRejection: Boolean = false                  // 이송거부
+)
+
 // 2. 환자발생유형
 data class PatienTypeData(
     // 병력 유무
@@ -167,13 +187,6 @@ data class FirstAidData(
     val woundParalysis: Boolean = false
 )
 
-// 5. 의료지도
-data class MedicalGuidanceData(
-    val medicalGuidance: String = "",
-    val guidanceDoctor: String = "",
-    val guidanceTime: String = ""
-)
-
 // 6. 환자이송
 data class PatientTransportData(
     val transportDestination: String = "",
@@ -266,6 +279,16 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
+     * ✅ 의료지도 업데이트
+     */
+    fun updateMedicalGuidance(data: MedicalGuidanceData) {
+        _activityLogData.value = _activityLogData.value.copy(
+            medicalGuidance = data
+        )
+        saveToLocal()
+    }
+
+    /**
      * ✅ 2. 환자발생유형 업데이트
      */
     fun updatePatienType(data: PatienTypeData) {
@@ -291,16 +314,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     fun updateFirstAid(data: FirstAidData) {
         _activityLogData.value = _activityLogData.value.copy(
             firstAid = data
-        )
-        saveToLocal()
-    }
-
-    /**
-     * ✅ 5. 의료지도 업데이트
-     */
-    fun updateMedicalGuidance(data: MedicalGuidanceData) {
-        _activityLogData.value = _activityLogData.value.copy(
-            medicalGuidance = data
         )
         saveToLocal()
     }
@@ -441,6 +454,23 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             }
                     }
 
+                    5 -> {
+                        // 의료지도 저장
+                        Log.d(TAG, "💾 [백엔드 저장] 의료지도 시작")
+                        val request = convertToMedicalGuidanceRequest(currentData.medicalGuidance)
+
+                        repository.updateMedicalGuidance(currentEmergencyReportId, request)
+                            .onSuccess { response ->
+                                Log.d(TAG, "✅ 의료지도 저장 성공")
+                                _saveState.value = SaveState.Success("의료지도 저장 완료")
+                                updateSaveTime()
+                            }
+                            .onFailure { error ->
+                                Log.e(TAG, "❌ 의료지도 저장 실패: ${error.message}")
+                                _saveState.value = SaveState.Error(error.message ?: "저장 실패")
+                            }
+                    }
+
                     else -> {
                         Log.d(TAG, "⚠️ 탭 $tabIndex 는 백엔드 저장이 구현되지 않았습니다")
                         _saveState.value = SaveState.Success("로컬 저장만 완료")
@@ -556,6 +586,63 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                         pain = painSymptoms,
                         trauma = traumaSymptoms,
                         otherSymptoms = otherSymptoms
+                    ),
+                    createdAt = currentTime,
+                    updatedAt = currentTime
+                )
+            )
+        )
+    }
+
+    /**
+     * MedicalGuidanceData → MedicalGuidanceRequest 변환
+     */
+    private fun convertToMedicalGuidanceRequest(data: MedicalGuidanceData): MedicalGuidanceRequest {
+        // 현재 시간을 ISO 8601 형식으로 생성
+        val currentTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
+
+        // 응급처치 리스트 변환
+        val emergencyTreatmentList = data.emergencyTreatment.map { item ->
+            com.example.ssairen_app.data.model.request.TreatmentItem(
+                name = item,
+                value = if (item == "기타") data.emergencyTreatmentOtherValue else null
+            )
+        }
+
+        // 약물투여 리스트 변환
+        val medicationList = data.medication.map { item ->
+            com.example.ssairen_app.data.model.request.TreatmentItem(
+                name = item,
+                value = if (item == "기타") data.medicationOtherValue else null
+            )
+        }
+
+        return MedicalGuidanceRequest(
+            data = MedicalGuidanceRequestData(
+                schemaVersion = 1,
+                medicalGuidance = MedicalGuidanceInfo(
+                    contactStatus = data.contactStatus.ifEmpty { "연결" },
+                    requestTime = data.requestTime.ifEmpty { "00:00" },
+                    requestMethod = com.example.ssairen_app.data.model.request.RequestMethod(
+                        type = data.requestMethod,
+                        value = if (data.requestMethod == "기타") data.requestMethodValue else null
+                    ),
+                    guidanceAgency = com.example.ssairen_app.data.model.request.GuidanceAgency(
+                        type = data.guidanceAgency,
+                        value = if (data.guidanceAgency == "기타") data.guidanceAgencyValue else null
+                    ),
+                    guidanceDoctor = com.example.ssairen_app.data.model.request.GuidanceDoctor(
+                        name = data.guidanceDoctor
+                    ),
+                    guidanceContent = com.example.ssairen_app.data.model.request.GuidanceContent(
+                        emergencyTreatment = emergencyTreatmentList,
+                        medication = medicationList,
+                        hospitalRequest = data.hospitalRequest,
+                        patientEvaluation = data.patientEvaluation,
+                        cprTransfer = data.cprTransfer,
+                        transferRefusal = data.transferRefusal,
+                        transferRejection = data.transferRejection,
+                        notes = null
                     ),
                     createdAt = currentTime,
                     updatedAt = currentTime

@@ -18,6 +18,8 @@ import com.example.ssairen_app.data.model.request.PatientEvaRequest
 import com.example.ssairen_app.data.model.request.FirstAidRequest
 import com.example.ssairen_app.data.model.request.DispatchRequest
 import com.example.ssairen_app.data.model.response.DispatchResponse
+import com.example.ssairen_app.data.model.request.MedicalGuidanceRequest
+import com.example.ssairen_app.data.model.response.MedicalGuidanceResponse
 
 import kotlinx.coroutines.launch
 
@@ -126,6 +128,70 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
             } catch (e: Exception) {
                 Log.e(TAG, "💥 구급출동 업데이트 중 예외 발생 (ViewModel)", e)
                 _dispatchState.postValue(DispatchApiState.UpdateError(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    // ==========================================
+    // 의료지도 (조회 + 업데이트)
+    // ==========================================
+    private val _medicalGuidanceState = MutableLiveData<MedicalGuidanceApiState>(MedicalGuidanceApiState.Idle)
+    val medicalGuidanceState: LiveData<MedicalGuidanceApiState> = _medicalGuidanceState
+
+    fun getMedicalGuidance() {
+        val reportId = _currentEmergencyReportId.value
+        if (reportId == null) {
+            Log.e(TAG, "❌ emergencyReportId가 설정되지 않았습니다")
+            _medicalGuidanceState.postValue(MedicalGuidanceApiState.Error("보고서 ID가 설정되지 않았습니다"))
+            return
+        }
+        getMedicalGuidance(reportId)
+    }
+
+    fun getMedicalGuidance(emergencyReportId: Int) {
+        Log.d(TAG, "=== 의료지도 조회 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _medicalGuidanceState.postValue(MedicalGuidanceApiState.Loading)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.getMedicalGuidance(emergencyReportId)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 의료지도 조회 성공 (ViewModel)")
+                    _medicalGuidanceState.postValue(MedicalGuidanceApiState.Success(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 의료지도 조회 실패 (ViewModel): ${error.message}")
+                    _medicalGuidanceState.postValue(MedicalGuidanceApiState.Error(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 의료지도 조회 중 예외 발생 (ViewModel)", e)
+                _medicalGuidanceState.postValue(MedicalGuidanceApiState.Error(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    fun updateMedicalGuidance(emergencyReportId: Int, request: MedicalGuidanceRequest) {
+        Log.d(TAG, "=== 의료지도 업데이트 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _medicalGuidanceState.postValue(MedicalGuidanceApiState.Updating)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.updateMedicalGuidance(emergencyReportId, request)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 의료지도 업데이트 성공 (ViewModel)")
+                    _medicalGuidanceState.postValue(MedicalGuidanceApiState.UpdateSuccess(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 의료지도 업데이트 실패 (ViewModel): ${error.message}")
+                    _medicalGuidanceState.postValue(MedicalGuidanceApiState.UpdateError(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 의료지도 업데이트 중 예외 발생 (ViewModel)", e)
+                _medicalGuidanceState.postValue(MedicalGuidanceApiState.UpdateError(e.message ?: "알 수 없는 오류"))
             }
         }
     }
@@ -520,4 +586,15 @@ sealed class DispatchApiState {
     object Updating : DispatchApiState()
     data class UpdateSuccess(val dispatchResponse: DispatchResponse) : DispatchApiState()
     data class UpdateError(val message: String) : DispatchApiState()
+}
+
+sealed class MedicalGuidanceApiState {
+    object Idle : MedicalGuidanceApiState()
+    object Loading : MedicalGuidanceApiState()
+    data class Success(val medicalGuidanceResponse: MedicalGuidanceResponse) : MedicalGuidanceApiState()
+    data class Error(val message: String) : MedicalGuidanceApiState()
+
+    object Updating : MedicalGuidanceApiState()
+    data class UpdateSuccess(val medicalGuidanceResponse: MedicalGuidanceResponse) : MedicalGuidanceApiState()
+    data class UpdateError(val message: String) : MedicalGuidanceApiState()
 }
