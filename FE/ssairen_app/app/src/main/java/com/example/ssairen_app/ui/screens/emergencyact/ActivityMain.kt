@@ -39,6 +39,7 @@ import com.example.ssairen_app.ui.components.MainButton
 import com.example.ssairen_app.ui.components.HeartRateChart
 import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.ui.wear.WearDataViewModel
+import com.example.ssairen_app.viewmodel.ActivityViewModel
 
 @Composable
 fun ActivityMain(
@@ -122,6 +123,7 @@ private fun HomeContent(
 
     val context = LocalContext.current
     val application = context.applicationContext as android.app.Application
+    val activityViewModel: ActivityViewModel = viewModel()
     val wearViewModel: WearDataViewModel = remember {
         WearDataViewModel.getInstance(application)
     }
@@ -176,6 +178,8 @@ private fun HomeContent(
                 audioService = binder.getService()
                 isAudioBound = true
                 Log.d("ActivityMain", "AudioRecordingService connected")
+
+                AudioRecordingService.setViewModel(activityViewModel)
 
                 audioService?.setRecordingCallbacks(
                     onStarted = {
