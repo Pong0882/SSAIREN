@@ -20,6 +20,8 @@ import com.example.ssairen_app.data.model.request.DispatchRequest
 import com.example.ssairen_app.data.model.response.DispatchResponse
 import com.example.ssairen_app.data.model.request.MedicalGuidanceRequest
 import com.example.ssairen_app.data.model.response.MedicalGuidanceResponse
+import com.example.ssairen_app.data.model.request.TransportRequest
+import com.example.ssairen_app.data.model.response.TransportResponse
 
 import kotlinx.coroutines.launch
 
@@ -192,6 +194,70 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
             } catch (e: Exception) {
                 Log.e(TAG, "💥 의료지도 업데이트 중 예외 발생 (ViewModel)", e)
                 _medicalGuidanceState.postValue(MedicalGuidanceApiState.UpdateError(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    // ==========================================
+    // 환자이송 (조회 + 업데이트)
+    // ==========================================
+    private val _transportState = MutableLiveData<TransportApiState>(TransportApiState.Idle)
+    val transportState: LiveData<TransportApiState> = _transportState
+
+    fun getTransport() {
+        val reportId = _currentEmergencyReportId.value
+        if (reportId == null) {
+            Log.e(TAG, "❌ emergencyReportId가 설정되지 않았습니다")
+            _transportState.postValue(TransportApiState.Error("보고서 ID가 설정되지 않았습니다"))
+            return
+        }
+        getTransport(reportId)
+    }
+
+    fun getTransport(emergencyReportId: Int) {
+        Log.d(TAG, "=== 환자이송 조회 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _transportState.postValue(TransportApiState.Loading)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.getTransport(emergencyReportId)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 환자이송 조회 성공 (ViewModel)")
+                    _transportState.postValue(TransportApiState.Success(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 환자이송 조회 실패 (ViewModel): ${error.message}")
+                    _transportState.postValue(TransportApiState.Error(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 환자이송 조회 중 예외 발생 (ViewModel)", e)
+                _transportState.postValue(TransportApiState.Error(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    fun updateTransport(emergencyReportId: Int, request: TransportRequest) {
+        Log.d(TAG, "=== 환자이송 업데이트 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _transportState.postValue(TransportApiState.Updating)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.updateTransport(emergencyReportId, request)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 환자이송 업데이트 성공 (ViewModel)")
+                    _transportState.postValue(TransportApiState.UpdateSuccess(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 환자이송 업데이트 실패 (ViewModel): ${error.message}")
+                    _transportState.postValue(TransportApiState.UpdateError(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 환자이송 업데이트 중 예외 발생 (ViewModel)", e)
+                _transportState.postValue(TransportApiState.UpdateError(e.message ?: "알 수 없는 오류"))
             }
         }
     }
@@ -597,4 +663,15 @@ sealed class MedicalGuidanceApiState {
     object Updating : MedicalGuidanceApiState()
     data class UpdateSuccess(val medicalGuidanceResponse: MedicalGuidanceResponse) : MedicalGuidanceApiState()
     data class UpdateError(val message: String) : MedicalGuidanceApiState()
+}
+
+sealed class TransportApiState {
+    object Idle : TransportApiState()
+    object Loading : TransportApiState()
+    data class Success(val transportResponse: TransportResponse) : TransportApiState()
+    data class Error(val message: String) : TransportApiState()
+
+    object Updating : TransportApiState()
+    data class UpdateSuccess(val transportResponse: TransportResponse) : TransportApiState()
+    data class UpdateError(val message: String) : TransportApiState()
 }

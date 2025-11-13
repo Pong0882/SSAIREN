@@ -189,9 +189,25 @@ data class FirstAidData(
 
 // 6. 환자이송
 data class PatientTransportData(
-    val transportDestination: String = "",
-    val transportTime: String = "",
-    val transportMethod: String = ""
+    // 1차 이송
+    val firstHospitalName: String = "",
+    val firstRegionType: String = "관할",           // 관할 | 타시·도
+    val firstArrivalTime: String = "",              // HH:mm
+    val firstDistanceKm: Double = 0.0,
+    val firstSelectedBy: String = "",               // 의료기관 선정자
+    val firstBedShortageReasons: Set<String> = setOf(), // 병상부족 사유 (복수선택)
+    val firstOtherReasons: Set<String> = setOf(),   // 기타 재이송 사유 (복수선택)
+    val firstReceiver: String = "",                 // 환자 인수자
+
+    // 2차 이송 (선택)
+    val secondHospitalName: String = "",
+    val secondRegionType: String = "관할",
+    val secondArrivalTime: String = "",
+    val secondDistanceKm: Double = 0.0,
+    val secondSelectedBy: String = "",
+    val secondBedShortageReasons: Set<String> = setOf(),
+    val secondOtherReasons: Set<String> = setOf(),
+    val secondReceiver: String = ""
 )
 
 // 7. 세부사항표
@@ -471,6 +487,23 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             }
                     }
 
+                    6 -> {
+                        // 환자이송 저장
+                        Log.d(TAG, "💾 [백엔드 저장] 환자이송 시작")
+                        val request = convertToTransportRequest(currentData.patientTransport)
+
+                        repository.updateTransport(currentEmergencyReportId, request)
+                            .onSuccess { response ->
+                                Log.d(TAG, "✅ 환자이송 저장 성공")
+                                _saveState.value = SaveState.Success("환자이송 저장 완료")
+                                updateSaveTime()
+                            }
+                            .onFailure { error ->
+                                Log.e(TAG, "❌ 환자이송 저장 실패: ${error.message}")
+                                _saveState.value = SaveState.Error(error.message ?: "저장 실패")
+                            }
+                    }
+
                     else -> {
                         Log.d(TAG, "⚠️ 탭 $tabIndex 는 백엔드 저장이 구현되지 않았습니다")
                         _saveState.value = SaveState.Success("로컬 저장만 완료")
@@ -644,6 +677,85 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                         transferRejection = data.transferRejection,
                         notes = null
                     ),
+                    createdAt = currentTime,
+                    updatedAt = currentTime
+                )
+            )
+        )
+    }
+
+    /**
+     * PatientTransportData → TransportRequest 변환
+     */
+    private fun convertToTransportRequest(data: PatientTransportData): com.example.ssairen_app.data.model.request.TransportRequest {
+        val currentTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
+
+        // 1차 이송 정보 (필수 - 빈 값이어도 항상 전송)
+        val firstTransport = com.example.ssairen_app.data.model.request.TransportDetail(
+            hospitalName = data.firstHospitalName,
+            regionType = data.firstRegionType,
+            arrivalTime = data.firstArrivalTime,
+            distanceKm = data.firstDistanceKm,
+            selectedBy = data.firstSelectedBy,
+            retransportReason = buildList {
+                // 병상부족 사유
+                if (data.firstBedShortageReasons.isNotEmpty()) {
+                    add(com.example.ssairen_app.data.model.request.RetransportReason(
+                        type = "병상부족",
+                        name = data.firstBedShortageReasons.toList(),
+                        isCustom = false
+                    ))
+                }
+                // 기타 사유
+                data.firstOtherReasons.forEach { reason ->
+                    add(com.example.ssairen_app.data.model.request.RetransportReason(
+                        type = reason,
+                        name = null,
+                        isCustom = reason == "기타"
+                    ))
+                }
+            },
+            receiver = data.firstReceiver,
+            receiverSign = null  // 서명 기능은 추후 구현
+        )
+
+        // 2차 이송 정보 (선택 - 데이터가 있을 때만)
+        val secondTransport = if (data.secondHospitalName.isNotEmpty()) {
+            com.example.ssairen_app.data.model.request.TransportDetail(
+                hospitalName = data.secondHospitalName,
+                regionType = data.secondRegionType,
+                arrivalTime = data.secondArrivalTime,
+                distanceKm = data.secondDistanceKm,
+                selectedBy = data.secondSelectedBy,
+                retransportReason = buildList {
+                    // 병상부족 사유
+                    if (data.secondBedShortageReasons.isNotEmpty()) {
+                        add(com.example.ssairen_app.data.model.request.RetransportReason(
+                            type = "병상부족",
+                            name = data.secondBedShortageReasons.toList(),
+                            isCustom = false
+                        ))
+                    }
+                    // 기타 사유
+                    data.secondOtherReasons.forEach { reason ->
+                        add(com.example.ssairen_app.data.model.request.RetransportReason(
+                            type = reason,
+                            name = null,
+                            isCustom = reason == "기타"
+                        ))
+                    }
+                },
+                receiver = data.secondReceiver,
+                receiverSign = null  // 서명 기능은 추후 구현
+            )
+        } else null
+
+        return com.example.ssairen_app.data.model.request.TransportRequest(
+            data = com.example.ssairen_app.data.model.request.TransportRequestData(
+                schemaVersion = 1,
+                transport = com.example.ssairen_app.data.model.request.TransportInfo(
+                    firstTransport = firstTransport,
+                    secondTransport = secondTransport,
                     createdAt = currentTime,
                     updatedAt = currentTime
                 )

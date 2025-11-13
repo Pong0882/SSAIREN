@@ -217,7 +217,11 @@ fun ActivityLogHome(
                         data = activityLogData,
                         isReadOnly = isReadOnly
                     )
-                    6 -> PatientTransport()
+                    6 -> PatientTransport(
+                        viewModel = viewModel,
+                        data = activityLogData,
+                        isReadOnly = isReadOnly
+                    )
                     7 -> ReportDetail(logViewModel = viewModel)
                 }
             }
