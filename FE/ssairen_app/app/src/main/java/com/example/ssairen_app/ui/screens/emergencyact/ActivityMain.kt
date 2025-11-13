@@ -15,6 +15,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -590,7 +592,9 @@ private fun HomeContent(
 
             // 우측 메뉴 버튼들
             Column(
-                modifier = Modifier.width(140.dp),
+                modifier = Modifier
+                    .width(140.dp)
+                    .fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // 1. 환자정보 버튼
@@ -767,6 +771,59 @@ private fun HomeContent(
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
+                }
+
+                // ✅ STT 텍스트 표시 영역 (STT 녹음 중일 때만 표시)
+                if (isSttRecording && sttText.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    DarkCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        cornerRadius = 8.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.KeyboardVoice,
+                                    contentDescription = "STT",
+                                    tint = Color(0xFF4CAF50),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "음성 인식 중",
+                                    color = Color(0xFF4CAF50),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Color(0xFF1a1a1a),
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
+                                    )
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(6.dp)
+                            ) {
+                                Text(
+                                    text = sttText,
+                                    color = Color.White,
+                                    fontSize = 11.sp,
+                                    lineHeight = 14.sp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
