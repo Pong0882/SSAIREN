@@ -65,9 +65,10 @@ interface FileApiService {
     ): Response<ApiResponse<SttResponse>>
 
     /**
-     * 텍스트를 JSON으로 변환
+     * 텍스트를 JSON으로 변환 + ReportSection 저장
      *
      * @param text 변환할 텍스트 내용
+     * @param emergencyReportId 구급일지 ID
      * @param maxNewTokens 최대 생성 토큰 수 (기본값: 700)
      * @param temperature 생성 온도 (0.0 ~ 1.0, 기본값: 0.1)
      * @return 구조화된 JSON 데이터
@@ -75,6 +76,7 @@ interface FileApiService {
     @POST("/api/files/text-to-json")
     suspend fun textToJson(
         @retrofit2.http.Query("text") text: String,
+        @retrofit2.http.Query("emergencyReportId") emergencyReportId: Long,
         @retrofit2.http.Query("maxNewTokens") maxNewTokens: Int = 700,
         @retrofit2.http.Query("temperature") temperature: Double = 0.1
     ): Response<ApiResponse<SttResponse>>

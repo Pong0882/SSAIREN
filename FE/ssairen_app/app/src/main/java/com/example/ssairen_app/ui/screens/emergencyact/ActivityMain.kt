@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material.icons.filled.KeyboardVoice
@@ -334,46 +335,68 @@ private fun HomeContent(
         Log.d("ActivityMain", "🎤 STT Recording Started")
     }
 
-    // ✅ STT 녹음 중지 및 API 전송 함수
+    // ✅ STT 녹음 중지 함수 (API 전송 없이 녹음만 중지)
     fun stopSttRecording() {
         sttHelper?.stopListening()
         isSttRecording = false
+        Log.d("ActivityMain", "🛑 STT Recording Stopped")
 
-        val finalText = sttHelper?.getAccumulatedText() ?: ""
-        Log.d("ActivityMain", "🛑 STT Recording Stopped. Final text: $finalText")
+        // 녹음 중지 시 누적 텍스트 초기화
+        sttHelper?.clearAccumulatedText()
+        sttText = ""
+    }
 
-        if (finalText.isNotEmpty()) {
-            // API 호출
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    Log.d("ActivityMain", "📤 Sending text to API...")
-                    val response = RetrofitClient.fileApiService.textToJson(
-                        text = finalText,
-                        maxNewTokens = 700,
-                        temperature = 0.1
-                    )
+    // ✅ 누적된 텍스트를 API로 전송하는 함수 (녹음은 계속 진행)
+    fun sendAccumulatedTextToApi() {
+        val currentText = sttHelper?.getAccumulatedText() ?: ""
+        val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
 
-                    withContext(Dispatchers.Main) {
-                        if (response.isSuccessful) {
-                            val data = response.body()?.data
-                            Log.d("ActivityMain", "✅ API Success: $data")
-                            // TODO: 받은 JSON 데이터 처리
-                        } else {
-                            Log.e("ActivityMain", "❌ API Error: ${response.code()}")
-                        }
+        Log.d("ActivityMain", "📤 Sending accumulated text to API")
+        Log.d("ActivityMain", "  - Text: $currentText")
+        Log.d("ActivityMain", "  - ReportId: $currentReportId")
+
+        if (currentText.isEmpty()) {
+            Log.w("ActivityMain", "⚠️ No text to send")
+            return
+        }
+
+        if (currentReportId <= 0) {
+            Log.e("ActivityMain", "❌ Invalid report ID: $currentReportId")
+            return
+        }
+
+        // API 호출
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                Log.d("ActivityMain", "📤 Calling text-to-json API...")
+                val response = RetrofitClient.fileApiService.textToJson(
+                    text = currentText,
+                    emergencyReportId = currentReportId.toLong(),
+                    maxNewTokens = 700,
+                    temperature = 0.1
+                )
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val data = response.body()?.data
+                        Log.d("ActivityMain", "✅ API Success: $data")
+                        // TODO: 받은 JSON 데이터 처리
+
+                        // 전송 성공 후 누적 텍스트 초기화
+                        sttHelper?.clearAccumulatedText()
+                        sttText = ""
+                        Log.d("ActivityMain", "🗑️ Accumulated text cleared")
+                    } else {
+                        Log.e("ActivityMain", "❌ API Error: ${response.code()}")
                     }
-                } catch (e: Exception) {
-                    Log.e("ActivityMain", "❌ API Exception: ${e.message}")
-                    withContext(Dispatchers.Main) {
-                        // 에러 처리
-                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ActivityMain", "❌ API Exception: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    // 에러 처리
                 }
             }
         }
-
-        // 텍스트 초기화
-        sttHelper?.clearAccumulatedText()
-        sttText = ""
     }
 
     Log.d("ActivityMain", "🎨 HomeContent Composable 렌더링")
@@ -449,87 +472,118 @@ private fun HomeContent(
                 }
 
                 // ✅ 바디캠 녹화 + 오디오 녹음 + STT 버튼
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // 바디캠 녹화 버튼
-                    IconButton(
-                        onClick = {
-                            if (isVideoRecording) {
-                                stopVideoRecording()
-                            } else {
-                                startVideoRecording()
-                            }
-                        },
+                    // 첫 번째 줄: 바디캠, 오디오, STT 버튼
+                    Row(
                         modifier = Modifier
-                            .size(56.dp)
-                            .background(
-                                if (isVideoRecording) Color(0xFFff3b30) else Color(0xFF2a2a2a),
-                                CircleShape
-                            )
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = if (isVideoRecording) Icons.Filled.Stop else Icons.Filled.PhotoCamera,
-                            contentDescription = if (isVideoRecording) "녹화 중지" else "녹화 시작",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        // 바디캠 녹화 버튼
+                        IconButton(
+                            onClick = {
+                                if (isVideoRecording) {
+                                    stopVideoRecording()
+                                } else {
+                                    startVideoRecording()
+                                }
+                            },
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(
+                                    if (isVideoRecording) Color(0xFFff3b30) else Color(0xFF2a2a2a),
+                                    CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = if (isVideoRecording) Icons.Filled.Stop else Icons.Filled.PhotoCamera,
+                                contentDescription = if (isVideoRecording) "녹화 중지" else "녹화 시작",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        // ✅ 오디오 녹음 버튼
+                        IconButton(
+                            onClick = {
+                                if (isAudioRecording) {
+                                    stopAudioRecording()
+                                } else {
+                                    startAudioRecording()
+                                }
+                            },
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(
+                                    if (isAudioRecording) Color(0xFFff3b30) else Color(0xFF2a2a2a),
+                                    CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = if (isAudioRecording) Icons.Filled.Stop else Icons.Filled.Mic,
+                                contentDescription = if (isAudioRecording) "녹음 중지" else "녹음 시작",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        // ✅ STT 버튼 (음성인식)
+                        IconButton(
+                            onClick = {
+                                if (isSttRecording) {
+                                    stopSttRecording()
+                                } else {
+                                    startSttRecording()
+                                }
+                            },
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(
+                                    if (isSttRecording) Color(0xFF4CAF50) else Color(0xFF2a2a2a),
+                                    CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = if (isSttRecording) Icons.Filled.Stop else Icons.Filled.KeyboardVoice,
+                                contentDescription = if (isSttRecording) "STT 중지" else "STT 시작",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    // ✅ 오디오 녹음 버튼
-                    IconButton(
-                        onClick = {
-                            if (isAudioRecording) {
-                                stopAudioRecording()
-                            } else {
-                                startAudioRecording()
-                            }
-                        },
-                        modifier = Modifier
-                            .size(56.dp)
-                            .background(
-                                if (isAudioRecording) Color(0xFFff3b30) else Color(0xFF2a2a2a),
-                                CircleShape
+                    // 두 번째 줄: STT 전송 버튼 (STT 녹음 중일 때만 표시)
+                    if (isSttRecording) {
+                        Button(
+                            onClick = { sendAccumulatedTextToApi() },
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .height(40.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF2196F3)
                             )
-                    ) {
-                        Icon(
-                            imageVector = if (isAudioRecording) Icons.Filled.Stop else Icons.Filled.Mic,
-                            contentDescription = if (isAudioRecording) "녹음 중지" else "녹음 시작",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    // ✅ STT 버튼 (음성인식)
-                    IconButton(
-                        onClick = {
-                            if (isSttRecording) {
-                                stopSttRecording()
-                            } else {
-                                startSttRecording()
-                            }
-                        },
-                        modifier = Modifier
-                            .size(56.dp)
-                            .background(
-                                if (isSttRecording) Color(0xFF4CAF50) else Color(0xFF2a2a2a),
-                                CircleShape
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Send,
+                                contentDescription = "텍스트 전송",
+                                modifier = Modifier.size(20.dp)
                             )
-                    ) {
-                        Icon(
-                            imageVector = if (isSttRecording) Icons.Filled.Stop else Icons.Filled.KeyboardVoice,
-                            contentDescription = if (isSttRecording) "STT 중지" else "STT 시작",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "텍스트 전송",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
             }
