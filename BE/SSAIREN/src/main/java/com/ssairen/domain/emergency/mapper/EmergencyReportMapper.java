@@ -47,6 +47,7 @@ public class EmergencyReportMapper {
 
         return new EmergencyReportCreateResponse(
                 emergencyReport.getId(),
+                emergencyReport.getIsCompleted(),
                 paramedicInfo,
                 dispatchInfo,
                 emergencyReport.getCreatedAt()

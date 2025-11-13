@@ -1,5 +1,6 @@
 package com.ssairen.domain.emergency.service;
 
+import com.ssairen.domain.emergency.dto.EmergencyReportCompleteResponse;
 import com.ssairen.domain.emergency.dto.EmergencyReportCreateResponse;
 import com.ssairen.domain.emergency.dto.FireStateEmergencyReportsResponse;
 import com.ssairen.domain.emergency.dto.ParamedicEmergencyReportResponse;
@@ -32,4 +33,13 @@ public interface EmergencyReportService {
      * @return 소방서별 구급일지 목록 (List로 래핑)
      */
     List<FireStateEmergencyReportsResponse> getEmergencyReportsByFireState(Integer paramedicId);
+
+    /**
+     * 구급일지 완료 상태 토글
+     *
+     * @param emergencyReportId 구급일지 ID
+     * @param paramedicId       구급대원 ID
+     * @return 구급일지 ID와 변경된 완료 상태
+     */
+    EmergencyReportCompleteResponse toggleEmergencyReportCompleted(Long emergencyReportId, Integer paramedicId);
 }
