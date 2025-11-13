@@ -1,6 +1,7 @@
 //DispatchDetail.kt
 package com.example.ssairen_app.ui.screens.report
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -39,8 +40,14 @@ data class DispatchDetailData(
 fun DispatchDetail(
     dispatchData: DispatchDetailData,
     onDismiss: () -> Unit,
-    onCreateNewReport: () -> Unit = {}  // ⬅️ 추가
+    onCreateNewReport: () -> Unit = {}
 ) {
+    Log.d("DispatchDetail", "========================================")
+    Log.d("DispatchDetail", "🎨 DispatchDetail 렌더링")
+    Log.d("DispatchDetail", "dispatchNumber: ${dispatchData.dispatchNumber}")
+    Log.d("DispatchDetail", "onCreateNewReport: $onCreateNewReport")
+    Log.d("DispatchDetail", "========================================")
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -146,7 +153,21 @@ fun DispatchDetail(
 
                 // 새 일지 등록 버튼
                 Button(
-                    onClick = onCreateNewReport,  // ⬅️ 변경 (onDismiss → onCreateNewReport)
+                    onClick = {
+                        Log.d("DispatchDetail", "╔════════════════════════════════════════╗")
+                        Log.d("DispatchDetail", "║   🔵 버튼 클릭됨!                     ║")
+                        Log.d("DispatchDetail", "╚════════════════════════════════════════╝")
+
+                        try {
+                            Log.d("DispatchDetail", "📡 onCreateNewReport 콜백 호출 시작...")
+                            onCreateNewReport()
+                            Log.d("DispatchDetail", "✅ onCreateNewReport 콜백 호출 완료!")
+                        } catch (e: Exception) {
+                            Log.e("DispatchDetail", "❌ 콜백 실행 중 에러: ${e.message}", e)
+                        }
+
+                        Log.d("DispatchDetail", "========================================")
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)

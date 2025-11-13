@@ -29,7 +29,7 @@ import com.example.ssairen_app.viewmodel.ReportListState
 fun ReportHome(
     onNavigateToActivityLog: (emergencyReportId: Int, isReadOnly: Boolean) -> Unit = { _, _ -> },
     onLogout: () -> Unit = {},
-    reportViewModel: ReportViewModel = viewModel()
+    reportViewModel: ReportViewModel  // ✅ 수정: 기본값 제거 (반드시 전달받도록)
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val dispatchState = rememberDispatchState()
