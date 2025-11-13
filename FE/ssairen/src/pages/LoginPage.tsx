@@ -9,7 +9,6 @@ export default function LoginPage() {
     error,
     handleInputChange,
     handleSubmit,
-    handleForgotPassword,
   } = useLogin()
 
   return (
@@ -20,7 +19,6 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
         isLoading={isLoading}
         error={error}
-        onForgotPassword={handleForgotPassword}
       />
     </AuthLayout>
   )

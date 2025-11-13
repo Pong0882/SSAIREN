@@ -8,7 +8,6 @@ interface LoginFormProps {
   onSubmit: (e: FormEvent<HTMLFormElement>) => void
   isLoading?: boolean
   error?: string
-  onForgotPassword?: () => void
 }
 
 export default function LoginForm({
@@ -16,8 +15,7 @@ export default function LoginForm({
   onInputChange,
   onSubmit,
   isLoading = false,
-  error,
-  onForgotPassword
+  error
 }: LoginFormProps) {
   return (
     <div className="space-y-6">
@@ -71,19 +69,6 @@ export default function LoginForm({
         >
           로그인하기
         </Button>
-
-        {/* 비밀번호 찾기 */}
-        {onForgotPassword && (
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={onForgotPassword}
-              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              비밀번호 찾기
-            </button>
-          </div>
-        )}
       </form>
     </div>
   )
