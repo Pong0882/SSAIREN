@@ -186,9 +186,26 @@ class AudioRecordingService : Service() {
     private fun uploadAllFiles() {
         serviceScope.launch {
             try {
+                // ✅ 전역 구급일지 ID 가져오기
+                val emergencyReportId = try {
+                    com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to get emergency report ID", e)
+                    -1
+                }
+
+                if (emergencyReportId <= 0) {
+                    Log.e(TAG, "Invalid emergency report ID: $emergencyReportId")
+                    updateNotification("업로드 실패: 구급일지 ID 없음")
+                    delay(3000)
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                    return@launch
+                }
+
                 recordedFiles.forEachIndexed { index, file ->
                     updateNotification("업로드 중... (${index + 1}/${recordedFiles.size})")
-                    apiAudioUploader.uploadAudio(file) { progress ->
+                    apiAudioUploader.uploadAudio(file, emergencyReportId.toLong()) { progress ->
                         updateNotification("업로드 중... (${index + 1}/${recordedFiles.size} - $progress%)")
                     }.onSuccess { uploadResult ->
                         Log.d(TAG, "Upload successful: ${uploadResult.fileName}")

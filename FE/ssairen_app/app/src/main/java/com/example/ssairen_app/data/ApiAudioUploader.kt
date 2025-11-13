@@ -24,12 +24,14 @@ class ApiAudioUploader {
     /**
      * 오디오 파일을 백엔드 API를 통해 업로드 및 STT 구조화된 데이터 받기
      *
-     * @param file 업로드할 오디오 파일 (.m4a)
+     * @param file 업로드할 오디오 파일 (.m4a, .wav, .mp3)
+     * @param emergencyReportId 구급일지 ID
      * @param onProgress 업로드 진행률 콜백 (0~100)
      * @return 업로드 성공 시 파일 정보 + STT 구조화된 데이터
      */
     suspend fun uploadAudio(
         file: File,
+        emergencyReportId: Long,
         onProgress: ((Int) -> Unit)? = null
     ): Result<AudioUploadResult> = withContext(Dispatchers.IO) {
         try {
@@ -57,7 +59,15 @@ class ApiAudioUploader {
             Log.d(TAG, "Upload file path: $fileNameWithPath")
 
             // Multipart 요청 생성
-            val requestBody = file.asRequestBody("audio/mp4".toMediaType())
+            // ✅ 파일 확장자에 따라 Content-Type 자동 설정
+            val contentType = when (file.extension.lowercase()) {
+                "wav" -> "audio/wav"
+                "m4a" -> "audio/mp4"
+                "mp3" -> "audio/mpeg"
+                else -> "audio/*"
+            }.toMediaType()
+
+            val requestBody = file.asRequestBody(contentType)
             val multipartBody = MultipartBody.Part.createFormData(
                 "file",
                 fileNameWithPath,
@@ -65,7 +75,10 @@ class ApiAudioUploader {
             )
 
             // API 호출 - /api/files/stt/local/full-to-json
-            val response = RetrofitClient.fileApiService.uploadAudioAndGetStructuredData(multipartBody)
+            val response = RetrofitClient.fileApiService.uploadAudioAndGetStructuredData(
+                multipartBody,
+                emergencyReportId
+            )
 
             onProgress?.invoke(100)
 
