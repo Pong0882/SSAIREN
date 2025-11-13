@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.KeyboardVoice
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +40,11 @@ import com.example.ssairen_app.ui.components.MainButton
 import com.example.ssairen_app.ui.components.HeartRateChart
 import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.ui.wear.WearDataViewModel
+import com.example.ssairen_app.utils.SpeechToTextHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ActivityMain(
@@ -119,6 +125,11 @@ private fun HomeContent(
     // ✅ 오디오 서비스 변수 추가
     var audioService by remember { mutableStateOf<AudioRecordingService?>(null) }
     var isAudioBound by remember { mutableStateOf(false) }
+
+    // ✅ STT 관련 상태 추가
+    var isSttRecording by remember { mutableStateOf(false) }
+    var sttText by remember { mutableStateOf("") }
+    var sttHelper by remember { mutableStateOf<SpeechToTextHelper?>(null) }
 
     val context = LocalContext.current
     val application = context.applicationContext as android.app.Application
@@ -208,7 +219,7 @@ private fun HomeContent(
         }
     }
 
-    // 화면 정리 시 서비스 언바인드
+    // 화면 정리 시 서비스 언바인드 및 STT 정리
     DisposableEffect(Unit) {
         onDispose {
             if (isBound) {
@@ -217,6 +228,7 @@ private fun HomeContent(
             if (isAudioBound) {
                 context.unbindService(audioServiceConnection)
             }
+            sttHelper?.destroy()
         }
     }
 
@@ -294,6 +306,76 @@ private fun HomeContent(
         audioService?.stopRecording()
     }
 
+    // ✅ STT 녹음 시작 함수
+    fun startSttRecording() {
+        if (!checkPermissions()) {
+            permissionLauncher.launch(requiredPermissions.toTypedArray())
+            return
+        }
+
+        if (sttHelper == null) {
+            sttHelper = SpeechToTextHelper(
+                context = context,
+                onResult = { text ->
+                    sttText = text
+                    Log.d("ActivityMain", "📝 STT Result: $text")
+                },
+                onPartialResult = { text ->
+                    Log.d("ActivityMain", "📝 STT Partial: $text")
+                },
+                onError = { error ->
+                    Log.e("ActivityMain", "❌ STT Error: $error")
+                }
+            )
+        }
+
+        isSttRecording = true
+        sttHelper?.startListening()
+        Log.d("ActivityMain", "🎤 STT Recording Started")
+    }
+
+    // ✅ STT 녹음 중지 및 API 전송 함수
+    fun stopSttRecording() {
+        sttHelper?.stopListening()
+        isSttRecording = false
+
+        val finalText = sttHelper?.getAccumulatedText() ?: ""
+        Log.d("ActivityMain", "🛑 STT Recording Stopped. Final text: $finalText")
+
+        if (finalText.isNotEmpty()) {
+            // API 호출
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    Log.d("ActivityMain", "📤 Sending text to API...")
+                    val response = RetrofitClient.fileApiService.textToJson(
+                        text = finalText,
+                        maxNewTokens = 700,
+                        temperature = 0.1
+                    )
+
+                    withContext(Dispatchers.Main) {
+                        if (response.isSuccessful) {
+                            val data = response.body()?.data
+                            Log.d("ActivityMain", "✅ API Success: $data")
+                            // TODO: 받은 JSON 데이터 처리
+                        } else {
+                            Log.e("ActivityMain", "❌ API Error: ${response.code()}")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("ActivityMain", "❌ API Exception: ${e.message}")
+                    withContext(Dispatchers.Main) {
+                        // 에러 처리
+                    }
+                }
+            }
+        }
+
+        // 텍스트 초기화
+        sttHelper?.clearAccumulatedText()
+        sttText = ""
+    }
+
     Log.d("ActivityMain", "🎨 HomeContent Composable 렌더링")
     Log.d("ActivityMain", "📱 ViewModel 인스턴스: $wearViewModel")
 
@@ -366,7 +448,7 @@ private fun HomeContent(
                     )
                 }
 
-                // ✅ 바디캠 녹화 + 오디오 녹음 버튼
+                // ✅ 바디캠 녹화 + 오디오 녹음 + STT 버튼
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -419,6 +501,32 @@ private fun HomeContent(
                         Icon(
                             imageVector = if (isAudioRecording) Icons.Filled.Stop else Icons.Filled.Mic,
                             contentDescription = if (isAudioRecording) "녹음 중지" else "녹음 시작",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    // ✅ STT 버튼 (음성인식)
+                    IconButton(
+                        onClick = {
+                            if (isSttRecording) {
+                                stopSttRecording()
+                            } else {
+                                startSttRecording()
+                            }
+                        },
+                        modifier = Modifier
+                            .size(56.dp)
+                            .background(
+                                if (isSttRecording) Color(0xFF4CAF50) else Color(0xFF2a2a2a),
+                                CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = if (isSttRecording) Icons.Filled.Stop else Icons.Filled.KeyboardVoice,
+                            contentDescription = if (isSttRecording) "STT 중지" else "STT 시작",
                             tint = Color.White,
                             modifier = Modifier.size(28.dp)
                         )
