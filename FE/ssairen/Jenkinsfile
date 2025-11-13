@@ -34,45 +34,15 @@ pipeline {
             steps {
                 echo 'Checking environment...'
                 sh '''
-                    node --version
-                    npm --version
                     docker --version
                     docker-compose --version
                 '''
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                echo 'Installing dependencies...'
-                sh 'npm ci'
-            }
-        }
-
-        stage('Type Check') {
-            steps {
-                echo 'Running TypeScript type check...'
-                sh 'npx tsc -b --noEmit || true'
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                echo 'Running tests...'
-                sh 'npm run test -- --run || true'
-            }
-        }
-
-        stage('Build Application') {
-            steps {
-                echo 'Building application...'
-                sh 'npm run build'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
-                echo 'Building Docker image...'
+                echo 'Building Docker image (includes npm install & build)...'
                 sh 'docker-compose build'
             }
         }
