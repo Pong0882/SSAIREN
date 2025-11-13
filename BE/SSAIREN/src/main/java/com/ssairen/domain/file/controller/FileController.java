@@ -377,7 +377,15 @@ public class FileController {
         LocalWhisperSttResponse sttResponse = localWhisperSttService.convertSpeechToText(file, language);
         log.info("STT 변환 완료 - 텍스트 길이: {} 문자", sttResponse.getText().length());
 
-        // 3. AI 서버로 텍스트를 JSON으로 변환
+        // 3. STT 변환된 텍스트를 stt_transcripts 테이블에 저장
+        SttTranscript sttTranscript = SttTranscript.builder()
+                .emergencyReport(emergencyReport)
+                .data(sttResponse.getText())
+                .build();
+        sttTranscriptRepository.save(sttTranscript);
+        log.info("STT 텍스트 DB 저장 완료 - 구급일지 ID: {}", emergencyReportId);
+
+        // 4. AI 서버로 텍스트를 JSON으로 변환
         Object jsonResponse = textToJsonService.convertTextToJson(
                 sttResponse.getText(),
                 maxNewTokens,
@@ -385,7 +393,7 @@ public class FileController {
         );
         log.info("JSON 변환 완료");
 
-        // 4. AI 응답을 ReportSection에 저장
+        // 5. AI 응답을 ReportSection에 저장
         int savedCount = aiResponseToReportSectionService.saveAiResponseToReportSections(
                 jsonResponse,
                 emergencyReport
@@ -442,7 +450,15 @@ public class FileController {
         EmergencyReport emergencyReport = emergencyReportRepository.findById(emergencyReportId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
 
-        // 2. 텍스트를 AI 서버로 JSON으로 변환
+        // 2. 입력 텍스트를 stt_transcripts 테이블에 저장
+        SttTranscript sttTranscript = SttTranscript.builder()
+                .emergencyReport(emergencyReport)
+                .data(text)
+                .build();
+        sttTranscriptRepository.save(sttTranscript);
+        log.info("텍스트 DB 저장 완료 - 구급일지 ID: {}", emergencyReportId);
+
+        // 3. 텍스트를 AI 서버로 JSON으로 변환
         Object jsonResponse = textToJsonService.convertTextToJson(
                 text,
                 maxNewTokens,
@@ -450,7 +466,7 @@ public class FileController {
         );
         log.info("JSON 변환 완료");
 
-        // 3. AI 응답을 ReportSection에 저장
+        // 4. AI 응답을 ReportSection에 저장
         int savedCount = aiResponseToReportSectionService.saveAiResponseToReportSections(
                 jsonResponse,
                 emergencyReport
