@@ -62,18 +62,11 @@ export const useLogin = () => {
     }
   }
 
-  // 비밀번호 찾기 핸들러
-  const handleForgotPassword = () => {
-    // 비밀번호 찾기 기능 (추후 구현)
-    // navigate('/forgot-password')
-  }
-
   return {
     formData,
     isLoading,
     error,
     handleInputChange,
     handleSubmit,
-    handleForgotPassword,
   }
 }
