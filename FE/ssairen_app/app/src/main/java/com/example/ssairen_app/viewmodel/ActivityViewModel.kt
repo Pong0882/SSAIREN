@@ -16,6 +16,7 @@ import com.example.ssairen_app.data.model.request.PatientInfoRequest
 import com.example.ssairen_app.data.model.request.PatientTypeRequest
 import com.example.ssairen_app.data.model.request.PatientEvaRequest
 import com.example.ssairen_app.data.model.request.FirstAidRequest
+import com.example.ssairen_app.data.dto.SttResponse  // ✅ 추가: STT 응답 모델
 
 import kotlinx.coroutines.launch
 
@@ -62,6 +63,33 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
     fun setEmergencyReportId(reportId: Int) {
         Log.d(TAG, "📝 출동보고서 ID 변경: ${_currentEmergencyReportId.value} → $reportId")
         _currentEmergencyReportId.postValue(reportId)
+    }
+
+    // ==========================================
+    // ✅ STT 데이터 상태 관리 (NEW!)
+    // ==========================================
+
+    // STT 데이터를 저장할 LiveData
+    private val _sttDataState = MutableLiveData<SttDataState>(SttDataState.Idle)
+    val sttDataState: LiveData<SttDataState> = _sttDataState
+
+    /**
+     * STT 데이터를 업데이트하는 함수
+     * AudioRecordingService에서 호출됨
+     */
+    fun updateSttData(sttResponse: SttResponse) {
+        Log.d(TAG, "📥 STT 데이터 수신됨")
+        Log.d(TAG, "   환자명: ${sttResponse.reportSectionType.patientInfo.patient.name}")
+        _sttDataState.postValue(SttDataState.Success(sttResponse))
+    }
+
+    /**
+     * STT 상태를 초기화하는 함수
+     * 데이터 사용 후 중복 적용 방지를 위해 호출
+     */
+    fun resetSttData() {
+        Log.d(TAG, "🔄 STT 데이터 상태 초기화")
+        _sttDataState.postValue(SttDataState.Idle)
     }
 
     // ==========================================
@@ -392,6 +420,14 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
         super.onCleared()
         Log.w(TAG, "🧹 ActivityViewModel 정리됨")
     }
+}
+
+// ==========================================
+// ✅ STT 데이터 상태 sealed class (NEW!)
+// ==========================================
+sealed class SttDataState {
+    object Idle : SttDataState()
+    data class Success(val data: SttResponse) : SttDataState()
 }
 
 // ==========================================
