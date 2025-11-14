@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import com.example.ssairen_app.data.websocket.DispatchMessage
 import com.example.ssairen_app.data.websocket.HospitalResponseMessage
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,15 +36,22 @@ import com.example.ssairen_app.ui.screens.report.ReportHome
 import com.example.ssairen_app.ui.screens.emergencyact.ActivityMain
 import com.example.ssairen_app.ui.screens.emergencyact.ActivityLogHome
 import com.example.ssairen_app.ui.screens.Summation
-import com.example.ssairen_app.ui.screens.Login
-import com.example.ssairen_app.viewmodel.AuthViewModel
-import com.example.ssairen_app.viewmodel.ReportViewModel
-import com.example.ssairen_app.viewmodel.CreateReportState
-import com.example.ssairen_app.data.api.RetrofitClient
-import com.example.ssairen_app.ui.components.HospitalResponseModal
-import com.example.ssairen_app.ui.screens.report.DispatchDetail
-import com.example.ssairen_app.ui.screens.report.DispatchDetailData
-import com.example.ssairen_app.service.MyFirebaseMessagingService
+import com.example.ssairen_app.ui.screens.Login  // ⭐ 추가
+import com.example.ssairen_app.viewmodel.AuthViewModel  // ⭐ 추가
+import com.example.ssairen_app.viewmodel.ReportViewModel  // ⭐ 새 일지 등록용
+import com.example.ssairen_app.viewmodel.CreateReportState  // ⭐ 일지 생성 상태
+import com.example.ssairen_app.data.api.RetrofitClient  // ⭐ 바디캠 업로드용 & API 호출용
+import com.example.ssairen_app.ui.components.DispatchModal  // ⭐ 모달 추가
+import com.example.ssairen_app.ui.components.HospitalResponseModal  // ⭐ 병원 응답 모달 추가
+import com.example.ssairen_app.ui.screens.report.DispatchDetail  // ⭐ 출동 상세 모달
+import com.example.ssairen_app.ui.screens.report.DispatchDetailData  // ⭐ 출동 상세 데이터
+import com.example.ssairen_app.service.MyFirebaseMessagingService  // ⭐ FCM 서비스
+import com.example.ssairen_app.utils.SttManager  // ⭐ STT 전역 상태 관리
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import android.widget.Toast
 
 class MainActivity : ComponentActivity() {
 
@@ -368,12 +376,59 @@ fun AppNavigation(
     onClearHospitalResponse: () -> Unit = {}
 ) {
     val navController = rememberNavController()
+    val context = LocalContext.current
+
+    // ✅ DispatchContext 가져오기
     val dispatchState = rememberDispatchState()
     val reportViewModel: ReportViewModel = viewModel()
     val createReportState by reportViewModel.createReportState.observeAsState(CreateReportState.Idle)
 
-    // ✅ dispatchId 에러 상태 관리
-    var showDispatchIdErrorDialog by remember { mutableStateOf(false) }
+    // ✅ 전역 STT 상태 관찰
+    val isSttRecording = SttManager.isSttRecording
+
+    // ✅ STT 녹음 중일 때 20초마다 자동으로 텍스트 전송 (전역 - 모든 화면에서 동작)
+    LaunchedEffect(isSttRecording) {
+        if (isSttRecording) {
+            Log.d("AppNavigation", "⏰ STT 자동 전송 스케줄링 시작 (20초 간격)")
+            while (isSttRecording) {
+                kotlinx.coroutines.delay(20000L) // 20초 대기
+                if (isSttRecording) {
+                    Log.d("AppNavigation", "⏰ 20초 경과 - 자동 텍스트 전송")
+
+                    // ✅ 텍스트 전송
+                    val accumulatedText = SttManager.getAccumulatedText()
+                    val currentText = if (SttManager.sttText.isNotEmpty()) SttManager.sttText else accumulatedText
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+
+                    if (currentText.isNotEmpty() && currentReportId > 0) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                val response = RetrofitClient.fileApiService.textToJson(
+                                    text = currentText,
+                                    emergencyReportId = currentReportId.toLong(),
+                                    maxNewTokens = 700,
+                                    temperature = 0.1
+                                )
+
+                                withContext(Dispatchers.Main) {
+                                    if (response.isSuccessful) {
+                                        Log.d("AppNavigation", "✅ API Success")
+                                        Toast.makeText(context, "전송 완료", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Log.e("AppNavigation", "❌ API Error: ${response.code()}")
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.e("AppNavigation", "❌ API Exception: ${e.message}")
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            Log.d("AppNavigation", "⏰ STT 자동 전송 스케줄링 중지")
+        }
+    }
 
     // ✅ 일지 생성 성공 시 화면 이동
     LaunchedEffect(createReportState) {
