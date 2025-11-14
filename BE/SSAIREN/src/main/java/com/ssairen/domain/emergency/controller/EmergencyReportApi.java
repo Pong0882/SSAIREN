@@ -286,7 +286,6 @@ public interface EmergencyReportApi {
                                                     "emergencyReportId": 123,
                                                     "type": "PATIENT_INFO",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "patientInfo": {
                                                             "reporter": {
                                                                 "phone": null,
@@ -330,7 +329,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "DISPATCH",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "dispatch": {
                                                             "reportDate": null,
                                                             "reportTime": null,
@@ -374,7 +372,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "INCIDENT_TYPE",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "incidentType": {
                                                             "category": null,
                                                             "medicalHistory": {
@@ -423,7 +420,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "ASSESSMENT",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "patientAssessment": {
                                                             "consciousness": {
                                                                 "first": {
@@ -490,7 +486,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "TREATMENT",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "emergencyTreatment": {
                                                             "airwayManagement": {
                                                                 "methods": null,
@@ -547,7 +542,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "MEDICAL_GUIDANCE",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "medicalGuidance": {
                                                             "contactStatus": null,
                                                             "requestTime": null,
@@ -591,7 +585,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "TRANSPORT",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "patientTransport": {
                                                             "firstTransport": {
                                                                 "hospitalName": null,
@@ -635,7 +628,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "DETAIL_REPORT",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "dispatchMembers": {
                                                             "doctor": {
                                                                 "affiliation": null,
@@ -787,7 +779,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "PATIENT_INFO",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "patientInfo": {
                                                             "reporter": {
                                                                 "phone": "01012345678",
@@ -830,7 +821,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "DISPATCH",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "dispatch": {
                                                             "reportDate": "2022-08-11",
                                                             "reportTime": "02:26",
@@ -900,7 +890,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "INCIDENT_TYPE",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "incidentType": {
                                                             "category": "질병",
                                                             "medicalHistory": {
@@ -948,7 +937,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "ASSESSMENT",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "patientAssessment": {
                                                             "consciousness": {
                                                                 "first": {
@@ -1014,7 +1002,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "TREATMENT",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "emergencyTreatment": {
                                                             "airwayManagement": {
                                                                 "methods": ["기도유지"],
@@ -1070,7 +1057,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "MEDICAL_GUIDANCE",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "medicalGuidance": {
                                                             "contactStatus": "연결",
                                                             "requestTime": "02:55",
@@ -1123,7 +1109,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "TRANSPORT",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "patientTransport": {
                                                             "firstTransport": {
                                                                 "hospitalName": "OO병원",
@@ -1169,7 +1154,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "DETAIL_REPORT",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "dispatchMembers": {
                                                             "doctor": {
                                                                 "affiliation": "소방",
@@ -1407,7 +1391,6 @@ public interface EmergencyReportApi {
                                     value = """
                                             {
                                                 "data": {
-                                                    "schemaVersion": 1,
                                                     "patientInfo": {
                                                         "reporter": {
                                                             "phone": "01012345678",
@@ -1441,7 +1424,6 @@ public interface EmergencyReportApi {
                                     value = """
                                             {
                                                 "data": {
-                                                    "schemaVersion": 1,
                                                     "dispatch": {
                                                         "reportDatetime": "2022-08-11T02:26:00",
                                                         "departureTime": "02:00",
@@ -1500,7 +1482,6 @@ public interface EmergencyReportApi {
                                     value = """
                                             {
                                                 "data": {
-                                                    "schemaVersion": 1,
                                                     "incidentType": {
                                                         "medicalHistory": {
                                                             "status": "있음",
@@ -1566,7 +1547,6 @@ public interface EmergencyReportApi {
                                     value = """
                                             {
                                                 "data": {
-                                                    "schemaVersion": 1,
                                                     "assessment": {
                                                         "consciousness": {
                                                             "first": {
@@ -1627,7 +1607,6 @@ public interface EmergencyReportApi {
                                     value = """
                                             {
                                                 "data": {
-                                                    "schemaVersion": 1,
                                                     "treatment": {
                                                         "airwayManagement": {
                                                             "methods": ["기도유지"]
@@ -1668,7 +1647,6 @@ public interface EmergencyReportApi {
                                     value = """
                                             {
                                                 "data": {
-                                                    "schemaVersion": 1,
                                                     "medicalGuidance": {
                                                         "contactStatus": "연결",
                                                         "requestTime": "02:55",
@@ -1723,7 +1701,6 @@ public interface EmergencyReportApi {
                                     value = """
                                             {
                                                 "data": {
-                                                    "schemaVersion": 1,
                                                     "transport": {
                                                         "firstTransport": {
                                                             "hospitalName": "OO병원",
@@ -1789,7 +1766,6 @@ public interface EmergencyReportApi {
                                     value = """
                                             {
                                                 "data": {
-                                                    "schemaVersion": 1,
                                                     "detailReport": {
                                                         "doctor": {
                                                             "affiliation": "소방",
@@ -1820,10 +1796,10 @@ public interface EmergencyReportApi {
                                                             "name": "최지원",
                                                             "signature": null
                                                         },
-                                                        "obstacles": {
+                                                        "obstacles": [{
                                                             "type": "없음",
                                                             "isCustom": false
-                                                        },
+                                                        }],
                                                         "createdAt": "2025-10-21T09:00:00Z",
                                                         "updatedAt": "2025-10-21T09:00:00Z"
                                                     }
@@ -1851,7 +1827,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "PATIENT_INFO",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "patientInfo": {
                                                             "reporter": {
                                                                 "phone": "01012345678",
@@ -1895,7 +1870,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "DISPATCH",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "dispatch": {
                                                             "reportDate": "2022-08-11",
                                                             "reportTime": "02:26",
@@ -1954,7 +1928,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "INCIDENT_TYPE",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "incidentType": {
                                                             "category": "질병",
                                                             "medicalHistory": {
@@ -2003,7 +1976,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "ASSESSMENT",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "patientAssessment": {
                                                             "consciousness": {
                                                                 "first": {
@@ -2070,7 +2042,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "TREATMENT",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "emergencyTreatment": {
                                                             "airwayManagement": {
                                                                 "methods": ["기도유지"],
@@ -2127,7 +2098,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "MEDICAL_GUIDANCE",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "medicalGuidance": {
                                                             "contactStatus": "연결",
                                                             "requestTime": "02:55",
@@ -2181,7 +2151,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "TRANSPORT",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "patientTransport": {
                                                             "firstTransport": {
                                                                 "hospitalName": "OO병원",
@@ -2228,7 +2197,6 @@ public interface EmergencyReportApi {
                                                     "isCompleted": false,
                                                     "type": "DETAIL_REPORT",
                                                     "data": {
-                                                        "schemaVersion": 1,
                                                         "dispatchMembers": {
                                                             "doctor": {
                                                                 "affiliation": "소방",
