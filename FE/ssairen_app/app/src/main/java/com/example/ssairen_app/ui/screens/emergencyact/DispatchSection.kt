@@ -264,19 +264,21 @@ fun DispatchSection(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    TimeFieldRow(
+                    TimeFieldRowWithButton(
                         label = "환자 접촉",
                         value = contactTime,
                         onValueChange = { contactTime = it },
-                        placeholder = "HH:mm",
+                        buttonText = "접촉",
+                        onButtonClick = { contactTime = getCurrentTime() },
                         modifier = Modifier.weight(1f)
                     )
 
-                    TimeFieldRow(
+                    TimeFieldRowWithButton(
                         label = "병원 도착",
                         value = arrivalHospitalTime,
                         onValueChange = { arrivalHospitalTime = it },
-                        placeholder = "HH:mm",
+                        buttonText = "도착",
+                        onButtonClick = { arrivalHospitalTime = getCurrentTime() },
                         modifier = Modifier.weight(1f)
                     )
                 }
