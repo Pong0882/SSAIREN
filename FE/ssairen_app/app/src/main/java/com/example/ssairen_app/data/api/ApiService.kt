@@ -20,6 +20,8 @@ import com.example.ssairen_app.data.model.request.MedicalGuidanceRequest
 import com.example.ssairen_app.data.model.response.MedicalGuidanceResponse
 import com.example.ssairen_app.data.model.request.TransportRequest
 import com.example.ssairen_app.data.model.response.TransportResponse
+import com.example.ssairen_app.data.model.request.DetailReportRequest
+import com.example.ssairen_app.data.model.response.DetailReportResponse
 
 import retrofit2.Response
 import retrofit2.http.*
@@ -165,4 +167,19 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: TransportRequest
     ): Response<TransportResponse>
+
+    // 세부사항
+    @GET("api/emergency-reports/{emergencyReportId}/sections/DETAIL_REPORT")
+    suspend fun getDetailReport(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String
+    ): Response<DetailReportResponse>
+
+    @PATCH("api/emergency-reports/{emergencyReportId}/sections/DETAIL_REPORT")
+    suspend fun updateDetailReport(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String,
+        @Body request: DetailReportRequest
+    ): Response<DetailReportResponse>
+
 }

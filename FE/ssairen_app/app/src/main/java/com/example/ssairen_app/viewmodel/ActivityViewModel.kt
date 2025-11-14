@@ -22,6 +22,9 @@ import com.example.ssairen_app.data.model.request.MedicalGuidanceRequest
 import com.example.ssairen_app.data.model.response.MedicalGuidanceResponse
 import com.example.ssairen_app.data.model.request.TransportRequest
 import com.example.ssairen_app.data.model.response.TransportResponse
+import com.example.ssairen_app.data.model.request.DetailReportRequest
+import com.example.ssairen_app.data.model.response.DetailReportResponse
+
 
 import kotlinx.coroutines.launch
 
@@ -261,6 +264,57 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
             }
         }
     }
+
+    // ==========================================
+    // 세부사항 (조회 + 업데이트)
+    // ==========================================
+    private val _detailReportState = MutableLiveData<DetailReportApiState>(DetailReportApiState.Idle)
+    val detailReportState: LiveData<DetailReportApiState> = _detailReportState
+
+    fun getDetailReport(emergencyReportId: Int) {
+        viewModelScope.launch {
+            _detailReportState.postValue(DetailReportApiState.Loading)
+            Log.d(TAG, "📞 세부사항 조회 시작 - emergencyReportId: $emergencyReportId")
+
+            try {
+                val result = repository.getDetailReport(emergencyReportId)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 세부사항 조회 성공")
+                    _detailReportState.postValue(DetailReportApiState.Success(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 세부사항 조회 실패: ${error.message}")
+                    _detailReportState.postValue(DetailReportApiState.Error(error.message ?: "세부사항 조회 실패"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 세부사항 조회 예외 발생", e)
+                _detailReportState.postValue(DetailReportApiState.Error(e.message ?: "세부사항 조회 실패"))
+            }
+        }
+    }
+
+    fun updateDetailReport(emergencyReportId: Int, request: DetailReportRequest) {
+        viewModelScope.launch {
+            _detailReportState.postValue(DetailReportApiState.Updating)
+            Log.d(TAG, "📞 세부사항 업데이트 시작 - emergencyReportId: $emergencyReportId")
+
+            try {
+                val result = repository.updateDetailReport(emergencyReportId, request)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 세부사항 업데이트 성공")
+                    _detailReportState.postValue(DetailReportApiState.UpdateSuccess(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 세부사항 업데이트 실패: ${error.message}")
+                    _detailReportState.postValue(DetailReportApiState.UpdateError(error.message ?: "세부사항 업데이트 실패"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 세부사항 업데이트 예외 발생", e)
+                _detailReportState.postValue(DetailReportApiState.UpdateError(e.message ?: "세부사항 업데이트 실패"))
+            }
+        }
+    }
+
 
     // ==========================================
     // 환자정보 (조회 + 업데이트)
@@ -674,4 +728,15 @@ sealed class TransportApiState {
     object Updating : TransportApiState()
     data class UpdateSuccess(val transportResponse: TransportResponse) : TransportApiState()
     data class UpdateError(val message: String) : TransportApiState()
+}
+
+sealed class DetailReportApiState {
+    object Idle : DetailReportApiState()
+    object Loading : DetailReportApiState()
+    data class Success(val detailReportResponse: DetailReportResponse) : DetailReportApiState()
+    data class Error(val message: String) : DetailReportApiState()
+
+    object Updating : DetailReportApiState()
+    data class UpdateSuccess(val detailReportResponse: DetailReportResponse) : DetailReportApiState()
+    data class UpdateError(val message: String) : DetailReportApiState()
 }

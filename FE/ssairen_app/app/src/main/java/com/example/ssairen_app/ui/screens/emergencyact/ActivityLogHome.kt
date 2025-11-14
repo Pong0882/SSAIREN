@@ -20,6 +20,9 @@ import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.viewmodel.LogViewModel
 import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.SaveState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun ActivityLogHome(
@@ -222,7 +225,23 @@ fun ActivityLogHome(
                         data = activityLogData,
                         isReadOnly = isReadOnly
                     )
-                    7 -> ReportDetail(logViewModel = viewModel)
+                    7 -> {
+                        ReportDetail(
+                            viewModel = viewModel,
+                            data = activityLogData,
+                            isReadOnly = isReadOnly
+                        )
+
+                        DisposableEffect(Unit) {
+                            onDispose {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    Log.d("ActivityLogHome", "🔄 세부사항 탭 벗어남 - 백그라운드 저장")
+                                    viewModel.saveDetailReportSection(activityViewModel)
+                                }
+                            }
+                        }
+                    }
+
                 }
             }
 

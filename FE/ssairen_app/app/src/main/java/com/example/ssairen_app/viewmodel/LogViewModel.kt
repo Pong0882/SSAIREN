@@ -212,10 +212,40 @@ data class PatientTransportData(
 
 // 7. 세부사항표
 data class ReportDetailData(
-    val detailedSituation: String = "",
-    val specialNotes: String = "",
-    val crewMembers: String = ""
+    // 의사
+    val doctorAffiliation: String = "",
+    val doctorName: String = "",
+    val doctorSignature: List<androidx.compose.ui.geometry.Offset> = emptyList(),
+
+    // 구급대원 1
+    val paramedic1Grade: String = "",
+    val paramedic1Rank: String = "",
+    val paramedic1Name: String = "",
+    val paramedic1Signature: List<androidx.compose.ui.geometry.Offset> = emptyList(),
+
+    // 구급대원 2
+    val paramedic2Grade: String = "",
+    val paramedic2Rank: String = "",
+    val paramedic2Name: String = "",
+    val paramedic2Signature: List<androidx.compose.ui.geometry.Offset> = emptyList(),
+
+    // 운전요원
+    val driverGrade: String = "",
+    val driverRank: String = "",
+    val driverName: String = "",
+    val driverSignature: List<androidx.compose.ui.geometry.Offset> = emptyList(),
+
+    // 기타 인원
+    val otherGrade: String = "",
+    val otherRank: String = "",
+    val otherName: String = "",
+    val otherSignature: List<androidx.compose.ui.geometry.Offset> = emptyList(),
+
+    // 장애요인 (복수 선택 가능)
+    val obstacles: Set<String> = setOf(),
+    val obstacleOtherValue: String? = null
 )
+
 
 // ==========================================
 // ✅ 전체 구급활동일지 데이터
@@ -986,6 +1016,117 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             saveToBackend(4) // 응급처치
 
             Log.d(TAG, "✅ 전체 데이터 전송 완료")
+        }
+    }
+
+    /**
+     * 세부사항 섹션 저장 (탭 이탈 시 자동 호출)
+     */
+    suspend fun saveDetailReportSection(activityViewModel: ActivityViewModel): Result<Unit> {
+        return try {
+            val detailData = _activityLogData.value.reportDetail
+            val emergencyReportId = currentEmergencyReportId
+
+            if (emergencyReportId == 0) {
+                Log.e(TAG, "❌ emergencyReportId가 0입니다. 저장 불가")
+                return Result.failure(Exception("emergencyReportId가 없습니다"))
+            }
+
+            Log.d(TAG, "🔄 세부사항 섹션 저장 시작 - emergencyReportId: $emergencyReportId")
+
+            // 의사 정보 변환 (이름이 있을 경우에만 포함)
+            val doctor = if (detailData.doctorName.isNotEmpty()) {
+                ParamedicMember(
+                    affiliation = detailData.doctorAffiliation.ifEmpty { null },
+                    name = detailData.doctorName,
+                    grade = null,
+                    rank = null,
+                    signature = if (detailData.doctorSignature.isNotEmpty()) "" else null
+                )
+            } else null
+
+            // 구급대원1 정보 변환
+            val paramedic1 = if (detailData.paramedic1Name.isNotEmpty()) {
+                ParamedicMember(
+                    affiliation = null,
+                    name = detailData.paramedic1Name,
+                    grade = detailData.paramedic1Grade.ifEmpty { null },
+                    rank = detailData.paramedic1Rank.ifEmpty { null },
+                    signature = if (detailData.paramedic1Signature.isNotEmpty()) "" else null
+                )
+            } else null
+
+            // 구급대원2 정보 변환
+            val paramedic2 = if (detailData.paramedic2Name.isNotEmpty()) {
+                ParamedicMember(
+                    affiliation = null,
+                    name = detailData.paramedic2Name,
+                    grade = detailData.paramedic2Grade.ifEmpty { null },
+                    rank = detailData.paramedic2Rank.ifEmpty { null },
+                    signature = if (detailData.paramedic2Signature.isNotEmpty()) "" else null
+                )
+            } else null
+
+            // 운전요원 정보 변환
+            val driver = if (detailData.driverName.isNotEmpty()) {
+                ParamedicMember(
+                    affiliation = null,
+                    name = detailData.driverName,
+                    grade = detailData.driverGrade.ifEmpty { null },
+                    rank = detailData.driverRank.ifEmpty { null },
+                    signature = if (detailData.driverSignature.isNotEmpty()) "" else null
+                )
+            } else null
+
+            // 기타 인원 정보 변환
+            val other = if (detailData.otherName.isNotEmpty()) {
+                ParamedicMember(
+                    affiliation = null,
+                    name = detailData.otherName,
+                    grade = detailData.otherGrade.ifEmpty { null },
+                    rank = detailData.otherRank.ifEmpty { null },
+                    signature = if (detailData.otherSignature.isNotEmpty()) "" else null
+                )
+            } else null
+
+            // 장애요인 변환 - Set<String>을 List<ObstacleItem>으로 변환
+            val obstacles = detailData.obstacles.map { obstacleName ->
+                ObstacleItem(
+                    type = obstacleName,
+                    isCustom = obstacleName == "기타",
+                    value = if (obstacleName == "기타") detailData.obstacleOtherValue else null
+                )
+            }
+
+            // createdAt, updatedAt 생성
+            val currentTime = java.time.ZonedDateTime.now()
+            val formatter = java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
+            val currentIsoTime = currentTime.format(formatter)
+
+            val request = DetailReportRequest(
+                data = DetailReportRequestData(
+                    schemaVersion = 1,
+                    detailReport = DetailReportInfo(
+                        doctor = doctor,
+                        paramedic1 = paramedic1,
+                        paramedic2 = paramedic2,
+                        driver = driver,
+                        other = other,
+                        obstacles = obstacles,
+                        createdAt = currentIsoTime,
+                        updatedAt = currentIsoTime
+                    )
+                )
+            )
+
+            // ActivityViewModel의 updateDetailReport 호출
+            activityViewModel.updateDetailReport(emergencyReportId, request)
+
+            Log.d(TAG, "✅ 세부사항 섹션 저장 요청 완료")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ 세부사항 섹션 저장 실패: ${e.message}", e)
+            Result.failure(e)
         }
     }
 
