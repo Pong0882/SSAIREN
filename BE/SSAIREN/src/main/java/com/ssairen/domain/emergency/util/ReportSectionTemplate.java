@@ -24,7 +24,6 @@ public class ReportSectionTemplate {
     // 환자 정보
     private static final String PATIENT_INFO_TEMPLATE = """
             {
-                "schemaVersion": 1,
                 "patientInfo": {
                     "reporter": {
                         "phone": null,
@@ -55,7 +54,6 @@ public class ReportSectionTemplate {
     // 구급 출동
     private static final String DISPATCH_TEMPLATE = """
             {
-                "schemaVersion": 1,
                 "dispatch": {
                     "reportDatetime": null,
                     "departureTime": null,
@@ -84,7 +82,6 @@ public class ReportSectionTemplate {
     // 환자 발생 유형
     private static final String INCIDENT_TYPE_TEMPLATE = """
             {
-                "schemaVersion": 1,
                 "incidentType": {
                     "medicalHistory": {
                         "status": null,
@@ -122,7 +119,6 @@ public class ReportSectionTemplate {
     // 환자 평가
     private static final String ASSESSMENT_TEMPLATE = """
             {
-                "schemaVersion": 1,
                 "assessment": {
                     "consciousness": {
                         "first": {
@@ -180,7 +176,6 @@ public class ReportSectionTemplate {
     // 응급 처치
     private static final String TREATMENT_TEMPLATE = """
             {
-                "schemaVersion": 1,
                 "treatment": {
                     "airwayManagement": {
                         "methods": null
@@ -214,7 +209,6 @@ public class ReportSectionTemplate {
     // 의료 지도
     private static final String MEDICAL_GUIDANCE_TEMPLATE = """
             {
-                "schemaVersion": 1,
                 "medicalGuidance": {
                     "contactStatus": null,
                     "requestTime": null,
@@ -248,7 +242,6 @@ public class ReportSectionTemplate {
     // 환자 이송
     private static final String TRANSPORT_TEMPLATE = """
             {
-                "schemaVersion": 1,
                 "transport": {
                     "firstTransport": {
                         "hospitalName": null,
@@ -285,7 +278,6 @@ public class ReportSectionTemplate {
     // 세부 상황표 (출동 대원)
     private static final String DETAIL_REPORT_TEMPLATE = """
             {
-                "schemaVersion": 1,
                 "detailReport": {
                     "doctor": {
                         "affiliation": null,
@@ -316,10 +308,10 @@ public class ReportSectionTemplate {
                         "name": null,
                         "signature": null
                     },
-                    "obstacles": {
+                    "obstacles": [{
                         "type": null,
                         "isCustom": null
-                    },
+                    }],
                     "createdAt": null,
                     "updatedAt": null
                 }
