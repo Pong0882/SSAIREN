@@ -50,11 +50,19 @@ fun PatientInfo(
     val patientInfoState by activityViewModel.patientInfoState.observeAsState(PatientInfoApiState.Idle)
     val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState()
 
-    // ✅ API 호출 (currentReportId가 설정되면 자동 실행)
+    // ✅ 최초 로딩 여부 추적 (깜빡임 방지)
+    var isInitialLoad by remember { mutableStateOf(true) }
+
+    // ✅ 5초마다 자동으로 GET 요청 (AI 입력 내용 반영)
     LaunchedEffect(currentReportId) {
         currentReportId?.let { reportId ->
-            Log.d("PatientInfo", "📞 API 호출: getPatientInfo($reportId)")
-            activityViewModel.getPatientInfo(reportId)
+            while (true) {
+                Log.d("PatientInfo", "📞 자동 API 호출: getPatientInfo($reportId)")
+                activityViewModel.getPatientInfo(reportId)
+
+                // 5초 대기
+                kotlinx.coroutines.delay(5000)
+            }
         }
     }
 
@@ -98,6 +106,7 @@ fun PatientInfo(
         when (val state = patientInfoState) {
             is PatientInfoApiState.Success -> {
                 Log.d("PatientInfo", "✅ API 성공 - 데이터 매핑 시작")
+                isInitialLoad = false  // 최초 로딩 완료
                 val apiData = state.patientInfoResponse.data.data.patientInfo
 
                 // 신고자 정보 매핑
@@ -156,8 +165,8 @@ fun PatientInfo(
     }
 
 
-    // ✅ 로딩 중일 때 표시
-    if (patientInfoState is PatientInfoApiState.Loading) {
+    // ✅ 최초 로딩 중일 때만 로딩 화면 표시 (깜빡임 방지)
+    if (isInitialLoad && patientInfoState is PatientInfoApiState.Loading) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
