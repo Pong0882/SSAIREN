@@ -22,6 +22,8 @@ import com.example.ssairen_app.data.model.request.TransportRequest
 import com.example.ssairen_app.data.model.response.TransportResponse
 import com.example.ssairen_app.data.model.request.DetailReportRequest
 import com.example.ssairen_app.data.model.response.DetailReportResponse
+import com.example.ssairen_app.data.model.request.HospitalAiRecommendationRequest
+import com.example.ssairen_app.data.model.response.HospitalAiRecommendationResponse
 
 import retrofit2.Response
 import retrofit2.http.*
@@ -181,5 +183,16 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: DetailReportRequest
     ): Response<DetailReportResponse>
+
+    // ==========================================
+    // 병원 선택 API
+    // ==========================================
+
+    // AI 기반 병원 추천 및 이송 요청
+    @POST("api/hospital-selection/ai-recommendation")
+    suspend fun getAiHospitalRecommendation(
+        @Body request: HospitalAiRecommendationRequest,
+        @Header("Authorization") token: String
+    ): Response<HospitalAiRecommendationResponse>
 
 }

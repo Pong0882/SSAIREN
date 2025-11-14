@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,20 +16,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.ui.components.ClickableDarkCard
+import com.example.ssairen_app.viewmodel.HospitalSearchViewModel
+import com.example.ssairen_app.viewmodel.HospitalAiRecommendationState
+import com.example.ssairen_app.viewmodel.ActivityViewModel
 import kotlinx.coroutines.delay
 
 // ==========================================
-// 병원 데이터 클래스
+// 병원 상태 enum (UI 표시용)
 // ==========================================
-data class HospitalData(
-    val id: Int,
-    val name: String,
-    val distance: String,
-    val phoneNumber: String,
-    val status: HospitalStatus
-)
-
 enum class HospitalStatus(val displayName: String, val color: Color) {
     PENDING("요청중", Color(0xFF999999)),
     ACCEPTED("수용 가능", Color(0xFF34c759)),
@@ -41,41 +38,46 @@ enum class HospitalStatus(val displayName: String, val color: Color) {
 // ==========================================
 @Composable
 fun HospitalSearch(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hospitalSearchViewModel: HospitalSearchViewModel = viewModel(),
+    activityViewModel: ActivityViewModel = viewModel()
 ) {
-    var isSearching by remember { mutableStateOf(true) }
-    var hospitals by remember { mutableStateOf<List<HospitalData>>(emptyList()) }
     var selectedHospitalId by remember { mutableStateOf<Int?>(null) }
     var selectedTab by remember { mutableStateOf(0) } // 0: 검색 완료, 1: 선정된 병원
 
-    // 병원 추가 로직 (랜덤 간격으로 추가)
+    val aiRecommendationState by hospitalSearchViewModel.aiRecommendationState.collectAsState()
+    val hospitals by hospitalSearchViewModel.hospitals.collectAsState()
+    val emergencyReportId = activityViewModel.currentEmergencyReportId.observeAsState()
+
+    // 화면 진입 시 AI 병원 추천 자동 호출
     LaunchedEffect(Unit) {
-        val dummyHospitals = listOf(
-            HospitalData(1, "OO 병원", "1.4 km", "010-5555-5555", HospitalStatus.PENDING),
-            HospitalData(2, "OO 병원", "3 km", "010-5555-5555", HospitalStatus.PENDING),
-            HospitalData(3, "OO 병원", "2.6 km", "010-5555-5555", HospitalStatus.PENDING),
-            HospitalData(4, "OO 병원", "5 km", "010-5555-5555", HospitalStatus.PENDING),
-            HospitalData(5, "OO 병원", "7 km", "010-5555-5555", HospitalStatus.PENDING),
-        )
+        val reportId = emergencyReportId.value
+        android.util.Log.d("HospitalSearch", "========================================")
+        android.util.Log.d("HospitalSearch", "LaunchedEffect 실행됨")
+        android.util.Log.d("HospitalSearch", "emergencyReportId.value: $reportId")
+        android.util.Log.d("HospitalSearch", "========================================")
 
-        // 0.5초~1.5초 랜덤 간격으로 병원 추가
-        dummyHospitals.forEach { hospital ->
-            delay((500..1500).random().toLong())
-            hospitals = hospitals + hospital
-        }
+        // ⚠️ 임시: emergencyReportId가 없으면 테스트용 ID 사용
+        val testReportId = reportId ?: 1
 
-        // 모든 병원 추가 완료 후 2초 대기
-        delay(2000)
-        isSearching = false
+        if (testReportId != 0) {
+            // 하드코딩된 위도/경도 (예시값)
+            val latitude = 37.5062528
+            val longitude = 127.0317056
+            val radius = 10
 
-        // 검색 완료 후 상태 업데이트 (랜덤으로 수용/거절/전화요망)
-        hospitals = hospitals.map { hospital ->
-            val statusOptions = listOf(
-                HospitalStatus.ACCEPTED,
-                HospitalStatus.REJECTED,
-                HospitalStatus.CALLREQUEST
+            android.util.Log.d("HospitalSearch", "✅ AI 병원 추천 API 호출 시작!")
+            android.util.Log.d("HospitalSearch", "   - reportId: $testReportId")
+            android.util.Log.d("HospitalSearch", "   - 위치: ($latitude, $longitude)")
+
+            hospitalSearchViewModel.requestAiHospitalRecommendation(
+                emergencyReportId = testReportId.toLong(),
+                latitude = latitude,
+                longitude = longitude,
+                radius = radius
             )
-            hospital.copy(status = statusOptions.random())
+        } else {
+            android.util.Log.e("HospitalSearch", "❌ emergencyReportId가 0입니다!")
         }
     }
 
@@ -84,18 +86,84 @@ fun HospitalSearch(
             .fillMaxSize()
             .background(Color(0xFF1a1a1a))
     ) {
-        if (isSearching) {
-            // 검색 중 화면
-            SearchingScreen(hospitals = hospitals, selectedHospitalId = selectedHospitalId, onHospitalClick = { selectedHospitalId = if (selectedHospitalId == it) null else it })
-        } else {
-            // 검색 완료 화면
-            SearchCompletedScreen(
-                hospitals = hospitals,
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
-                selectedHospitalId = selectedHospitalId,
-                onHospitalClick = { selectedHospitalId = if (selectedHospitalId == it) null else it }
-            )
+        when (aiRecommendationState) {
+            is HospitalAiRecommendationState.Idle -> {
+                // 초기 상태
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "병원 검색 준비 중...",
+                        color = Color.White,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+
+            is HospitalAiRecommendationState.Loading -> {
+                // 로딩 중 (AI 추론 중)
+                SearchingScreen(
+                    hospitals = hospitals,
+                    selectedHospitalId = selectedHospitalId,
+                    onHospitalClick = { selectedHospitalId = if (selectedHospitalId == it) null else it }
+                )
+            }
+
+            is HospitalAiRecommendationState.Success -> {
+                // AI 추천 성공 - 검색 완료 화면
+                SearchCompletedScreen(
+                    hospitals = hospitals,
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it },
+                    selectedHospitalId = selectedHospitalId,
+                    onHospitalClick = { selectedHospitalId = if (selectedHospitalId == it) null else it }
+                )
+            }
+
+            is HospitalAiRecommendationState.Error -> {
+                // 에러 발생
+                val errorMessage = (aiRecommendationState as HospitalAiRecommendationState.Error).message
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "병원 검색 실패",
+                            color = Color(0xFFff3b30),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = errorMessage,
+                            color = Color(0xFF999999),
+                            fontSize = 14.sp
+                        )
+                        Button(
+                            onClick = {
+                                val reportId = emergencyReportId.value
+                                if (reportId != null && reportId != 0) {
+                                    hospitalSearchViewModel.requestAiHospitalRecommendation(
+                                        emergencyReportId = reportId.toLong(),
+                                        latitude = 37.5062528,
+                                        longitude = 127.0317056,
+                                        radius = 10
+                                    )
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3b7cff)
+                            )
+                        ) {
+                            Text("다시 시도")
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -105,7 +173,7 @@ fun HospitalSearch(
 // ==========================================
 @Composable
 private fun SearchingScreen(
-    hospitals: List<HospitalData>,
+    hospitals: List<com.example.ssairen_app.data.model.response.HospitalSelectionInfo>,
     selectedHospitalId: Int?,
     onHospitalClick: (Int) -> Unit
 ) {
@@ -140,11 +208,11 @@ private fun SearchingScreen(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(hospitals, key = { it.id }) { hospital ->
+            items(hospitals, key = { it.hospitalSelectionId }) { hospital ->
                 HospitalCard(
                     hospital = hospital,
-                    isSelected = selectedHospitalId == hospital.id,
-                    onClick = { onHospitalClick(hospital.id) }
+                    isSelected = selectedHospitalId == hospital.hospitalSelectionId,
+                    onClick = { onHospitalClick(hospital.hospitalSelectionId) }
                 )
             }
         }
@@ -156,7 +224,7 @@ private fun SearchingScreen(
 // ==========================================
 @Composable
 private fun SearchCompletedScreen(
-    hospitals: List<HospitalData>,
+    hospitals: List<com.example.ssairen_app.data.model.response.HospitalSelectionInfo>,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     selectedHospitalId: Int?,
@@ -190,17 +258,17 @@ private fun SearchCompletedScreen(
         val filteredHospitals = if (selectedTab == 0) {
             hospitals // 검색 완료: 모든 병원
         } else {
-            hospitals.filter { it.status == HospitalStatus.ACCEPTED } // 선정된 병원: 수용 가능한 병원만
+            hospitals.filter { it.status == "ACCEPTED" } // 선정된 병원: 수용 가능한 병원만
         }
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(filteredHospitals, key = { it.id }) { hospital ->
+            items(filteredHospitals, key = { it.hospitalSelectionId }) { hospital ->
                 HospitalCard(
                     hospital = hospital,
-                    isSelected = selectedHospitalId == hospital.id,
-                    onClick = { onHospitalClick(hospital.id) }
+                    isSelected = selectedHospitalId == hospital.hospitalSelectionId,
+                    onClick = { onHospitalClick(hospital.hospitalSelectionId) }
                 )
             }
         }
@@ -240,10 +308,19 @@ private fun TabButton(
 // ==========================================
 @Composable
 private fun HospitalCard(
-    hospital: HospitalData,
+    hospital: com.example.ssairen_app.data.model.response.HospitalSelectionInfo,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    // 상태에 따른 색상 및 텍스트 매핑
+    val statusInfo = when (hospital.status) {
+        "PENDING" -> HospitalStatus.PENDING
+        "ACCEPTED" -> HospitalStatus.ACCEPTED
+        "REJECTED" -> HospitalStatus.REJECTED
+        "CALLREQUEST" -> HospitalStatus.CALLREQUEST
+        else -> HospitalStatus.PENDING
+    }
+
     ClickableDarkCard(
         onClick = onClick,
         isSelected = isSelected,
@@ -259,32 +336,32 @@ private fun HospitalCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = hospital.name,
+                    text = hospital.hospitalName,
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "거리 ${hospital.distance}",
+                    text = "ID: ${hospital.hospitalSelectionId}",
                     color = Color(0xFF999999),
-                    fontSize = 14.sp
+                    fontSize = 12.sp
                 )
                 Text(
-                    text = "전화번호 ${hospital.phoneNumber}",
+                    text = "생성시간: ${hospital.createdAt}",
                     color = Color(0xFF999999),
-                    fontSize = 14.sp
+                    fontSize = 12.sp
                 )
             }
 
             // 상태 표시
             Surface(
                 shape = RoundedCornerShape(4.dp),
-                color = hospital.status.color.copy(alpha = 0.2f),
-                border = BorderStroke(1.dp, hospital.status.color)
+                color = statusInfo.color.copy(alpha = 0.2f),
+                border = BorderStroke(1.dp, statusInfo.color)
             ) {
                 Text(
-                    text = hospital.status.displayName,
-                    color = hospital.status.color,
+                    text = statusInfo.displayName,
+                    color = statusInfo.color,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
