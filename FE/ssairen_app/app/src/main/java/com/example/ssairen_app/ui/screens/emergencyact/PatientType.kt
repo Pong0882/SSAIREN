@@ -165,6 +165,10 @@ fun PatientType(
                 Log.d(TAG, "   - subType: $subType")
                 Log.d(TAG, "   - accidentVictimType: $accidentVictimType")
                 Log.d(TAG, "   - etcType: $etcType")
+
+                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
+                saveData()
+                Log.d(TAG, "💾 LogViewModel 동기화 완료")
             }
             is PatientTypeApiState.Error -> {
                 Log.e(TAG, "❌ API 오류: ${state.message}")

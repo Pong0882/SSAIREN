@@ -180,26 +180,43 @@ fun ActivityLogHome(
                         selectedLogTab = newTab
 
                         // 3️⃣ GET: 새 탭 데이터 불러오기
+                        Log.d("ActivityLogHome", "🔍 GET 요청 시작 - emergencyReportId: $emergencyReportId, 탭: $newTab")
                         when (newTab) {
-                            0 -> activityViewModel.getPatientInfo()
-                            1 -> {
-                                // TODO: 구급출동 API 구현 시 추가
+                            0 -> {
+                                Log.d("ActivityLogHome", "📞 환자정보 조회 호출")
+                                activityViewModel.getPatientInfo(emergencyReportId)
                             }
-                            2 -> activityViewModel.getPatientType()
-                            3 -> activityViewModel.getPatientEva()
-                            4 -> activityViewModel.getFirstAid()
+                            1 -> {
+                                Log.d("ActivityLogHome", "📞 구급출동 조회 호출")
+                                activityViewModel.getDispatch(emergencyReportId)
+                            }
+                            2 -> {
+                                Log.d("ActivityLogHome", "📞 환자발생유형 조회 호출")
+                                activityViewModel.getPatientType(emergencyReportId)
+                            }
+                            3 -> {
+                                Log.d("ActivityLogHome", "📞 환자평가 조회 호출")
+                                activityViewModel.getPatientEva(emergencyReportId)
+                            }
+                            4 -> {
+                                Log.d("ActivityLogHome", "📞 응급처치 조회 호출")
+                                activityViewModel.getFirstAid(emergencyReportId)
+                            }
                             5 -> {
-                                // TODO: 의료지도 API 구현 시 추가
+                                Log.d("ActivityLogHome", "📞 의료지도 조회 호출")
+                                activityViewModel.getMedicalGuidance(emergencyReportId)
                             }
                             6 -> {
-                                // TODO: 환자이송 API 구현 시 추가
+                                Log.d("ActivityLogHome", "📞 환자이송 조회 호출")
+                                activityViewModel.getTransport(emergencyReportId)
                             }
                             7 -> {
-                                // TODO: 세부상황표 API 구현 시 추가
+                                Log.d("ActivityLogHome", "📞 세부사항 조회 호출")
+                                activityViewModel.getDetailReport(emergencyReportId)
                             }
                         }
 
-                        Log.d("ActivityLogHome", "📑 상단 탭 변경: $selectedLogTab → $newTab")
+                        Log.d("ActivityLogHome", "📑 상단 탭 변경 완료: $selectedLogTab → $newTab")
                     }
                 },
                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -291,10 +308,14 @@ fun ActivityLogHome(
                                 // 구급활동일지로 복귀
                                 // 3️⃣ GET: 현재 상단 탭 데이터 다시 불러오기
                                 when (selectedLogTab) {
-                                    0 -> activityViewModel.getPatientInfo()
-                                    2 -> activityViewModel.getPatientType()
-                                    3 -> activityViewModel.getPatientEva()
-                                    4 -> activityViewModel.getFirstAid()
+                                    0 -> activityViewModel.getPatientInfo(emergencyReportId)
+                                    1 -> activityViewModel.getDispatch(emergencyReportId)
+                                    2 -> activityViewModel.getPatientType(emergencyReportId)
+                                    3 -> activityViewModel.getPatientEva(emergencyReportId)
+                                    4 -> activityViewModel.getFirstAid(emergencyReportId)
+                                    5 -> activityViewModel.getMedicalGuidance(emergencyReportId)
+                                    6 -> activityViewModel.getTransport(emergencyReportId)
+                                    7 -> activityViewModel.getDetailReport(emergencyReportId)
                                 }
                             }
                             2 -> {

@@ -34,10 +34,6 @@ class ReportRepository(
         private const val TAG = "ReportRepository"
     }
 
-    // ==========================================
-    // 새 일지 등록
-    // ==========================================
-
     /**
      * 새 일지 등록
      * POST /api/emergency-reports/{dispatch_id}
@@ -135,6 +131,7 @@ class ReportRepository(
             )
 
             Log.d(TAG, "응답 코드: ${response.code()}")
+            Log.d(TAG, "📦 전체 응답: ${response.body()}")
 
             if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!
@@ -144,7 +141,25 @@ class ReportRepository(
                     Log.d(TAG, "✅ 환자정보 조회 성공!")
                     Log.d(TAG, "섹션 ID: ${body.data.id}")
                     Log.d(TAG, "출동보고서 ID: ${body.data.emergencyReportId}")
-                    Log.d(TAG, "환자 이름: ${body.data.data.patientInfo.patient?.name ?: "없음"}")
+                    Log.d(TAG, "섹션 타입: ${body.data.type}")
+                    Log.d(TAG, "버전: ${body.data.version}")
+                    Log.d(TAG, "스키마 버전: ${body.data.data.schemaVersion}")
+
+                    // 환자정보 상세 로그
+                    Log.d(TAG, "📋 환자정보 데이터:")
+                    Log.d(TAG, "  - reporter: ${body.data.data.patientInfo.reporter}")
+                    Log.d(TAG, "  - patient: ${body.data.data.patientInfo.patient}")
+                    Log.d(TAG, "  - guardian: ${body.data.data.patientInfo.guardian}")
+                    Log.d(TAG, "  - incidentLocation: ${body.data.data.patientInfo.incidentLocation}")
+
+                    // 환자 세부 정보
+                    val patient = body.data.data.patientInfo.patient
+                    Log.d(TAG, "👤 환자 상세:")
+                    Log.d(TAG, "  - 이름: ${patient?.name ?: "null"}")
+                    Log.d(TAG, "  - 성별: ${patient?.gender ?: "null"}")
+                    Log.d(TAG, "  - 나이: ${patient?.ageYears ?: "null"}")
+                    Log.d(TAG, "  - 생년월일: ${patient?.birthDate ?: "null"}")
+                    Log.d(TAG, "  - 주소: ${patient?.address ?: "null"}")
 
                     Result.success(body)
                 } else {

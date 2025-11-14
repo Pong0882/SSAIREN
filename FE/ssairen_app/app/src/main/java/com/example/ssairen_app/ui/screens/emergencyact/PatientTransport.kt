@@ -135,6 +135,29 @@ fun PatientTransport(
                     }
 
                     Log.d("PatientTransport", "✅ 데이터 매핑 완료")
+
+                    // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
+                    viewModel.updatePatientTransport(
+                        PatientTransportData(
+                            firstHospitalName = firstHospitalName,
+                            firstRegionType = selectedFirstRegion,
+                            firstArrivalTime = firstArrivalTime,
+                            firstDistanceKm = firstDistance.toDoubleOrNull() ?: 0.0,
+                            firstSelectedBy = selectedFirstMedicalSelector,
+                            firstBedShortageReasons = selectedFirstBedShortageReasons,
+                            firstOtherReasons = selectedFirstOtherReasons,
+                            firstReceiver = selectedFirstPatientReceiver,
+                            secondHospitalName = secondHospitalName,
+                            secondRegionType = selectedSecondRegion,
+                            secondArrivalTime = secondArrivalTime,
+                            secondDistanceKm = secondDistance.toDoubleOrNull() ?: 0.0,
+                            secondSelectedBy = selectedSecondMedicalSelector,
+                            secondBedShortageReasons = selectedSecondBedShortageReasons,
+                            secondOtherReasons = selectedSecondOtherReasons,
+                            secondReceiver = selectedSecondPatientReceiver
+                        )
+                    )
+                    Log.d("PatientTransport", "💾 LogViewModel 동기화 완료")
                 }
             }
             is TransportApiState.Error -> {
