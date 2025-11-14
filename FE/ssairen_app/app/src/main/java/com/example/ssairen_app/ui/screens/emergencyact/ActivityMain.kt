@@ -46,6 +46,7 @@ import com.example.ssairen_app.ui.components.HeartRateChart
 import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.ui.wear.WearDataViewModel
 import com.example.ssairen_app.utils.SpeechToTextHelper
+import com.example.ssairen_app.utils.SttManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -64,6 +65,56 @@ fun ActivityMain(
     onNavigateToReportDetail: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
+
+    // ✅ 전역 STT 상태 사용 (싱글톤)
+    val isSttRecording = SttManager.isSttRecording
+    val sttText = SttManager.sttText
+
+    val context = LocalContext.current
+
+    // ✅ STT 녹음 중일 때 20초마다 자동으로 텍스트 전송 (ActivityMain 레벨)
+    LaunchedEffect(isSttRecording) {
+        if (isSttRecording) {
+            Log.d("ActivityMain", "⏰ STT 자동 전송 스케줄링 시작 (20초 간격)")
+            while (isSttRecording) {
+                kotlinx.coroutines.delay(20000L) // 20초 대기
+                if (isSttRecording) { // 대기 중 중지되지 않았는지 확인
+                    Log.d("ActivityMain", "⏰ 20초 경과 - 자동 텍스트 전송")
+
+                    // ✅ 텍스트 전송
+                    val accumulatedText = SttManager.getAccumulatedText()
+                    val currentText = if (SttManager.sttText.isNotEmpty()) SttManager.sttText else accumulatedText
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+
+                    if (currentText.isNotEmpty() && currentReportId > 0) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                val response = RetrofitClient.fileApiService.textToJson(
+                                    text = currentText,
+                                    emergencyReportId = currentReportId.toLong(),
+                                    maxNewTokens = 700,
+                                    temperature = 0.1
+                                )
+
+                                withContext(Dispatchers.Main) {
+                                    if (response.isSuccessful) {
+                                        Log.d("ActivityMain", "✅ API Success")
+                                        Toast.makeText(context, "전송 완료", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Log.e("ActivityMain", "❌ API Error: ${response.code()}")
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.e("ActivityMain", "❌ API Exception: ${e.message}")
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            Log.d("ActivityMain", "⏰ STT 자동 전송 스케줄링 중지")
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -122,6 +173,9 @@ private fun HomeContent(
     onNavigateToPatientTransport: () -> Unit = {},
     onNavigateToReportDetail: () -> Unit = {}
 ) {
+    // ✅ 전역 STT 상태 사용 (싱글톤)
+    val isSttRecording = SttManager.isSttRecording
+    val sttText = SttManager.sttText
     var isAudioRecording by remember { mutableStateOf(false) }
     var isVideoRecording by remember { mutableStateOf(false) }
     var videoService by remember { mutableStateOf<VideoRecordingService?>(null) }
@@ -130,11 +184,6 @@ private fun HomeContent(
     // ✅ 오디오 서비스 변수 추가 (새로운 AudioRecord 방식)
     var audioService by remember { mutableStateOf<AudioRecordingServiceNew?>(null) }
     var isAudioBound by remember { mutableStateOf(false) }
-
-    // ✅ STT 관련 상태 추가
-    var isSttRecording by remember { mutableStateOf(false) }
-    var sttText by remember { mutableStateOf("") }
-    var sttHelper by remember { mutableStateOf<SpeechToTextHelper?>(null) }
 
     val context = LocalContext.current
     val application = context.applicationContext as android.app.Application
@@ -224,7 +273,7 @@ private fun HomeContent(
         }
     }
 
-    // 화면 정리 시 서비스 언바인드 및 STT 정리
+    // 화면 정리 시 서비스 언바인드 (STT는 ActivityMain에서 관리)
     DisposableEffect(Unit) {
         onDispose {
             if (isBound) {
@@ -233,7 +282,6 @@ private fun HomeContent(
             if (isAudioBound) {
                 context.unbindService(audioServiceConnection)
             }
-            sttHelper?.destroy()
         }
     }
 
@@ -324,51 +372,38 @@ private fun HomeContent(
             return
         }
 
-        if (sttHelper == null) {
-            sttHelper = SpeechToTextHelper(
-                context = context,
-                onResult = { text ->
-                    sttText = text
-                    Log.d("ActivityMain", "📝 STT Result: $text")
-                },
-                onPartialResult = { text ->
-                    Log.d("ActivityMain", "📝 STT Partial: $text")
-                },
-                onError = { error ->
-                    Log.e("ActivityMain", "❌ STT Error: $error")
-                }
-            )
-        }
-
-        isSttRecording = true
-        sttHelper?.startListening()
-        Log.d("ActivityMain", "🎤 STT Recording Started")
+        // ✅ SttManager 초기화 및 시작
+        SttManager.initializeSttHelper(
+            context = context,
+            onResult = { text ->
+                Log.d("ActivityMain", "📝 STT Result: $text")
+            },
+            onPartialResult = { text ->
+                Log.d("ActivityMain", "📝 STT Partial: $text")
+            },
+            onError = { error ->
+                Log.e("ActivityMain", "❌ STT Error: $error")
+            }
+        )
+        SttManager.startRecording()
     }
 
     // ✅ STT 녹음 중지 함수 (API 전송 없이 녹음만 중지)
     fun stopSttRecording() {
-        sttHelper?.stopListening()
-        isSttRecording = false
-        Log.d("ActivityMain", "🛑 STT Recording Stopped")
-
-        // 녹음 중지 시 누적 텍스트 초기화
-        sttHelper?.clearAccumulatedText()
-        sttText = ""
+        SttManager.stopRecording()
     }
 
     // ✅ 누적된 텍스트를 API로 전송하는 함수 (녹음은 계속 진행)
     fun sendAccumulatedTextToApi() {
-        // ✅ 현재 누적된 텍스트 가져오기
-        val accumulatedText = sttHelper?.getAccumulatedText() ?: ""
-
-        // ✅ 화면에 표시되는 텍스트도 함께 가져오기 (부분 결과 포함)
-        val currentText = if (sttText.isNotEmpty()) sttText else accumulatedText
+        // ✅ SttManager에서 누적된 텍스트 가져오기
+        val accumulatedText = SttManager.getAccumulatedText()
+        val currentText = if (SttManager.sttText.isNotEmpty()) SttManager.sttText else accumulatedText
 
         val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
 
         Log.d("ActivityMain", "📤 Sending accumulated text to API")
         Log.d("ActivityMain", "  - Accumulated Text: $accumulatedText")
-        Log.d("ActivityMain", "  - Display Text (sttText): $sttText")
+        Log.d("ActivityMain", "  - Display Text (sttText): ${SttManager.sttText}")
         Log.d("ActivityMain", "  - Sending Text: $currentText")
         Log.d("ActivityMain", "  - ReportId: $currentReportId")
 
@@ -417,23 +452,10 @@ private fun HomeContent(
         }
     }
 
-    // ✅ STT 녹음 중일 때 20초마다 자동으로 텍스트 전송
-    LaunchedEffect(isSttRecording) {
-        if (isSttRecording) {
-            Log.d("ActivityMain", "⏰ STT 자동 전송 스케줄링 시작 (20초 간격)")
-            while (isSttRecording) {
-                kotlinx.coroutines.delay(20000L) // 20초 대기
-                if (isSttRecording) { // 대기 중 중지되지 않았는지 확인
-                    Log.d("ActivityMain", "⏰ 20초 경과 - 자동 텍스트 전송")
-                    sendAccumulatedTextToApi()
-                }
-            }
-        } else {
-            Log.d("ActivityMain", "⏰ STT 자동 전송 스케줄링 중지")
-        }
-    }
+    // ✅ STT 자동 전송은 ActivityMain 레벨에서 처리됨
 
-    // ✅ Whisper 오디오 녹음 중일 때 20초마다 자동으로 전송
+    // ✅ Whisper 오디오 녹음 중일 때 20초마다 자동으로 전송 (현재 주석 처리 - 나중에 사용 가능)
+    /*
     LaunchedEffect(isAudioRecording) {
         if (isAudioRecording) {
             Log.d("ActivityMain", "⏰ Whisper 자동 전송 스케줄링 시작 (20초 간격)")
@@ -448,6 +470,7 @@ private fun HomeContent(
             Log.d("ActivityMain", "⏰ Whisper 자동 전송 스케줄링 중지")
         }
     }
+    */
 
     Log.d("ActivityMain", "🎨 HomeContent Composable 렌더링")
     Log.d("ActivityMain", "📱 ViewModel 인스턴스: $wearViewModel")
