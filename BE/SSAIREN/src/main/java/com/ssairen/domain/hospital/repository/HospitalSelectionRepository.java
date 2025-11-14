@@ -205,7 +205,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     // ===== 통계 관련 쿼리 =====
 
     /**
-     * 요일별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     * 요일별 환자 수용 건수 조회 (ACCEPTED, ARRIVED 상태)
      * 0 = 일요일, 1 = 월요일, ..., 6 = 토요일
      *
      * @param hospitalId 병원 ID
@@ -216,7 +216,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     @Query(value = "SELECT EXTRACT(DOW FROM hs.response_at) AS day_of_week, COUNT(*) " +
             "FROM hospital_selection hs " +
             "WHERE hs.hospital_id = :hospitalId " +
-            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.status IN ('ACCEPTED', 'ARRIVED') " +
             "AND hs.response_at >= :startDateTime " +
             "AND hs.response_at < :endDateTime " +
             "GROUP BY day_of_week " +
@@ -229,7 +229,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     );
 
     /**
-     * 시간대별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     * 시간대별 환자 수용 건수 조회 (ACCEPTED, ARRIVED 상태)
      * 0 ~ 23시
      *
      * @param hospitalId 병원 ID
@@ -240,7 +240,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     @Query(value = "SELECT EXTRACT(HOUR FROM hs.response_at) AS hour, COUNT(*) " +
             "FROM hospital_selection hs " +
             "WHERE hs.hospital_id = :hospitalId " +
-            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.status IN ('ACCEPTED', 'ARRIVED') " +
             "AND hs.response_at >= :startDateTime " +
             "AND hs.response_at < :endDateTime " +
             "GROUP BY hour " +
@@ -253,7 +253,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     );
 
     /**
-     * 기간 내 총 수용 건수 조회 (ACCEPTED 상태만)
+     * 기간 내 총 수용 건수 조회 (ACCEPTED, ARRIVED 상태)
      *
      * @param hospitalId 병원 ID
      * @param startDateTime 시작 날짜
@@ -262,7 +262,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
      */
     @Query("SELECT COUNT(hs) FROM HospitalSelection hs " +
             "WHERE hs.hospital.id = :hospitalId " +
-            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.status IN ('ACCEPTED', 'ARRIVED') " +
             "AND hs.responseAt >= :startDateTime " +
             "AND hs.responseAt < :endDateTime")
     long countByHospitalIdAndPeriod(
@@ -274,7 +274,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     // ===== 환자 통계 관련 쿼리 =====
 
     /**
-     * 성별별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     * 성별별 환자 수용 건수 조회 (ACCEPTED, ARRIVED 상태)
      *
      * @param hospitalId 병원 ID
      * @param startDateTime 시작 날짜
@@ -286,7 +286,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
             "INNER JOIN emergency_reports er ON hs.emergency_report_id = er.id " +
             "INNER JOIN patient_info pi ON er.id = pi.emergency_report_id " +
             "WHERE hs.hospital_id = :hospitalId " +
-            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.status IN ('ACCEPTED', 'ARRIVED') " +
             "AND hs.response_at >= :startDateTime " +
             "AND hs.response_at < :endDateTime " +
             "GROUP BY pi.gender",
@@ -298,7 +298,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     );
 
     /**
-     * 연령대별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     * 연령대별 환자 수용 건수 조회 (ACCEPTED, ARRIVED 상태)
      * 10년 단위: 0-9, 10-19, 20-29, ..., 80+
      *
      * @param hospitalId 병원 ID
@@ -323,7 +323,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
             "INNER JOIN emergency_reports er ON hs.emergency_report_id = er.id " +
             "INNER JOIN patient_info pi ON er.id = pi.emergency_report_id " +
             "WHERE hs.hospital_id = :hospitalId " +
-            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.status IN ('ACCEPTED', 'ARRIVED') " +
             "AND hs.response_at >= :startDateTime " +
             "AND hs.response_at < :endDateTime " +
             "GROUP BY age_group " +
@@ -336,7 +336,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     );
 
     /**
-     * 의식 상태별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     * 의식 상태별 환자 수용 건수 조회 (ACCEPTED, ARRIVED 상태)
      *
      * @param hospitalId 병원 ID
      * @param startDateTime 시작 날짜
@@ -348,7 +348,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
             "INNER JOIN emergency_reports er ON hs.emergency_report_id = er.id " +
             "INNER JOIN patient_info pi ON er.id = pi.emergency_report_id " +
             "WHERE hs.hospital_id = :hospitalId " +
-            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.status IN ('ACCEPTED', 'ARRIVED') " +
             "AND hs.response_at >= :startDateTime " +
             "AND hs.response_at < :endDateTime " +
             "GROUP BY pi.mental_status",
@@ -362,7 +362,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     // ===== 재난 유형 통계 관련 쿼리 =====
 
     /**
-     * 재난 유형별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     * 재난 유형별 환자 수용 건수 조회 (ACCEPTED, ARRIVED 상태)
      *
      * @param hospitalId 병원 ID
      * @param startDateTime 시작 날짜
@@ -374,7 +374,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
             "INNER JOIN emergency_reports er ON hs.emergency_report_id = er.id " +
             "INNER JOIN dispatches d ON er.dispatches_id = d.id " +
             "WHERE hs.hospital_id = :hospitalId " +
-            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.status IN ('ACCEPTED', 'ARRIVED') " +
             "AND hs.response_at >= :startDateTime " +
             "AND hs.response_at < :endDateTime " +
             "AND d.disaster_type IS NOT NULL " +
@@ -388,7 +388,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
     );
 
     /**
-     * 재난 세부 유형별 환자 수용 건수 조회 (ACCEPTED 상태만)
+     * 재난 세부 유형별 환자 수용 건수 조회 (ACCEPTED, ARRIVED 상태)
      *
      * @param hospitalId 병원 ID
      * @param startDateTime 시작 날짜
@@ -400,7 +400,7 @@ public interface HospitalSelectionRepository extends JpaRepository<HospitalSelec
             "INNER JOIN emergency_reports er ON hs.emergency_report_id = er.id " +
             "INNER JOIN dispatches d ON er.dispatches_id = d.id " +
             "WHERE hs.hospital_id = :hospitalId " +
-            "AND hs.status = 'ACCEPTED' " +
+            "AND hs.status IN ('ACCEPTED', 'ARRIVED') " +
             "AND hs.response_at >= :startDateTime " +
             "AND hs.response_at < :endDateTime " +
             "AND d.disaster_subtype IS NOT NULL " +
