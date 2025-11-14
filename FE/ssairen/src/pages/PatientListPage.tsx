@@ -520,9 +520,6 @@ export default function PatientListPage() {
                 </TableHeader>
                 <TableBody>
                   {patients.map((patient) => {
-                    // 급한 환자 판별 (PAIN 또는 UNRESPONSIVE)
-                    const isUrgent = patient.mentalStatus === "PAIN" || patient.mentalStatus === "UNRESPONSIVE";
-
                     return (
                       <TableRow
                         key={patient.hospitalSelectionId}
@@ -532,15 +529,7 @@ export default function PatientListPage() {
                         onClick={() => handlePatientClick(patient)}
                       >
                         <TableCell className="w-[8%] text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            {isUrgent && (
-                              <span className="flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                              </span>
-                            )}
-                            {patient.hospitalSelectionId}
-                          </div>
+                          {patient.hospitalSelectionId}
                         </TableCell>
                         <TableCell className="w-[8%]">
                           <span className={patient.gender === "M" ? "text-blue-600 font-medium" : "text-pink-600 font-medium"}>
