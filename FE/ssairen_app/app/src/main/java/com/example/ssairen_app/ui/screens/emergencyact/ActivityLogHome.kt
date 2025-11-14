@@ -170,8 +170,32 @@ fun ActivityLogHome(
                 selectedTab = selectedLogTab,
                 onTabSelected = { newTab ->
                     if (selectedLogTab != newTab) {
+                        // 1️⃣ PATCH: 이전 탭 데이터 저장
                         saveCurrentTabToBackend()
+
+                        // 2️⃣ 탭 전환
                         selectedLogTab = newTab
+
+                        // 3️⃣ GET: 새 탭 데이터 불러오기
+                        when (newTab) {
+                            0 -> activityViewModel.getPatientInfo()
+                            1 -> {
+                                // TODO: 구급출동 API 구현 시 추가
+                            }
+                            2 -> activityViewModel.getPatientType()
+                            3 -> activityViewModel.getPatientEva()
+                            4 -> activityViewModel.getFirstAid()
+                            5 -> {
+                                // TODO: 의료지도 API 구현 시 추가
+                            }
+                            6 -> {
+                                // TODO: 환자이송 API 구현 시 추가
+                            }
+                            7 -> {
+                                // TODO: 세부상황표 API 구현 시 추가
+                            }
+                        }
+
                         Log.d("ActivityLogHome", "📑 상단 탭 변경: $selectedLogTab → $newTab")
                     }
                 },
@@ -219,16 +243,39 @@ fun ActivityLogHome(
                 selectedTab = selectedBottomTab,
                 onTabSelected = { newTab ->
                     if (selectedBottomTab != newTab) {
+                        // 1️⃣ PATCH: 현재 상단 탭 데이터 저장
                         saveCurrentTabToBackend()
+
+                        // 2️⃣ 하단 탭 전환
                         selectedBottomTab = newTab
+
                         Log.d("ActivityLogHome", "📑 하단 탭 변경: $selectedBottomTab → $newTab")
 
                         when (newTab) {
-                            0 -> onNavigateToHome()         // 홈
-                            1 -> { /* 현재 화면 유지 */ }  // 구급활동일지
-                            2 -> onNavigateToSummation()    // 요약
-                            3 -> { /* TODO: 메모 */ }
-                            4 -> { /* TODO: 병원이송 */ }
+                            0 -> {
+                                // 홈으로 이동 (GET 불필요)
+                                onNavigateToHome()
+                            }
+                            1 -> {
+                                // 구급활동일지로 복귀
+                                // 3️⃣ GET: 현재 상단 탭 데이터 다시 불러오기
+                                when (selectedLogTab) {
+                                    0 -> activityViewModel.getPatientInfo()
+                                    2 -> activityViewModel.getPatientType()
+                                    3 -> activityViewModel.getPatientEva()
+                                    4 -> activityViewModel.getFirstAid()
+                                }
+                            }
+                            2 -> {
+                                // 요약으로 이동
+                                onNavigateToSummation()
+                            }
+                            3 -> {
+                                // TODO: 메모
+                            }
+                            4 -> {
+                                // TODO: 병원이송
+                            }
                         }
                     }
                 }

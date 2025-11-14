@@ -86,6 +86,44 @@ fun PatientEva(
     var rightRespiratoryRate by remember { mutableStateOf(data.patientEva.rightRespiratoryRate) }
     var rightBloodSugar by remember { mutableStateOf(data.patientEva.rightBloodSugar) }
 
+    // ✅ 자동 저장 함수
+    fun saveData() {
+        val evaData = PatientEvaData(
+            patientLevel = selectedLevel,
+            consciousness1stAlert = consciousness1stAlert,
+            consciousness1stVerbal = consciousness1stVerbal,
+            consciousness1stPainful = consciousness1stPainful,
+            consciousness1stUnresponsive = consciousness1stUnresponsive,
+            consciousness2ndAlert = consciousness2ndAlert,
+            consciousness2ndVerbal = consciousness2ndVerbal,
+            consciousness2ndPainful = consciousness2ndPainful,
+            consciousness2ndUnresponsive = consciousness2ndUnresponsive,
+            leftPupilNormal = false,  // 추후 업데이트 필요
+            leftPupilSlow = false,
+            leftPupilReactive = false,
+            leftPupilNonReactive = false,
+            rightPupilNormal = false,
+            rightPupilSlow = false,
+            rightPupilReactive = false,
+            rightPupilNonReactive = false,
+            leftTime = leftTime,
+            leftPulse = leftPulse,
+            leftBloodPressure = leftBloodPressure,
+            leftTemperature = leftTemperature,
+            leftOxygenSaturation = leftOxygenSaturation,
+            leftRespiratoryRate = leftRespiratoryRate,
+            leftBloodSugar = leftBloodSugar,
+            rightTime = rightTime,
+            rightPulse = rightPulse,
+            rightBloodPressure = rightBloodPressure,
+            rightTemperature = rightTemperature,
+            rightOxygenSaturation = rightOxygenSaturation,
+            rightRespiratoryRate = rightRespiratoryRate,
+            rightBloodSugar = rightBloodSugar
+        )
+        viewModel.updatePatientEva(evaData)
+    }
+
     // ✅ API 응답 처리
     LaunchedEffect(patientEvaState) {
         when (val state = patientEvaState) {
@@ -214,44 +252,6 @@ fun PatientEva(
             }
             else -> {}
         }
-    }
-
-    // ✅ 자동 저장 함수
-    fun saveData() {
-        val evaData = PatientEvaData(
-            patientLevel = selectedLevel,
-            consciousness1stAlert = consciousness1stAlert,
-            consciousness1stVerbal = consciousness1stVerbal,
-            consciousness1stPainful = consciousness1stPainful,
-            consciousness1stUnresponsive = consciousness1stUnresponsive,
-            consciousness2ndAlert = consciousness2ndAlert,
-            consciousness2ndVerbal = consciousness2ndVerbal,
-            consciousness2ndPainful = consciousness2ndPainful,
-            consciousness2ndUnresponsive = consciousness2ndUnresponsive,
-            leftPupilNormal = false,  // 추후 업데이트 필요
-            leftPupilSlow = false,
-            leftPupilReactive = false,
-            leftPupilNonReactive = false,
-            rightPupilNormal = false,
-            rightPupilSlow = false,
-            rightPupilReactive = false,
-            rightPupilNonReactive = false,
-            leftTime = leftTime,
-            leftPulse = leftPulse,
-            leftBloodPressure = leftBloodPressure,
-            leftTemperature = leftTemperature,
-            leftOxygenSaturation = leftOxygenSaturation,
-            leftRespiratoryRate = leftRespiratoryRate,
-            leftBloodSugar = leftBloodSugar,
-            rightTime = rightTime,
-            rightPulse = rightPulse,
-            rightBloodPressure = rightBloodPressure,
-            rightTemperature = rightTemperature,
-            rightOxygenSaturation = rightOxygenSaturation,
-            rightRespiratoryRate = rightRespiratoryRate,
-            rightBloodSugar = rightBloodSugar
-        )
-        viewModel.updatePatientEva(evaData)
     }
 
     // ✅ 로딩 중일 때 표시

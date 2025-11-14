@@ -183,10 +183,19 @@ object WebSocketManager {
                                 val dispatch = gson.fromJson(payload, DispatchMessage::class.java)
 
                                 Log.d(TAG, "Dispatch Details:")
+                                Log.d(TAG, "  - id: ${dispatch.id} ⬅️⬅️⬅️ 출동 ID (API 호출용)")
                                 Log.d(TAG, "  - disasterNumber: ${dispatch.disasterNumber}")
                                 Log.d(TAG, "  - disasterType: ${dispatch.disasterType}")
                                 Log.d(TAG, "  - locationAddress: ${dispatch.locationAddress}")
                                 Log.d(TAG, "")
+
+                                // ✅ 출동 ID 검증
+                                if (dispatch.id == 0) {
+                                    Log.e(TAG, "❌❌❌ 경고: dispatch.id가 0입니다!")
+                                    Log.e(TAG, "❌ 백엔드 WebSocket 메시지에 'id' 필드가 없거나 0입니다!")
+                                    Log.e(TAG, "❌ 위의 RAW MESSAGE RECEIVED 로그를 확인하세요!")
+                                }
+
                                 Log.d(TAG, "🎯 Calling onDispatchReceived callback...")
 
                                 onDispatchReceived(dispatch)
@@ -280,15 +289,16 @@ object WebSocketManager {
  * WebSocket으로 수신되는 출동 데이터 (백엔드 JSON 형식)
  */
 data class DispatchMessage(
-    val id: Int,                             // 출동 ID (dispatch_id)
-    val fireStateId: Int,                    // 소방서 ID
-    val paramedicId: Int,                    // 구급대원 ID
-    val disasterNumber: String,              // 재난 번호
-    val disasterType: String,                // 재난 유형 (화재, 구조 등)
+    @com.google.gson.annotations.SerializedName("dispatchId")
+    val id: Int,                             // 출동 ID (백엔드 필드명: dispatchId)
+    val fireStateId: Int = 0,                // 소방서 ID
+    val paramedicId: Int = 0,                // 구급대원 ID
+    val disasterNumber: String = "",         // 재난 번호
+    val disasterType: String = "",           // 재난 유형 (화재, 구조 등)
     val disasterSubtype: String? = null,     // 재난 세부 유형
     val reporterName: String? = null,        // 신고자 이름
     val reporterPhone: String? = null,       // 신고자 전화번호
-    val locationAddress: String,             // 출동 위치
+    val locationAddress: String = "",        // 출동 위치
     val incidentDescription: String? = null, // 사건 설명
     val dispatchLevel: String? = null,       // 출동 등급 (실전, 대응 등)
     val dispatchOrder: Int? = null,          // 출동 순서

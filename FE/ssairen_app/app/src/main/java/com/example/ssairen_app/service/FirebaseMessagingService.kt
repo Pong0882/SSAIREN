@@ -98,7 +98,17 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra("from_notification", true)
 
+            // ✅ 출동 ID - 여러 가능한 필드명 시도
+            val dispatchId = data["id"] ?: data["dispatchId"] ?: data["dispatchID"] ?: data["dispatch_id"]
+            Log.d(TAG, "🔍 출동 ID 확인:")
+            Log.d(TAG, "  - data[\"id\"]: ${data["id"]}")
+            Log.d(TAG, "  - data[\"dispatchId\"]: ${data["dispatchId"]}")
+            Log.d(TAG, "  - data[\"dispatchID\"]: ${data["dispatchID"]}")
+            Log.d(TAG, "  - data[\"dispatch_id\"]: ${data["dispatch_id"]}")
+            Log.d(TAG, "  - 최종 선택: $dispatchId")
+
             // 모든 출동 데이터를 Intent에 담기
+            putExtra("dispatchId", dispatchId)
             putExtra("disasterNumber", data["disasterNumber"])
             putExtra("disasterType", data["disasterType"])
             putExtra("disasterSubtype", data["disasterSubtype"])

@@ -22,6 +22,7 @@ import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.FirstAidData
 import com.example.ssairen_app.viewmodel.FirstAidApiState
 import com.example.ssairen_app.viewmodel.LogViewModel
+import com.example.ssairen_app.viewmodel.SttDataState
 
 @Composable
 fun FirstAid(
@@ -33,6 +34,7 @@ fun FirstAid(
     // ✅ API 상태 관찰
     val firstAidState by activityViewModel.firstAidState.observeAsState(FirstAidApiState.Idle)
     val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState()
+    val sttDataState by activityViewModel.sttDataState.observeAsState(SttDataState.Idle)
 
     // ✅ API에서 데이터를 로드했는지 추적
     var isApiDataLoaded by remember { mutableStateOf(false) }
