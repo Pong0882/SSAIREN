@@ -363,16 +363,21 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
     fun getPatientInfo(emergencyReportId: Int) {
         Log.d(TAG, "=== 환자정보 조회 시작 (ViewModel) ===")
         Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+        Log.d(TAG, "현재 State: ${_patientInfoState.value}")
 
         _patientInfoState.postValue(PatientInfoApiState.Loading)
 
         viewModelScope.launch {
             try {
+                Log.d(TAG, "📞 Repository.getPatientInfo 호출 중...")
                 val result = repository.getPatientInfo(emergencyReportId)
 
                 result.onSuccess { response ->
                     Log.d(TAG, "✅ 환자정보 조회 성공 (ViewModel)")
+                    Log.d(TAG, "📦 Response Success: ${response.success}")
+                    Log.d(TAG, "📦 Response Data: ${response.data}")
                     _patientInfoState.postValue(PatientInfoApiState.Success(response))
+                    Log.d(TAG, "✅ State 업데이트 완료: PatientInfoApiState.Success")
                 }.onFailure { error ->
                     Log.e(TAG, "❌ 환자정보 조회 실패 (ViewModel): ${error.message}")
                     _patientInfoState.postValue(PatientInfoApiState.Error(error.message ?: "알 수 없는 오류"))

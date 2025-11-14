@@ -243,6 +243,10 @@ fun PatientEva(
                     rightBloodSugar = second.bloodSugar?.toString() ?: ""
                     Log.d(TAG, "   - 활력징후 2차: BP=${second.bloodPressure}, Pulse=${second.pulse}")
                 }
+
+                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
+                saveData()
+                Log.d(TAG, "💾 LogViewModel 동기화 완료")
             }
             is PatientEvaApiState.Error -> {
                 Log.e(TAG, "❌ API 오류: ${state.message}")

@@ -111,6 +111,29 @@ fun MedicalGuidance(
                 }
 
                 Log.d("MedicalGuidance", "✅ 데이터 매핑 완료")
+
+                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
+                viewModel.updateMedicalGuidance(
+                    MedicalGuidanceData(
+                        contactStatus = selectedConnection,
+                        requestTime = requestTime,
+                        requestMethod = selectedRequestMethod,
+                        requestMethodValue = if (selectedRequestMethod == "기타") requestMethodOtherValue else null,
+                        guidanceAgency = selectedInstitution,
+                        guidanceAgencyValue = if (selectedInstitution == "기타") institutionOtherValue else null,
+                        guidanceDoctor = doctorName,
+                        emergencyTreatment = selectedEmergencyCare,
+                        emergencyTreatmentOtherValue = if (selectedEmergencyCare.contains("기타")) emergencyCareOtherValue else null,
+                        medication = selectedMedication,
+                        medicationOtherValue = if (selectedMedication.contains("기타")) medicationOtherValue else null,
+                        hospitalRequest = selectedHospitalSelections.contains("병원선정"),
+                        patientEvaluation = selectedHospitalSelections.contains("환자평가"),
+                        cprTransfer = selectedHospitalSelections.contains("CPR유보중단"),
+                        transferRefusal = selectedHospitalSelections.contains("이송거절"),
+                        transferRejection = selectedHospitalSelections.contains("이송거부")
+                    )
+                )
+                Log.d("MedicalGuidance", "💾 LogViewModel 동기화 완료")
             }
             is MedicalGuidanceApiState.Error -> {
                 Log.e("MedicalGuidance", "❌ API 오류: ${state.message}")

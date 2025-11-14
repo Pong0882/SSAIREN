@@ -105,6 +105,29 @@ fun DispatchSection(
                 otherSymptomValue = apiData.symptoms.otherSymptoms?.find { it.name == "기타" }?.value ?: ""
 
                 Log.d("DispatchSection", "✅ 데이터 매핑 완료")
+
+                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
+                viewModel.updateDispatch(
+                    com.example.ssairen_app.viewmodel.DispatchData(
+                        reportDatetime = reportDatetime,
+                        departureTime = departureTime,
+                        arrivalSceneTime = arrivalSceneTime,
+                        departureSceneTime = departureSceneTime,
+                        contactTime = contactTime,
+                        arrivalHospitalTime = arrivalHospitalTime,
+                        distanceKm = distance.toDoubleOrNull() ?: 0.0,
+                        returnTime = returnTime,
+                        dispatchType = selectedDispatchType,
+                        sceneLocationName = selectedLocation,
+                        sceneLocationValue = if (selectedLocation == "기타") locationDetailValue else null,
+                        painSymptoms = selectedPains,
+                        traumaSymptoms = selectedInjuries,
+                        otherSymptoms = selectedSymptoms,
+                        otherPainValue = if (selectedPains.contains("그 밖의 통증")) otherPainValue else null,
+                        otherSymptomValue = if (selectedSymptoms.contains("기타")) otherSymptomValue else null
+                    )
+                )
+                Log.d("DispatchSection", "💾 LogViewModel 동기화 완료")
             }
             is DispatchApiState.Error -> {
                 Log.e("DispatchSection", "❌ API 오류: ${state.message}")

@@ -138,6 +138,10 @@ fun PatientInfo(
                 }
 
                 Log.d("PatientInfo", "✅ 데이터 매핑 완료")
+
+                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
+                saveData()
+                Log.d("PatientInfo", "💾 LogViewModel 동기화 완료")
             }
             is PatientInfoApiState.Error -> {
                 Log.e("PatientInfo", "❌ API 오류: ${state.message}")

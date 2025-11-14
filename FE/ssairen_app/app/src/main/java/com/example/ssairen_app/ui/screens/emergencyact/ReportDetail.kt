@@ -140,6 +140,34 @@ fun ReportDetail(
                     obstacleOtherValue = otherValue ?: ""
 
                     Log.d("ReportDetail", "✅ 데이터 매핑 완료")
+
+                    // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
+                    viewModel.updateReportDetail(
+                        com.example.ssairen_app.viewmodel.ReportDetailData(
+                            doctorAffiliation = doctorAffiliation,
+                            doctorName = doctorName,
+                            doctorSignature = doctorSignature,
+                            paramedic1Grade = paramedic1Grade,
+                            paramedic1Rank = paramedic1Rank,
+                            paramedic1Name = paramedic1Name,
+                            paramedic1Signature = paramedic1Signature,
+                            paramedic2Grade = paramedic2Grade,
+                            paramedic2Rank = paramedic2Rank,
+                            paramedic2Name = paramedic2Name,
+                            paramedic2Signature = paramedic2Signature,
+                            driverGrade = driverGrade,
+                            driverRank = driverRank,
+                            driverName = driverName,
+                            driverSignature = driverSignature,
+                            otherGrade = otherGrade,
+                            otherRank = otherRank,
+                            otherName = otherName,
+                            otherSignature = otherSignature,
+                            obstacles = selectedObstacles,
+                            obstacleOtherValue = if (selectedObstacles.contains("기타")) obstacleOtherValue else null
+                        )
+                    )
+                    Log.d("ReportDetail", "💾 LogViewModel 동기화 완료")
                 }
             }
             is DetailReportApiState.Error -> {

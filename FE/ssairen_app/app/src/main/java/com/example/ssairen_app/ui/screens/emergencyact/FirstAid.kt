@@ -200,6 +200,10 @@ fun FirstAid(
                 isApiDataLoaded = true
 
                 android.util.Log.d("FirstAid", "📋 매핑 완료 - CPR: $cprPerformed, AED Shock: $aedShock")
+
+                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
+                saveData()
+                android.util.Log.d("FirstAid", "💾 LogViewModel 동기화 완료")
             }
             is FirstAidApiState.Error -> {
                 android.util.Log.e("FirstAid", "❌ API 오류: ${state.message}")
