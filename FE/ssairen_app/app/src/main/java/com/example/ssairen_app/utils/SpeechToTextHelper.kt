@@ -112,13 +112,25 @@ class SpeechToTextHelper(
                 if (!matches.isNullOrEmpty()) {
                     val text = matches[0]
                     Log.d(TAG, "📝 Final result: $text")
+                    Log.d(TAG, "📝 Last partial result: $lastPartialResult")
+                    Log.d(TAG, "📝 Current accumulated: $accumulatedText")
 
-                    // ✅ 마지막 부분 결과와 다를 때만 추가 (중복 방지)
-                    if (text != lastPartialResult && text.isNotBlank()) {
-                        if (accumulatedText.isNotEmpty()) {
-                            accumulatedText.append(" ")
+                    // ✅ 최종 결과는 항상 추가 (이미 포함되어 있지 않으면)
+                    if (text.isNotBlank()) {
+                        val currentAccumulated = accumulatedText.toString()
+
+                        // 이미 같은 텍스트로 끝나지 않으면 추가
+                        if (!currentAccumulated.endsWith(text)) {
+                            if (accumulatedText.isNotEmpty()) {
+                                accumulatedText.append(" ")
+                            }
+                            accumulatedText.append(text)
+                            Log.d(TAG, "✅ Added to accumulated: $text")
+                            Log.d(TAG, "✅ New accumulated: $accumulatedText")
+                        } else {
+                            Log.d(TAG, "⚠️ Already in accumulated, skipping")
                         }
-                        accumulatedText.append(text)
+
                         onResult(accumulatedText.toString())
                     }
 
@@ -141,13 +153,14 @@ class SpeechToTextHelper(
                         Log.d(TAG, "📝 Partial result: $text")
                         lastPartialResult = text
 
-                        // 현재까지 누적 + 부분 결과 표시
+                        // 현재까지 누적 + 부분 결과 표시 (accumulatedText는 수정하지 않고 표시만)
                         val currentDisplay = if (accumulatedText.isEmpty()) {
                             text
                         } else {
                             "$accumulatedText $text"
                         }
                         onResult(currentDisplay)
+                        onPartialResult(text)
                     }
                 }
             }

@@ -357,11 +357,18 @@ private fun HomeContent(
 
     // ✅ 누적된 텍스트를 API로 전송하는 함수 (녹음은 계속 진행)
     fun sendAccumulatedTextToApi() {
-        val currentText = sttHelper?.getAccumulatedText() ?: ""
+        // ✅ 현재 누적된 텍스트 가져오기
+        val accumulatedText = sttHelper?.getAccumulatedText() ?: ""
+
+        // ✅ 화면에 표시되는 텍스트도 함께 가져오기 (부분 결과 포함)
+        val currentText = if (sttText.isNotEmpty()) sttText else accumulatedText
+
         val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
 
         Log.d("ActivityMain", "📤 Sending accumulated text to API")
-        Log.d("ActivityMain", "  - Text: $currentText")
+        Log.d("ActivityMain", "  - Accumulated Text: $accumulatedText")
+        Log.d("ActivityMain", "  - Display Text (sttText): $sttText")
+        Log.d("ActivityMain", "  - Sending Text: $currentText")
         Log.d("ActivityMain", "  - ReportId: $currentReportId")
 
         if (currentText.isEmpty()) {
@@ -391,10 +398,8 @@ private fun HomeContent(
                         Log.d("ActivityMain", "✅ API Success: $data")
                         // TODO: 받은 JSON 데이터 처리
 
-                        // 전송 성공 후 누적 텍스트 초기화
-                        sttHelper?.clearAccumulatedText()
-                        sttText = ""
-                        Log.d("ActivityMain", "🗑️ Accumulated text cleared")
+                        // ✅ 전송 후에도 텍스트는 계속 누적됨 (초기화하지 않음)
+                        Log.d("ActivityMain", "📝 Text sent successfully, continuing to accumulate")
                     } else {
                         Log.e("ActivityMain", "❌ API Error: ${response.code()}")
                     }
@@ -405,6 +410,22 @@ private fun HomeContent(
                     // 에러 처리
                 }
             }
+        }
+    }
+
+    // ✅ STT 녹음 중일 때 20초마다 자동으로 텍스트 전송
+    LaunchedEffect(isSttRecording) {
+        if (isSttRecording) {
+            Log.d("ActivityMain", "⏰ STT 자동 전송 스케줄링 시작 (20초 간격)")
+            while (isSttRecording) {
+                kotlinx.coroutines.delay(20000L) // 20초 대기
+                if (isSttRecording) { // 대기 중 중지되지 않았는지 확인
+                    Log.d("ActivityMain", "⏰ 20초 경과 - 자동 텍스트 전송")
+                    sendAccumulatedTextToApi()
+                }
+            }
+        } else {
+            Log.d("ActivityMain", "⏰ STT 자동 전송 스케줄링 중지")
         }
     }
 
