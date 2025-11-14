@@ -24,7 +24,6 @@ data class DispatchResponseData(
 )
 
 data class DispatchDataWrapper(
-    val schemaVersion: Int,
     val dispatch: DispatchResponseInfo
 )
 

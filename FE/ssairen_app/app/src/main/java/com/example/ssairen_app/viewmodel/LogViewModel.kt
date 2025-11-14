@@ -630,7 +630,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
         return DispatchRequest(
             data = DispatchRequestData(
-                schemaVersion = 1,
                 dispatch = DispatchInfo(
                     reportDatetime = data.reportDatetime.ifEmpty { currentTime },
                     departureTime = data.departureTime.ifEmpty { "00:00" },
@@ -682,7 +681,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
         return MedicalGuidanceRequest(
             data = MedicalGuidanceRequestData(
-                schemaVersion = 1,
                 medicalGuidance = MedicalGuidanceInfo(
                     contactStatus = data.contactStatus.ifEmpty { "연결" },
                     requestTime = data.requestTime.ifEmpty { "00:00" },
@@ -782,7 +780,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
         return com.example.ssairen_app.data.model.request.TransportRequest(
             data = com.example.ssairen_app.data.model.request.TransportRequestData(
-                schemaVersion = 1,
                 transport = com.example.ssairen_app.data.model.request.TransportInfo(
                     firstTransport = firstTransport,
                     secondTransport = secondTransport,
@@ -1108,7 +1105,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
             val request = DetailReportRequest(
                 data = DetailReportRequestData(
-                    schemaVersion = 1,
                     detailReport = DetailReportInfo(
                         doctor = doctor,
                         paramedic1 = paramedic1,

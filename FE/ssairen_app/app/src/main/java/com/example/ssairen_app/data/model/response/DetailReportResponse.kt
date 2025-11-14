@@ -25,7 +25,6 @@ data class DetailReportResponseData(
 )
 
 data class DetailReportDataWrapper(
-    val schemaVersion: Int,
     val detailReport: DetailReportResponseInfo
 )
 

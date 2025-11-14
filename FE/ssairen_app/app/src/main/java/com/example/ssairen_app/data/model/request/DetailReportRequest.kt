@@ -10,7 +10,6 @@ data class DetailReportRequest(
 )
 
 data class DetailReportRequestData(
-    val schemaVersion: Int = 1,
     val detailReport: DetailReportInfo
 )
 
