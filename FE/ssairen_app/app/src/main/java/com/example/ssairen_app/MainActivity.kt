@@ -35,16 +35,15 @@ import com.example.ssairen_app.ui.screens.report.ReportHome
 import com.example.ssairen_app.ui.screens.emergencyact.ActivityMain
 import com.example.ssairen_app.ui.screens.emergencyact.ActivityLogHome
 import com.example.ssairen_app.ui.screens.Summation
-import com.example.ssairen_app.ui.screens.Login  // ⭐ 추가
-import com.example.ssairen_app.viewmodel.AuthViewModel  // ⭐ 추가
-import com.example.ssairen_app.viewmodel.ReportViewModel  // ⭐ 새 일지 등록용
-import com.example.ssairen_app.viewmodel.CreateReportState  // ⭐ 일지 생성 상태
-import com.example.ssairen_app.data.api.RetrofitClient  // ⭐ 바디캠 업로드용
-import com.example.ssairen_app.ui.components.DispatchModal  // ⭐ 모달 추가
-import com.example.ssairen_app.ui.components.HospitalResponseModal  // ⭐ 병원 응답 모달 추가
-import com.example.ssairen_app.ui.screens.report.DispatchDetail  // ⭐ 출동 상세 모달
-import com.example.ssairen_app.ui.screens.report.DispatchDetailData  // ⭐ 출동 상세 데이터
-import com.example.ssairen_app.service.MyFirebaseMessagingService  // ⭐ FCM 서비스
+import com.example.ssairen_app.ui.screens.Login
+import com.example.ssairen_app.viewmodel.AuthViewModel
+import com.example.ssairen_app.viewmodel.ReportViewModel
+import com.example.ssairen_app.viewmodel.CreateReportState
+import com.example.ssairen_app.data.api.RetrofitClient
+import com.example.ssairen_app.ui.components.HospitalResponseModal
+import com.example.ssairen_app.ui.screens.report.DispatchDetail
+import com.example.ssairen_app.ui.screens.report.DispatchDetailData
+import com.example.ssairen_app.service.MyFirebaseMessagingService
 
 class MainActivity : ComponentActivity() {
 
@@ -108,8 +107,8 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        currentIntent = intent  // ✅ State 업데이트
-        extractDispatchFromIntent(intent)  // ✅ 출동 데이터 추출
+        currentIntent = intent
+        extractDispatchFromIntent(intent)
         Log.d(TAG, "📩 New Intent received, State updated")
     }
 
@@ -138,7 +137,6 @@ class MainActivity : ComponentActivity() {
         }
 
         val fromNotification = intent.getBooleanExtra("from_notification", false)
-        // ✅ FCM data에 type=DISPATCH가 있으면 알림에서 온 것으로 판단
         val typeFromFcm = intent.getStringExtra("type")
         val isFromDispatchNotification = fromNotification || (typeFromFcm == "DISPATCH")
 
@@ -153,6 +151,7 @@ class MainActivity : ComponentActivity() {
 
             // Intent에서 출동 데이터 추출
             val dispatch = DispatchMessage(
+                id = intent.getStringExtra("id")?.toIntOrNull() ?: 0,
                 fireStateId = intent.getStringExtra("fireStateId")?.toIntOrNull() ?: 0,
                 paramedicId = intent.getStringExtra("paramedicId")?.toIntOrNull() ?: 0,
                 disasterNumber = intent.getStringExtra("disasterNumber") ?: "UNKNOWN",
@@ -223,7 +222,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// ⭐ 새로 추가: 로그인 분기 처리
 @Composable
 fun AppRoot(
     viewModel: AuthViewModel = viewModel(),
@@ -241,31 +239,23 @@ fun AppRoot(
     val isLoggedIn by viewModel.isLoggedIn.observeAsState(false)
     Log.d("AppRoot", "🔐 isLoggedIn: $isLoggedIn")
 
-    // ✅ DispatchContext 가져오기
     val dispatchState = rememberDispatchState()
-
-    // ✅ WebSocket 출동 메시지 관찰
     val dispatchMessage by viewModel.dispatchMessage.observeAsState()
-
-    // ✅ WebSocket 병원 응답 메시지 관찰
     val hospitalResponseMessage by viewModel.hospitalResponseMessage.observeAsState()
 
     // ✅ WebSocket 메시지 수신 시 DispatchContext에 전달
     LaunchedEffect(dispatchMessage) {
         dispatchMessage?.let { message ->
             Log.d("AppRoot", "📩 Dispatch message received: $message")
-            // 이미 모달이 떠있으면 무시 (새 출동 지령만 처리)
             if (!dispatchState.showDispatchModal) {
                 dispatchState.createDispatchFromWebSocket(message)
             } else {
                 Log.d("AppRoot", "⚠️ Modal already showing, skipping dispatch")
             }
-            // 즉시 클리어해서 다음 메시지 받을 수 있게
             viewModel.clearDispatchMessage()
         }
     }
 
-    // ✅ 처리된 출동 ID 기억 (중복 처리 방지)
     val processedDispatchId = remember { mutableStateOf<String?>(null) }
 
     // ✅ 알림에서 받은 출동 데이터 처리 (로그인 완료 후)
@@ -278,7 +268,6 @@ fun AppRoot(
         Log.d("AppRoot", "   - isLoggedIn: $isLoggedIn")
         Log.d("AppRoot", "   - processedDispatchId: ${processedDispatchId.value}")
 
-        // ⚠️ 로그인 상태가 아니면 처리하지 않음
         if (!isLoggedIn) {
             if (pendingDispatch != null) {
                 Log.d("AppRoot", "⏳⏳⏳ Pending dispatch exists but not logged in yet")
@@ -289,7 +278,6 @@ fun AppRoot(
             return@LaunchedEffect
         }
 
-        // ✅ 로그인 완료 + 대기 중인 출동이 있으면 모달 띄우기
         if (pendingDispatch == null) {
             Log.d("AppRoot", "ℹ️ 대기 중인 출동 없음")
             return@LaunchedEffect
@@ -297,7 +285,6 @@ fun AppRoot(
 
         Log.d("AppRoot", "✅✅✅ 조건 충족! (로그인 완료 + 출동 데이터 있음)")
 
-        // 이미 처리한 출동인지 확인 (중복 방지)
         if (processedDispatchId.value == pendingDispatch.disasterNumber) {
             Log.d("AppRoot", "⚠️ 이미 처리한 출동입니다: ${pendingDispatch.disasterNumber}")
             return@LaunchedEffect
@@ -314,7 +301,7 @@ fun AppRoot(
         Log.d("AppRoot", "🎯 dispatchState.createDispatchFromWebSocket 호출 중...")
         dispatchState.createDispatchFromWebSocket(pendingDispatch)
 
-        processedDispatchId.value = pendingDispatch.disasterNumber  // 처리 완료 표시
+        processedDispatchId.value = pendingDispatch.disasterNumber
 
         Log.d("AppRoot", "╔════════════════════════════════════════╗")
         Log.d("AppRoot", "║   ✅ 모달 생성 완료! ✅                ║")
@@ -323,7 +310,6 @@ fun AppRoot(
         Log.d("AppRoot", "📌 dispatchState.activeDispatch: ${dispatchState.activeDispatch}")
     }
 
-    // ✅ 병원 응답 LiveData 관찰 로그
     LaunchedEffect(hospitalResponseMessage) {
         Log.d("AppRoot", "╔════════════════════════════════════════╗")
         Log.d("AppRoot", "║   hospitalResponseMessage Changed     ║")
@@ -342,18 +328,16 @@ fun AppRoot(
     }
 
     if (isLoggedIn) {
-        // ✅ 로그인됨 → 메인 네비게이션
         AppNavigation(
             onLogout = {
-                viewModel.logout()  // ✅ ViewModel의 logout 호출
+                viewModel.logout()
             },
-            hospitalResponseMessage = hospitalResponseMessage,  // ✅ 병원 응답 전달
+            hospitalResponseMessage = hospitalResponseMessage,
             onClearHospitalResponse = {
                 viewModel.clearHospitalResponseMessage()
             }
         )
     } else {
-        // ❌ 로그인 안됨 → 로그인 화면
         Login(
             onLoginSuccess = {
                 // 로그인 성공 시 자동으로 isLoggedIn이 true가 되어
@@ -365,16 +349,12 @@ fun AppRoot(
 
 @Composable
 fun AppNavigation(
-    onLogout: () -> Unit,  // ✅ 로그아웃 콜백
-    hospitalResponseMessage: HospitalResponseMessage? = null,  // ✅ 병원 응답 메시지
-    onClearHospitalResponse: () -> Unit = {}  // ✅ 병원 응답 클리어 콜백
+    onLogout: () -> Unit,
+    hospitalResponseMessage: HospitalResponseMessage? = null,
+    onClearHospitalResponse: () -> Unit = {}
 ) {
     val navController = rememberNavController()
-
-    // ✅ DispatchContext 가져오기
     val dispatchState = rememberDispatchState()
-
-    // ✅ ReportViewModel 가져오기
     val reportViewModel: ReportViewModel = viewModel()
     val createReportState by reportViewModel.createReportState.observeAsState(CreateReportState.Idle)
 
@@ -382,15 +362,24 @@ fun AppNavigation(
     LaunchedEffect(createReportState) {
         if (createReportState is CreateReportState.Success) {
             val emergencyReportId = (createReportState as CreateReportState.Success).reportData.emergencyReportId
-            Log.d("MainActivity", "✅ 일지 생성 완료, 화면 이동: emergencyReportId=$emergencyReportId")
+            Log.d("AppNavigation", "✅ 일지 생성 완료, 화면 이동: emergencyReportId=$emergencyReportId")
+            dispatchState.closeDispatchModal()
             navController.navigate("activity_log/$emergencyReportId/0?isReadOnly=false")
             reportViewModel.resetCreateState()
         }
     }
 
-    // ✅ 출동 모달 표시 (전역으로 모든 화면에서 표시)
+    // ✅✅✅ 출동 모달 표시 (디버깅 로그 추가) ✅✅✅
     if (dispatchState.showDispatchModal && dispatchState.activeDispatch != null) {
         val dispatch = dispatchState.activeDispatch!!
+
+        Log.d("AppNavigation", "========================================")
+        Log.d("AppNavigation", "🚨 출동 모달 표시 중!")
+        Log.d("AppNavigation", "dispatch.id: ${dispatch.id}")
+        Log.d("AppNavigation", "dispatch.dispatchId: ${dispatch.dispatchId}")
+        Log.d("AppNavigation", "dispatch.location: ${dispatch.location}")
+        Log.d("AppNavigation", "========================================")
+
         DispatchDetail(
             dispatchData = DispatchDetailData(
                 dispatchNumber = dispatch.id,
@@ -405,27 +394,28 @@ fun AppNavigation(
                 cause = "사고 원인 정보"
             ),
             onDismiss = {
-                Log.d("MainActivity", "❌ 출동 모달 닫기")
+                Log.d("AppNavigation", "❌ 출동 모달 닫기")
                 dispatchState.closeDispatchModal()
             },
             onCreateNewReport = {
-                // 새 일지 등록 API 호출
-                Log.d("MainActivity", "✅ 새 일지 등록 요청: dispatch.id=${dispatch.id}")
+                Log.d("AppNavigation", "╔════════════════════════════════════════╗")
+                Log.d("AppNavigation", "║   🚀 onCreateNewReport 콜백 호출!    ║")
+                Log.d("AppNavigation", "╚════════════════════════════════════════╝")
+                Log.d("AppNavigation", "dispatchId: ${dispatch.dispatchId}")
 
-                // dispatch.id를 Int로 변환 (disasterNumber는 String)
-                val dispatchId = dispatch.id.toIntOrNull()
-                if (dispatchId != null) {
-                    dispatchState.closeDispatchModal()
-                    reportViewModel.createReport(dispatchId)
+                if (dispatch.dispatchId == 0) {
+                    Log.e("AppNavigation", "❌❌❌ dispatchId가 0입니다! API 호출 불가!")
                 } else {
-                    Log.e("MainActivity", "❌ dispatch.id를 Int로 변환 실패: ${dispatch.id}")
-                    // TODO: 에러 메시지 표시
+                    Log.d("AppNavigation", "✅ dispatchId 정상, API 호출 시작")
                 }
+
+                reportViewModel.createReport(dispatch.dispatchId)
+                Log.d("AppNavigation", "========================================")
             }
         )
     }
 
-    // ✅ 병원 응답 모달 표시 (모든 화면 위에 표시)
+    // ✅ 병원 응답 모달 표시
     hospitalResponseMessage?.let { response ->
         Log.d("AppNavigation", "🎨 Rendering HospitalResponseModal")
         Log.d("AppNavigation", "  - Hospital: ${response.hospitalName}")
@@ -449,54 +439,46 @@ fun AppNavigation(
                 onNavigateToActivityLog = { emergencyReportId, isReadOnly ->
                     navController.navigate("activity_log/$emergencyReportId/0?isReadOnly=$isReadOnly")
                 },
-                onLogout = onLogout  // ✅ 로그아웃 연결
+                onLogout = onLogout,
+                reportViewModel = reportViewModel
             )
         }
 
         composable("activity_main") {
             ActivityMain(
                 onNavigateToActivityLog = {
-                    // ✅ 전역 현재 활성 보고서 ID 사용
                     val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
                     navController.navigate("activity_log/$currentReportId/0")
                 },
                 onNavigateToPatientInfo = {
-                    // ✅ 전역 현재 활성 보고서 ID 사용
                     val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
                     navController.navigate("activity_log/$currentReportId/0")
                 },
                 onNavigateToPatientType = {
-                    // ✅ 전역 현재 활성 보고서 ID 사용
                     val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
                     navController.navigate("activity_log/$currentReportId/2")
                 },
                 onNavigateToPatientEva = {
-                    // ✅ 전역 현재 활성 보고서 ID 사용
                     val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
                     navController.navigate("activity_log/$currentReportId/3")
                 },
                 onNavigateToFirstAid = {
-                    // ✅ 전역 현재 활성 보고서 ID 사용
                     val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
                     navController.navigate("activity_log/$currentReportId/4")
                 },
                 onNavigateToDispatch = {
-                    // ✅ 전역 현재 활성 보고서 ID 사용
                     val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
                     navController.navigate("activity_log/$currentReportId/1")
                 },
                 onNavigateToMedicalGuidance = {
-                    // ✅ 전역 현재 활성 보고서 ID 사용
                     val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
                     navController.navigate("activity_log/$currentReportId/5")
                 },
                 onNavigateToPatientTransport = {
-                    // ✅ 전역 현재 활성 보고서 ID 사용
                     val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
                     navController.navigate("activity_log/$currentReportId/6")
                 },
                 onNavigateToReportDetail = {
-                    // ✅ 전역 현재 활성 보고서 ID 사용
                     val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
                     navController.navigate("activity_log/$currentReportId/7")
                 }

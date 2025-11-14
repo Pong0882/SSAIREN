@@ -29,7 +29,7 @@ import com.example.ssairen_app.viewmodel.ReportListState
 fun ReportHome(
     onNavigateToActivityLog: (emergencyReportId: Int, isReadOnly: Boolean) -> Unit = { _, _ -> },
     onLogout: () -> Unit = {},
-    reportViewModel: ReportViewModel = viewModel()
+    reportViewModel: ReportViewModel  // ✅ 수정: 기본값 제거 (반드시 전달받도록)
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val dispatchState = rememberDispatchState()
@@ -44,47 +44,47 @@ fun ReportHome(
     }
 
     // ✅ 임시로 주석처리 - API 대신 모달창에서 직접 이동
-//    LaunchedEffect(createReportState) {
-//        if (createReportState is CreateReportState.Success) {
-//            val reportId = (createReportState as CreateReportState.Success).reportData.emergencyReportId
-//            reportViewModel.getReports()
-//            onNavigateToActivityLog(reportId, false)  // 새로 생성된 보고서는 수정 가능
-//            reportViewModel.resetCreateState()
-//        }
-//    }
-//
-//    if (createReportState is CreateReportState.Error) {
-//        val errorMessage = (createReportState as CreateReportState.Error).message
-//        AlertDialog(
-//            onDismissRequest = { reportViewModel.resetCreateState() },
-//            title = { Text("일지 생성 실패", color = Color.White) },
-//            text = { Text(errorMessage, color = Color.White) },
-//            confirmButton = {
-//                TextButton(onClick = { reportViewModel.resetCreateState() }) {
-//                    Text("확인")
-//                }
-//            },
-//            containerColor = Color(0xFF2a2a2a)
-//        )
-//    }
-//
-//    if (createReportState is CreateReportState.Loading) {
-//        AlertDialog(
-//            onDismissRequest = { },
-//            title = { Text("일지 생성 중...", color = Color.White) },
-//            text = {
-//                Row(
-//                    horizontalArrangement = Arrangement.Center,
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    modifier = Modifier.fillMaxWidth()
-//                ) {
-//                    CircularProgressIndicator()
-//                }
-//            },
-//            confirmButton = { },
-//            containerColor = Color(0xFF2a2a2a)
-//        )
-//    }
+    LaunchedEffect(createReportState) {
+        if (createReportState is CreateReportState.Success) {
+            val reportId = (createReportState as CreateReportState.Success).reportData.emergencyReportId
+            reportViewModel.getReports()
+            onNavigateToActivityLog(reportId, false)  // 새로 생성된 보고서는 수정 가능
+            reportViewModel.resetCreateState()
+        }
+    }
+
+    if (createReportState is CreateReportState.Error) {
+        val errorMessage = (createReportState as CreateReportState.Error).message
+        AlertDialog(
+            onDismissRequest = { reportViewModel.resetCreateState() },
+            title = { Text("일지 생성 실패", color = Color.White) },
+            text = { Text(errorMessage, color = Color.White) },
+            confirmButton = {
+                TextButton(onClick = { reportViewModel.resetCreateState() }) {
+                    Text("확인")
+                }
+            },
+            containerColor = Color(0xFF2a2a2a)
+        )
+    }
+
+    if (createReportState is CreateReportState.Loading) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("일지 생성 중...", color = Color.White) },
+            text = {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    CircularProgressIndicator()
+                }
+            },
+            confirmButton = { },
+            containerColor = Color(0xFF2a2a2a)
+        )
+    }
 
     // ✅ 출동 모달은 AppNavigation에서 전역으로 처리하므로 여기서는 제거
     // (중복 모달 방지)

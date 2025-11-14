@@ -10,15 +10,20 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.KeyboardVoice
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,11 +38,18 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.data.api.RetrofitClient
 import com.example.ssairen_app.service.VideoRecordingService
+import com.example.ssairen_app.service.AudioRecordingService
+import com.example.ssairen_app.service.AudioRecordingServiceNew
 import com.example.ssairen_app.ui.components.DarkCard
 import com.example.ssairen_app.ui.components.MainButton
 import com.example.ssairen_app.ui.components.HeartRateChart
 import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.ui.wear.WearDataViewModel
+import com.example.ssairen_app.utils.SpeechToTextHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ActivityMain(
@@ -110,12 +122,20 @@ private fun HomeContent(
     onNavigateToPatientTransport: () -> Unit = {},
     onNavigateToReportDetail: () -> Unit = {}
 ) {
-    var isAudioRecording by remember { mutableStateOf(false) }  // ✅ 오디오 녹음 상태
-    var isVideoRecording by remember { mutableStateOf(false) }  // ✅ 비디오 녹화 상태
+    var isAudioRecording by remember { mutableStateOf(false) }
+    var isVideoRecording by remember { mutableStateOf(false) }
     var videoService by remember { mutableStateOf<VideoRecordingService?>(null) }
     var isBound by remember { mutableStateOf(false) }
 
-    // ✅ Wear 데이터 ViewModel (Singleton 사용)
+    // ✅ 오디오 서비스 변수 추가 (새로운 AudioRecord 방식)
+    var audioService by remember { mutableStateOf<AudioRecordingServiceNew?>(null) }
+    var isAudioBound by remember { mutableStateOf(false) }
+
+    // ✅ STT 관련 상태 추가
+    var isSttRecording by remember { mutableStateOf(false) }
+    var sttText by remember { mutableStateOf("") }
+    var sttHelper by remember { mutableStateOf<SpeechToTextHelper?>(null) }
+
     val context = LocalContext.current
     val application = context.applicationContext as android.app.Application
     val wearViewModel: WearDataViewModel = remember {
@@ -131,7 +151,6 @@ private fun HomeContent(
                 isBound = true
                 Log.d("ActivityMain", "VideoRecordingService connected")
 
-                // 콜백 설정
                 videoService?.setRecordingCallbacks(
                     onStarted = {
                         isVideoRecording = true
@@ -152,7 +171,6 @@ private fun HomeContent(
                     }
                 )
 
-                // 서비스 연결 시 현재 녹화 상태 확인
                 if (videoService?.isCurrentlyRecording() == true) {
                     isVideoRecording = true
                 }
@@ -166,12 +184,56 @@ private fun HomeContent(
         }
     }
 
-    // 화면 정리 시 서비스 언바인드
+    // ✅ 오디오 서비스 연결 (새로운 AudioRecord 방식)
+    val audioServiceConnection = remember {
+        object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                val binder = service as AudioRecordingServiceNew.LocalBinder
+                audioService = binder.getService()
+                isAudioBound = true
+                Log.d("ActivityMain", "AudioRecordingServiceNew connected")
+
+                audioService?.setRecordingCallbacks(
+                    onStarted = {
+                        isAudioRecording = true
+                        Log.d("ActivityMain", "Audio recording started")
+                    },
+                    onStopped = { file ->
+                        isAudioRecording = false
+                        Log.d("ActivityMain", "Audio recording stopped: ${file?.name}")
+                    },
+                    onError = { error ->
+                        isAudioRecording = false
+                        Log.e("ActivityMain", "Audio recording error: $error")
+                    },
+                    onUploadComplete = { sessionName ->
+                        Log.d("ActivityMain", "Audio upload complete: $sessionName")
+                    }
+                )
+
+                if (audioService?.isCurrentlyRecording() == true) {
+                    isAudioRecording = true
+                }
+            }
+
+            override fun onServiceDisconnected(name: ComponentName?) {
+                audioService = null
+                isAudioBound = false
+                Log.d("ActivityMain", "AudioRecordingServiceNew disconnected")
+            }
+        }
+    }
+
+    // 화면 정리 시 서비스 언바인드 및 STT 정리
     DisposableEffect(Unit) {
         onDispose {
             if (isBound) {
                 context.unbindService(serviceConnection)
             }
+            if (isAudioBound) {
+                context.unbindService(audioServiceConnection)
+            }
+            sttHelper?.destroy()
         }
     }
 
@@ -211,12 +273,10 @@ private fun HomeContent(
         }
 
         if (!isBound) {
-            // 서비스 바인딩
             val intent = Intent(context, VideoRecordingService::class.java)
             context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         }
 
-        // 서비스 시작 및 녹화 시작
         val intent = Intent(context, VideoRecordingService::class.java).apply {
             action = VideoRecordingService.ACTION_START_RECORDING
         }
@@ -228,10 +288,170 @@ private fun HomeContent(
         videoService?.stopRecording()
     }
 
+    // ✅ 오디오 녹음 시작 함수 (새로운 AudioRecord 방식)
+    fun startAudioRecording() {
+        if (!checkPermissions()) {
+            permissionLauncher.launch(requiredPermissions.toTypedArray())
+            return
+        }
+
+        if (!isAudioBound) {
+            val intent = Intent(context, AudioRecordingServiceNew::class.java)
+            context.bindService(intent, audioServiceConnection, Context.BIND_AUTO_CREATE)
+        }
+
+        val intent = Intent(context, AudioRecordingServiceNew::class.java).apply {
+            action = AudioRecordingServiceNew.ACTION_START_RECORDING
+        }
+        ContextCompat.startForegroundService(context, intent)
+    }
+
+    // ✅ 오디오 녹음 중지 함수
+    fun stopAudioRecording() {
+        audioService?.stopRecording()
+    }
+
+    // ✅ 현재까지 녹음된 오디오를 전송 (녹음은 계속)
+    fun sendCurrentAudio() {
+        audioService?.sendCurrentRecording()
+        Log.d("ActivityMain", "📤 Sending current audio recording")
+    }
+
+    // ✅ STT 녹음 시작 함수
+    fun startSttRecording() {
+        if (!checkPermissions()) {
+            permissionLauncher.launch(requiredPermissions.toTypedArray())
+            return
+        }
+
+        if (sttHelper == null) {
+            sttHelper = SpeechToTextHelper(
+                context = context,
+                onResult = { text ->
+                    sttText = text
+                    Log.d("ActivityMain", "📝 STT Result: $text")
+                },
+                onPartialResult = { text ->
+                    Log.d("ActivityMain", "📝 STT Partial: $text")
+                },
+                onError = { error ->
+                    Log.e("ActivityMain", "❌ STT Error: $error")
+                }
+            )
+        }
+
+        isSttRecording = true
+        sttHelper?.startListening()
+        Log.d("ActivityMain", "🎤 STT Recording Started")
+    }
+
+    // ✅ STT 녹음 중지 함수 (API 전송 없이 녹음만 중지)
+    fun stopSttRecording() {
+        sttHelper?.stopListening()
+        isSttRecording = false
+        Log.d("ActivityMain", "🛑 STT Recording Stopped")
+
+        // 녹음 중지 시 누적 텍스트 초기화
+        sttHelper?.clearAccumulatedText()
+        sttText = ""
+    }
+
+    // ✅ 누적된 텍스트를 API로 전송하는 함수 (녹음은 계속 진행)
+    fun sendAccumulatedTextToApi() {
+        // ✅ 현재 누적된 텍스트 가져오기
+        val accumulatedText = sttHelper?.getAccumulatedText() ?: ""
+
+        // ✅ 화면에 표시되는 텍스트도 함께 가져오기 (부분 결과 포함)
+        val currentText = if (sttText.isNotEmpty()) sttText else accumulatedText
+
+        val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+
+        Log.d("ActivityMain", "📤 Sending accumulated text to API")
+        Log.d("ActivityMain", "  - Accumulated Text: $accumulatedText")
+        Log.d("ActivityMain", "  - Display Text (sttText): $sttText")
+        Log.d("ActivityMain", "  - Sending Text: $currentText")
+        Log.d("ActivityMain", "  - ReportId: $currentReportId")
+
+        if (currentText.isEmpty()) {
+            Log.w("ActivityMain", "⚠️ No text to send")
+            return
+        }
+
+        if (currentReportId <= 0) {
+            Log.e("ActivityMain", "❌ Invalid report ID: $currentReportId")
+            return
+        }
+
+        // API 호출
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                Log.d("ActivityMain", "📤 Calling text-to-json API...")
+                val response = RetrofitClient.fileApiService.textToJson(
+                    text = currentText,
+                    emergencyReportId = currentReportId.toLong(),
+                    maxNewTokens = 700,
+                    temperature = 0.1
+                )
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val data = response.body()?.data
+                        Log.d("ActivityMain", "✅ API Success: $data")
+                        // TODO: 받은 JSON 데이터 처리
+
+                        // ✅ 전송 후에도 텍스트는 계속 누적됨 (초기화하지 않음)
+                        Log.d("ActivityMain", "📝 Text sent successfully, continuing to accumulate")
+
+                        // ✅ 전송 완료 Toast 알림
+                        Toast.makeText(context, "전송 완료", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Log.e("ActivityMain", "❌ API Error: ${response.code()}")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ActivityMain", "❌ API Exception: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    // 에러 처리
+                }
+            }
+        }
+    }
+
+    // ✅ STT 녹음 중일 때 20초마다 자동으로 텍스트 전송
+    LaunchedEffect(isSttRecording) {
+        if (isSttRecording) {
+            Log.d("ActivityMain", "⏰ STT 자동 전송 스케줄링 시작 (20초 간격)")
+            while (isSttRecording) {
+                kotlinx.coroutines.delay(20000L) // 20초 대기
+                if (isSttRecording) { // 대기 중 중지되지 않았는지 확인
+                    Log.d("ActivityMain", "⏰ 20초 경과 - 자동 텍스트 전송")
+                    sendAccumulatedTextToApi()
+                }
+            }
+        } else {
+            Log.d("ActivityMain", "⏰ STT 자동 전송 스케줄링 중지")
+        }
+    }
+
+    // ✅ Whisper 오디오 녹음 중일 때 20초마다 자동으로 전송
+    LaunchedEffect(isAudioRecording) {
+        if (isAudioRecording) {
+            Log.d("ActivityMain", "⏰ Whisper 자동 전송 스케줄링 시작 (20초 간격)")
+            while (isAudioRecording) {
+                kotlinx.coroutines.delay(20000L) // 20초 대기
+                if (isAudioRecording) { // 대기 중 중지되지 않았는지 확인
+                    Log.d("ActivityMain", "⏰ 20초 경과 - 자동 오디오 전송")
+                    sendCurrentAudio()
+                }
+            }
+        } else {
+            Log.d("ActivityMain", "⏰ Whisper 자동 전송 스케줄링 중지")
+        }
+    }
+
     Log.d("ActivityMain", "🎨 HomeContent Composable 렌더링")
     Log.d("ActivityMain", "📱 ViewModel 인스턴스: $wearViewModel")
 
-    // ✅ Wear에서 전송된 실시간 데이터
     val heartRate by wearViewModel.heartRate.collectAsState()
     val spo2 by wearViewModel.spo2.collectAsState()
     val spo2ErrorMessage by wearViewModel.spo2ErrorMessage.collectAsState()
@@ -280,95 +500,191 @@ private fun HomeContent(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 심박수(맥박) - ✅ Wear에서 실시간 업데이트
+                    // 심박수(맥박)
                     StatCard(
                         title = "심박수(맥박)",
                         value = if (hrStatusMessage.isNotEmpty()) hrStatusMessage
-                               else if (heartRate > 0) "$heartRate bpm" else "--",
+                        else if (heartRate > 0) "$heartRate bpm" else "--",
                         modifier = Modifier.weight(1f),
                         valueColor = if (hrStatusMessage.isNotEmpty()) Color(0xFFFF9800) else Color(0xFF00d9ff),
                         isStatusMessage = hrStatusMessage.isNotEmpty()
                     )
 
-                    // 산소포화도(SpO2) - ✅ Wear에서 실시간 업데이트
+                    // 산소포화도(SpO2)
                     StatCard(
                         title = "산소포화도(SpO2)",
                         value = if (spo2ErrorMessage.isNotEmpty()) spo2ErrorMessage
-                               else if (spo2 > 0) "$spo2%" else "--",
+                        else if (spo2 > 0) "$spo2%" else "--",
                         modifier = Modifier.weight(1f),
                         valueColor = if (spo2ErrorMessage.isNotEmpty()) Color(0xFFFF5252) else Color(0xFF00d9ff),
                         isStatusMessage = spo2ErrorMessage.isNotEmpty()
                     )
                 }
 
-                // ✅ 바디캠 녹화 + 오디오 녹음 버튼
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                // ✅ 바디캠 녹화 + 오디오 녹음 + STT 버튼
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // ✅ 바디캠 녹화 버튼
-                    IconButton(
-                        onClick = {
-                            if (isVideoRecording) {
-                                stopVideoRecording()
-                            } else {
-                                startVideoRecording()
-                            }
-                        },
+                    // 첫 번째 줄: 바디캠, 오디오, STT 버튼
+                    Row(
                         modifier = Modifier
-                            .size(56.dp)
-                            .background(
-                                if (isVideoRecording) Color(0xFFff3b30) else Color(0xFF2a2a2a),
-                                CircleShape
-                            )
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = if (isVideoRecording) Icons.Filled.Stop else Icons.Filled.PhotoCamera,
-                            contentDescription = if (isVideoRecording) "녹화 중지" else "녹화 시작",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        // 바디캠 녹화 버튼
+                        IconButton(
+                            onClick = {
+                                if (isVideoRecording) {
+                                    stopVideoRecording()
+                                } else {
+                                    startVideoRecording()
+                                }
+                            },
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(
+                                    if (isVideoRecording) Color(0xFFff3b30) else Color(0xFF2a2a2a),
+                                    CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = if (isVideoRecording) Icons.Filled.Stop else Icons.Filled.PhotoCamera,
+                                contentDescription = if (isVideoRecording) "녹화 중지" else "녹화 시작",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        // ✅ 오디오 녹음 버튼 - 주석 처리
+                        /*
+                        IconButton(
+                            onClick = {
+                                if (isAudioRecording) {
+                                    stopAudioRecording()
+                                } else {
+                                    startAudioRecording()
+                                }
+                            },
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(
+                                    if (isAudioRecording) Color(0xFFff3b30) else Color(0xFF2a2a2a),
+                                    CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = if (isAudioRecording) Icons.Filled.Stop else Icons.Filled.Mic,
+                                contentDescription = if (isAudioRecording) "녹음 중지" else "녹음 시작",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+                        */
+
+                        // ✅ STT 버튼 (음성인식) - 활성화
+                        IconButton(
+                            onClick = {
+                                if (isSttRecording) {
+                                    stopSttRecording()
+                                } else {
+                                    startSttRecording()
+                                }
+                            },
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(
+                                    if (isSttRecording) Color(0xFF4CAF50) else Color(0xFF2a2a2a),
+                                    CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = if (isSttRecording) Icons.Filled.Stop else Icons.Filled.KeyboardVoice,
+                                contentDescription = if (isSttRecording) "STT 중지" else "STT 시작",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    // ✅ 오디오 녹음 버튼
-                    IconButton(
-                        onClick = {
-                            isAudioRecording = !isAudioRecording
-                            // TODO: 오디오 녹음 시작/중지 로직
-                            if (isAudioRecording) {
-                                Log.d("ActivityMain", "🎤 오디오 녹음 시작")
-                            } else {
-                                Log.d("ActivityMain", "⏹️ 오디오 녹음 중지")
-                            }
-                        },
+                    // 두 번째 줄: 전송 버튼들 - 모두 주석 처리
+                    /*
+                    Row(
                         modifier = Modifier
-                            .size(56.dp)
-                            .background(
-                                if (isAudioRecording) Color(0xFFff3b30) else Color(0xFF2a2a2a),
-                                CircleShape
-                            )
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = if (isAudioRecording) Icons.Filled.Stop else Icons.Filled.Mic,
-                            contentDescription = if (isAudioRecording) "녹음 중지" else "녹음 시작",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        // 오디오 중간 전송 버튼 (오디오 녹음 중일 때만 표시)
+                        if (isAudioRecording) {
+                            Button(
+                                onClick = { sendCurrentAudio() },
+                                modifier = Modifier.height(40.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFFF9800)
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Send,
+                                    contentDescription = "오디오 전송",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "오디오 전송",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+
+                        // 간격
+                        if (isAudioRecording && isSttRecording) {
+                            Spacer(modifier = Modifier.width(12.dp))
+                        }
+
+                        // STT 전송 버튼 (STT 녹음 중일 때만 표시)
+                        if (isSttRecording) {
+                            Button(
+                                onClick = { sendAccumulatedTextToApi() },
+                                modifier = Modifier.height(40.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF2196F3)
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Send,
+                                    contentDescription = "텍스트 전송",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "텍스트 전송",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
                     }
+                    */
                 }
             }
 
             // 우측 메뉴 버튼들
             Column(
-                modifier = Modifier.width(140.dp),
+                modifier = Modifier
+                    .width(140.dp)
+                    .fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 1. 환자정보 버튼 → 탭 0
+                // 1. 환자정보 버튼
                 MainButton(
                     onClick = onNavigateToPatientInfo,
                     modifier = Modifier
@@ -390,7 +706,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 2. 환자평가 버튼 → 탭 3
+                // 2. 환자평가 버튼
                 MainButton(
                     onClick = onNavigateToPatientEva,
                     modifier = Modifier
@@ -412,7 +728,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 3. 환자이송 버튼 → 탭 6
+                // 3. 환자이송 버튼
                 MainButton(
                     onClick = onNavigateToPatientTransport,
                     modifier = Modifier
@@ -434,7 +750,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 4. 구급출동 버튼 → 탭 1
+                // 4. 구급출동 버튼
                 MainButton(
                     onClick = onNavigateToDispatch,
                     modifier = Modifier
@@ -456,7 +772,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 5. 환자 발생 유형 버튼 → 탭 2
+                // 5. 환자 발생 유형 버튼
                 MainButton(
                     onClick = onNavigateToPatientType,
                     modifier = Modifier
@@ -478,7 +794,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 6. 응급처치 버튼 → 탭 4
+                // 6. 응급처치 버튼
                 MainButton(
                     onClick = onNavigateToFirstAid,
                     modifier = Modifier
@@ -500,7 +816,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 7. 의료지도 버튼 → 탭 5
+                // 7. 의료지도 버튼
                 MainButton(
                     onClick = onNavigateToMedicalGuidance,
                     modifier = Modifier
@@ -522,7 +838,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 8. 세부 상황정보 버튼 → 탭 7
+                // 8. 세부 상황정보 버튼
                 MainButton(
                     onClick = onNavigateToReportDetail,
                     modifier = Modifier
@@ -543,14 +859,67 @@ private fun HomeContent(
                         fontWeight = FontWeight.Medium
                     )
                 }
+
+                // ✅ STT 텍스트 표시 영역 (STT 녹음 중일 때만 표시) - 주석 처리
+                /*
+                if (isSttRecording && sttText.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    DarkCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        cornerRadius = 8.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.KeyboardVoice,
+                                    contentDescription = "STT",
+                                    tint = Color(0xFF4CAF50),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "음성 인식 중",
+                                    color = Color(0xFF4CAF50),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Color(0xFF1a1a1a),
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
+                                    )
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(6.dp)
+                            ) {
+                                Text(
+                                    text = sttText,
+                                    color = Color.White,
+                                    fontSize = 11.sp,
+                                    lineHeight = 14.sp
+                                )
+                            }
+                        }
+                    }
+                }
+                */
             }
         }
     }
 }
 
-// ==========================================
 // 통계 카드 컴포넌트
-// ==========================================
 @Composable
 private fun StatCard(
     title: String,
@@ -560,7 +929,7 @@ private fun StatCard(
     isStatusMessage: Boolean = false
 ) {
     DarkCard(
-        modifier = modifier.height(100.dp),  // 높이 고정
+        modifier = modifier.height(100.dp),
         cornerRadius = 8.dp
     ) {
         Column(
