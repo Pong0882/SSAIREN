@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.TransportApiState
+import com.example.ssairen_app.viewmodel.PatientTransportData
 
 /**
  * 환자이송 섹션 메인 화면
@@ -43,6 +44,7 @@ fun PatientTransport(
 
     // 로컬 UI 상태 - ViewModel에서 가져온 값으로 초기화
     var firstHospitalName by remember { mutableStateOf(transportData.firstHospitalName) }
+    var selectedFirstRegion by remember { mutableStateOf(transportData.firstRegionType) }
     var firstArrivalTime by remember { mutableStateOf(transportData.firstArrivalTime) }
     var firstDistance by remember { mutableStateOf(if (transportData.firstDistanceKm > 0)
         transportData.firstDistanceKm.toString() else "") }
@@ -53,6 +55,7 @@ fun PatientTransport(
     var selectedFirstPatientReceiver by remember { mutableStateOf(transportData.firstReceiver) }
 
     var secondHospitalName by remember { mutableStateOf(transportData.secondHospitalName) }
+    var selectedSecondRegion by remember { mutableStateOf(transportData.secondRegionType) }
     var secondArrivalTime by remember { mutableStateOf(transportData.secondArrivalTime) }
     var secondDistance by remember { mutableStateOf(if (transportData.secondDistanceKm > 0)
         transportData.secondDistanceKm.toString() else "") }
@@ -175,6 +178,7 @@ fun PatientTransport(
     // ViewModel 데이터가 변경되면 UI 상태 업데이트
     LaunchedEffect(transportData) {
         firstHospitalName = transportData.firstHospitalName
+        selectedFirstRegion = transportData.firstRegionType
         firstArrivalTime = transportData.firstArrivalTime
         firstDistance = if (transportData.firstDistanceKm > 0) transportData.firstDistanceKm.toString()
         else ""
@@ -184,6 +188,7 @@ fun PatientTransport(
         selectedFirstPatientReceiver = transportData.firstReceiver
 
         secondHospitalName = transportData.secondHospitalName
+        selectedSecondRegion = transportData.secondRegionType
         secondArrivalTime = transportData.secondArrivalTime
         secondDistance = if (transportData.secondDistanceKm > 0)
             transportData.secondDistanceKm.toString() else ""
@@ -202,9 +207,9 @@ fun PatientTransport(
     ) {
         if (!isReadOnly) {
             viewModel.updatePatientTransport(
-                com.example.ssairen_app.viewmodel.PatientTransportData(
+                PatientTransportData(
                     firstHospitalName = firstHospitalName,
-                    firstRegionType = "관할",
+                    firstRegionType = selectedFirstRegion,
                     firstArrivalTime = firstArrivalTime,
                     firstDistanceKm = firstDistance.toDoubleOrNull() ?: 0.0,
                     firstSelectedBy = selectedFirstMedicalSelector,
@@ -212,7 +217,7 @@ fun PatientTransport(
                     firstOtherReasons = selectedFirstOtherReasons,
                     firstReceiver = selectedFirstPatientReceiver,
                     secondHospitalName = secondHospitalName,
-                    secondRegionType = "관할",
+                    secondRegionType = selectedSecondRegion,
                     secondArrivalTime = secondArrivalTime,
                     secondDistanceKm = secondDistance.toDoubleOrNull() ?: 0.0,
                     secondSelectedBy = selectedSecondMedicalSelector,
