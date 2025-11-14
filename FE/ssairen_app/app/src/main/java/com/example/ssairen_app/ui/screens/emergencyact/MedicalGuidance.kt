@@ -86,12 +86,12 @@ fun MedicalGuidance(
                 Log.d("MedicalGuidance", "✅ API 성공 - 데이터 매핑 시작")
                 val apiData = state.medicalGuidanceResponse.data.data.medicalGuidance
 
-                // null 안전 처리: null이면 기본값 사용
-                selectedConnection = apiData.contactStatus ?: "연결"
+                // null 안전 처리: null이면 빈 문자열
+                selectedConnection = apiData.contactStatus ?: ""
                 requestTime = apiData.requestTime ?: ""
-                selectedRequestMethod = apiData.requestMethod.type ?: "일반전화"
+                selectedRequestMethod = apiData.requestMethod.type ?: ""
                 requestMethodOtherValue = apiData.requestMethod.value ?: ""
-                selectedInstitution = apiData.guidanceAgency.type ?: "소방"
+                selectedInstitution = apiData.guidanceAgency.type ?: ""
                 institutionOtherValue = apiData.guidanceAgency.value ?: ""
                 doctorName = apiData.guidanceDoctor.name ?: ""
 

@@ -58,11 +58,11 @@ data class DispatchData(
 
 // 의료지도
 data class MedicalGuidanceData(
-    val contactStatus: String = "연결",                      // 의료지도 연결 여부: 연결 | 미연결
+    val contactStatus: String = "",                         // 의료지도 연결 여부: 연결 | 미연결
     val requestTime: String = "",                           // 요청 시각 (HH:mm)
-    val requestMethod: String = "일반전화",                  // 요청 방법
+    val requestMethod: String = "",                         // 요청 방법
     val requestMethodValue: String? = null,                 // 기타 요청 방법 입력값
-    val guidanceAgency: String = "소방",                     // 의료지도 기관: 소방 | 병원 | 기타
+    val guidanceAgency: String = "",                        // 의료지도 기관: 소방 | 병원 | 기타
     val guidanceAgencyValue: String? = null,                // 기타 기관 입력값
     val guidanceDoctor: String = "",                        // 의료지도 의사 성명
     val emergencyTreatment: Set<String> = setOf(),          // 응급처치 (복수 선택)
