@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -400,6 +401,9 @@ private fun HomeContent(
 
                         // ✅ 전송 후에도 텍스트는 계속 누적됨 (초기화하지 않음)
                         Log.d("ActivityMain", "📝 Text sent successfully, continuing to accumulate")
+
+                        // ✅ 전송 완료 Toast 알림
+                        Toast.makeText(context, "전송 완료", Toast.LENGTH_SHORT).show()
                     } else {
                         Log.e("ActivityMain", "❌ API Error: ${response.code()}")
                     }
@@ -556,7 +560,8 @@ private fun HomeContent(
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        // ✅ 오디오 녹음 버튼
+                        // ✅ 오디오 녹음 버튼 - 주석 처리
+                        /*
                         IconButton(
                             onClick = {
                                 if (isAudioRecording) {
@@ -581,8 +586,9 @@ private fun HomeContent(
                         }
 
                         Spacer(modifier = Modifier.width(16.dp))
+                        */
 
-                        // ✅ STT 버튼 (음성인식)
+                        // ✅ STT 버튼 (음성인식) - 활성화
                         IconButton(
                             onClick = {
                                 if (isSttRecording) {
@@ -607,7 +613,8 @@ private fun HomeContent(
                         }
                     }
 
-                    // 두 번째 줄: 전송 버튼들
+                    // 두 번째 줄: 전송 버튼들 - 모두 주석 처리
+                    /*
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -666,6 +673,7 @@ private fun HomeContent(
                             }
                         }
                     }
+                    */
                 }
             }
 
@@ -852,7 +860,8 @@ private fun HomeContent(
                     )
                 }
 
-                // ✅ STT 텍스트 표시 영역 (STT 녹음 중일 때만 표시)
+                // ✅ STT 텍스트 표시 영역 (STT 녹음 중일 때만 표시) - 주석 처리
+                /*
                 if (isSttRecording && sttText.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     DarkCard(
@@ -904,6 +913,7 @@ private fun HomeContent(
                         }
                     }
                 }
+                */
             }
         }
     }
