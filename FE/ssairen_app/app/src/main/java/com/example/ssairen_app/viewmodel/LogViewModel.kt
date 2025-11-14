@@ -38,10 +38,42 @@ data class PatientInfoData(
 
 // 1. 구급출동
 data class DispatchData(
-    val dispatchTime: String = "",
-    val arrivalTime: String = "",
-    val departureTime: String = "",
-    val sceneLocation: String = ""
+    val reportDatetime: String = "",          // 신고 일시 (ISO 8601)
+    val departureTime: String = "",           // 출동 시각 (HH:mm)
+    val arrivalSceneTime: String = "",        // 현장 도착 (HH:mm)
+    val departureSceneTime: String = "",      // 현장 출발 (HH:mm)
+    val contactTime: String = "",             // 환자 접촉 (HH:mm)
+    val arrivalHospitalTime: String = "",     // 병원 도착 (HH:mm)
+    val distanceKm: Double = 0.0,             // 거리 (km)
+    val returnTime: String = "",              // 귀소 시간 (HH:mm)
+    val dispatchType: String = "정상",         // 출동 유형
+    val sceneLocationName: String = "집",      // 환자 발생 장소
+    val sceneLocationValue: String? = null,   // 기타 입력값
+    val painSymptoms: Set<String> = setOf(),  // 통증 증상들
+    val traumaSymptoms: Set<String> = setOf(),// 외상 증상들
+    val otherSymptoms: Set<String> = setOf(), // 그 외 증상들
+    val otherPainValue: String? = null,       // "그 밖의 통증" 실제 입력값
+    val otherSymptomValue: String? = null     // "기타" 증상 실제 입력값
+)
+
+// 의료지도
+data class MedicalGuidanceData(
+    val contactStatus: String = "연결",                      // 의료지도 연결 여부: 연결 | 미연결
+    val requestTime: String = "",                           // 요청 시각 (HH:mm)
+    val requestMethod: String = "일반전화",                  // 요청 방법
+    val requestMethodValue: String? = null,                 // 기타 요청 방법 입력값
+    val guidanceAgency: String = "소방",                     // 의료지도 기관: 소방 | 병원 | 기타
+    val guidanceAgencyValue: String? = null,                // 기타 기관 입력값
+    val guidanceDoctor: String = "",                        // 의료지도 의사 성명
+    val emergencyTreatment: Set<String> = setOf(),          // 응급처치 (복수 선택)
+    val emergencyTreatmentOtherValue: String? = null,       // 응급처치 기타 입력값
+    val medication: Set<String> = setOf(),                  // 약물투여 (복수 선택)
+    val medicationOtherValue: String? = null,               // 약물투여 기타 입력값
+    val hospitalRequest: Boolean = false,                   // 병원선정
+    val patientEvaluation: Boolean = false,                 // 환자평가
+    val cprTransfer: Boolean = false,                       // CPR유보중단
+    val transferRefusal: Boolean = false,                   // 이송거절
+    val transferRejection: Boolean = false                  // 이송거부
 )
 
 // 2. 환자발생유형
@@ -155,26 +187,65 @@ data class FirstAidData(
     val woundParalysis: Boolean = false
 )
 
-// 5. 의료지도
-data class MedicalGuidanceData(
-    val medicalGuidance: String = "",
-    val guidanceDoctor: String = "",
-    val guidanceTime: String = ""
-)
-
 // 6. 환자이송
 data class PatientTransportData(
-    val transportDestination: String = "",
-    val transportTime: String = "",
-    val transportMethod: String = ""
+    // 1차 이송
+    val firstHospitalName: String = "",
+    val firstRegionType: String = "관할",           // 관할 | 타시·도
+    val firstArrivalTime: String = "",              // HH:mm
+    val firstDistanceKm: Double = 0.0,
+    val firstSelectedBy: String = "",               // 의료기관 선정자
+    val firstBedShortageReasons: Set<String> = setOf(), // 병상부족 사유 (복수선택)
+    val firstOtherReasons: Set<String> = setOf(),   // 기타 재이송 사유 (복수선택)
+    val firstReceiver: String = "",                 // 환자 인수자
+
+    // 2차 이송 (선택)
+    val secondHospitalName: String = "",
+    val secondRegionType: String = "관할",
+    val secondArrivalTime: String = "",
+    val secondDistanceKm: Double = 0.0,
+    val secondSelectedBy: String = "",
+    val secondBedShortageReasons: Set<String> = setOf(),
+    val secondOtherReasons: Set<String> = setOf(),
+    val secondReceiver: String = ""
 )
 
 // 7. 세부사항표
 data class ReportDetailData(
-    val detailedSituation: String = "",
-    val specialNotes: String = "",
-    val crewMembers: String = ""
+    // 의사
+    val doctorAffiliation: String = "",
+    val doctorName: String = "",
+    val doctorSignature: List<androidx.compose.ui.geometry.Offset> = emptyList(),
+
+    // 구급대원 1
+    val paramedic1Grade: String = "",
+    val paramedic1Rank: String = "",
+    val paramedic1Name: String = "",
+    val paramedic1Signature: List<androidx.compose.ui.geometry.Offset> = emptyList(),
+
+    // 구급대원 2
+    val paramedic2Grade: String = "",
+    val paramedic2Rank: String = "",
+    val paramedic2Name: String = "",
+    val paramedic2Signature: List<androidx.compose.ui.geometry.Offset> = emptyList(),
+
+    // 운전요원
+    val driverGrade: String = "",
+    val driverRank: String = "",
+    val driverName: String = "",
+    val driverSignature: List<androidx.compose.ui.geometry.Offset> = emptyList(),
+
+    // 기타 인원
+    val otherGrade: String = "",
+    val otherRank: String = "",
+    val otherName: String = "",
+    val otherSignature: List<androidx.compose.ui.geometry.Offset> = emptyList(),
+
+    // 장애요인 (복수 선택 가능)
+    val obstacles: Set<String> = setOf(),
+    val obstacleOtherValue: String? = null
 )
+
 
 // ==========================================
 // ✅ 전체 구급활동일지 데이터
@@ -254,6 +325,16 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
+     * ✅ 의료지도 업데이트
+     */
+    fun updateMedicalGuidance(data: MedicalGuidanceData) {
+        _activityLogData.value = _activityLogData.value.copy(
+            medicalGuidance = data
+        )
+        saveToLocal()
+    }
+
+    /**
      * ✅ 2. 환자발생유형 업데이트
      */
     fun updatePatienType(data: PatienTypeData) {
@@ -279,16 +360,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     fun updateFirstAid(data: FirstAidData) {
         _activityLogData.value = _activityLogData.value.copy(
             firstAid = data
-        )
-        saveToLocal()
-    }
-
-    /**
-     * ✅ 5. 의료지도 업데이트
-     */
-    fun updateMedicalGuidance(data: MedicalGuidanceData) {
-        _activityLogData.value = _activityLogData.value.copy(
-            medicalGuidance = data
         )
         saveToLocal()
     }
@@ -361,6 +432,23 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             }
                     }
 
+                    1 -> {
+                        // 구급출동 저장
+                        Log.d(TAG, "💾 [백엔드 저장] 구급출동 시작")
+                        val request = convertToDispatchRequest(currentData.dispatch)
+
+                        repository.updateDispatch(currentEmergencyReportId, request)
+                            .onSuccess { response ->
+                                Log.d(TAG, "✅ 구급출동 저장 성공")
+                                _saveState.value = SaveState.Success("구급출동 저장 완료")
+                                updateSaveTime()
+                            }
+                            .onFailure { error ->
+                                Log.e(TAG, "❌ 구급출동 저장 실패: ${error.message}")
+                                _saveState.value = SaveState.Error(error.message ?: "저장 실패")
+                            }
+                    }
+
                     2 -> {
                         // 환자발생유형 저장
                         Log.d(TAG, "💾 [백엔드 저장] 환자발생유형 시작")
@@ -408,6 +496,40 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             }
                             .onFailure { error ->
                                 Log.e(TAG, "❌ 응급처치 저장 실패: ${error.message}")
+                                _saveState.value = SaveState.Error(error.message ?: "저장 실패")
+                            }
+                    }
+
+                    5 -> {
+                        // 의료지도 저장
+                        Log.d(TAG, "💾 [백엔드 저장] 의료지도 시작")
+                        val request = convertToMedicalGuidanceRequest(currentData.medicalGuidance)
+
+                        repository.updateMedicalGuidance(currentEmergencyReportId, request)
+                            .onSuccess { response ->
+                                Log.d(TAG, "✅ 의료지도 저장 성공")
+                                _saveState.value = SaveState.Success("의료지도 저장 완료")
+                                updateSaveTime()
+                            }
+                            .onFailure { error ->
+                                Log.e(TAG, "❌ 의료지도 저장 실패: ${error.message}")
+                                _saveState.value = SaveState.Error(error.message ?: "저장 실패")
+                            }
+                    }
+
+                    6 -> {
+                        // 환자이송 저장
+                        Log.d(TAG, "💾 [백엔드 저장] 환자이송 시작")
+                        val request = convertToTransportRequest(currentData.patientTransport)
+
+                        repository.updateTransport(currentEmergencyReportId, request)
+                            .onSuccess { response ->
+                                Log.d(TAG, "✅ 환자이송 저장 성공")
+                                _saveState.value = SaveState.Success("환자이송 저장 완료")
+                                updateSaveTime()
+                            }
+                            .onFailure { error ->
+                                Log.e(TAG, "❌ 환자이송 저장 실패: ${error.message}")
                                 _saveState.value = SaveState.Error(error.message ?: "저장 실패")
                             }
                     }
@@ -475,6 +597,197 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     incidentLocation = IncidentLocation(
                         text = null // 구급출동 섹션에 있으므로 여기선 null
                     )
+                )
+            )
+        )
+    }
+
+    /**
+     * DispatchData → DispatchRequest 변환
+     */
+    private fun convertToDispatchRequest(data: DispatchData): DispatchRequest {
+        // 현재 시간을 ISO 8601 형식으로 생성
+        val currentTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
+
+        // 증상 데이터 변환
+        val painSymptoms = data.painSymptoms.map { symptom ->
+            SymptomItem(
+                name = symptom,
+                value = if (symptom == "그 밖의 통증") data.otherPainValue else null
+            )
+        }
+
+        val traumaSymptoms = data.traumaSymptoms.map { symptom ->
+            SymptomItem(name = symptom, value = null)
+        }
+
+        val otherSymptoms = data.otherSymptoms.map { symptom ->
+            SymptomItem(
+                name = symptom,
+                value = if (symptom == "기타") data.otherSymptomValue else null
+            )
+        }
+
+        return DispatchRequest(
+            data = DispatchRequestData(
+                schemaVersion = 1,
+                dispatch = DispatchInfo(
+                    reportDatetime = data.reportDatetime.ifEmpty { currentTime },
+                    departureTime = data.departureTime.ifEmpty { "00:00" },
+                    arrivalSceneTime = data.arrivalSceneTime.ifEmpty { "00:00" },
+                    contactTime = data.contactTime.ifEmpty { "00:00" },
+                    distanceKm = data.distanceKm,
+                    departureSceneTime = data.departureSceneTime.ifEmpty { "00:00" },
+                    arrivalHospitalTime = data.arrivalHospitalTime.ifEmpty { "00:00" },
+                    returnTime = data.returnTime.ifEmpty { "00:00" },
+                    dispatchType = data.dispatchType.ifEmpty { "정상" },
+                    sceneLocation = SceneLocation(
+                        name = data.sceneLocationName,
+                        value = data.sceneLocationValue
+                    ),
+                    symptoms = Symptoms(
+                        pain = painSymptoms,
+                        trauma = traumaSymptoms,
+                        otherSymptoms = otherSymptoms
+                    ),
+                    createdAt = currentTime,
+                    updatedAt = currentTime
+                )
+            )
+        )
+    }
+
+    /**
+     * MedicalGuidanceData → MedicalGuidanceRequest 변환
+     */
+    private fun convertToMedicalGuidanceRequest(data: MedicalGuidanceData): MedicalGuidanceRequest {
+        // 현재 시간을 ISO 8601 형식으로 생성
+        val currentTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
+
+        // 응급처치 리스트 변환
+        val emergencyTreatmentList = data.emergencyTreatment.map { item ->
+            com.example.ssairen_app.data.model.request.TreatmentItem(
+                name = item,
+                value = if (item == "기타") data.emergencyTreatmentOtherValue else null
+            )
+        }
+
+        // 약물투여 리스트 변환
+        val medicationList = data.medication.map { item ->
+            com.example.ssairen_app.data.model.request.TreatmentItem(
+                name = item,
+                value = if (item == "기타") data.medicationOtherValue else null
+            )
+        }
+
+        return MedicalGuidanceRequest(
+            data = MedicalGuidanceRequestData(
+                schemaVersion = 1,
+                medicalGuidance = MedicalGuidanceInfo(
+                    contactStatus = data.contactStatus.ifEmpty { "연결" },
+                    requestTime = data.requestTime.ifEmpty { "00:00" },
+                    requestMethod = com.example.ssairen_app.data.model.request.RequestMethod(
+                        type = data.requestMethod,
+                        value = if (data.requestMethod == "기타") data.requestMethodValue else null
+                    ),
+                    guidanceAgency = com.example.ssairen_app.data.model.request.GuidanceAgency(
+                        type = data.guidanceAgency,
+                        value = if (data.guidanceAgency == "기타") data.guidanceAgencyValue else null
+                    ),
+                    guidanceDoctor = com.example.ssairen_app.data.model.request.GuidanceDoctor(
+                        name = data.guidanceDoctor
+                    ),
+                    guidanceContent = com.example.ssairen_app.data.model.request.GuidanceContent(
+                        emergencyTreatment = emergencyTreatmentList,
+                        medication = medicationList,
+                        hospitalRequest = data.hospitalRequest,
+                        patientEvaluation = data.patientEvaluation,
+                        cprTransfer = data.cprTransfer,
+                        transferRefusal = data.transferRefusal,
+                        transferRejection = data.transferRejection,
+                        notes = null
+                    ),
+                    createdAt = currentTime,
+                    updatedAt = currentTime
+                )
+            )
+        )
+    }
+
+    /**
+     * PatientTransportData → TransportRequest 변환
+     */
+    private fun convertToTransportRequest(data: PatientTransportData): com.example.ssairen_app.data.model.request.TransportRequest {
+        val currentTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
+
+        // 1차 이송 정보 (필수 - 빈 값이어도 항상 전송)
+        val firstTransport = com.example.ssairen_app.data.model.request.TransportDetail(
+            hospitalName = data.firstHospitalName,
+            regionType = data.firstRegionType,
+            arrivalTime = data.firstArrivalTime,
+            distanceKm = data.firstDistanceKm,
+            selectedBy = data.firstSelectedBy,
+            retransportReason = buildList {
+                // 병상부족 사유
+                if (data.firstBedShortageReasons.isNotEmpty()) {
+                    add(com.example.ssairen_app.data.model.request.RetransportReason(
+                        type = "병상부족",
+                        name = data.firstBedShortageReasons.toList(),
+                        isCustom = false
+                    ))
+                }
+                // 기타 사유
+                data.firstOtherReasons.forEach { reason ->
+                    add(com.example.ssairen_app.data.model.request.RetransportReason(
+                        type = reason,
+                        name = null,
+                        isCustom = reason == "기타"
+                    ))
+                }
+            },
+            receiver = data.firstReceiver,
+            receiverSign = null  // 서명 기능은 추후 구현
+        )
+
+        // 2차 이송 정보 (선택 - 데이터가 있을 때만)
+        val secondTransport = if (data.secondHospitalName.isNotEmpty()) {
+            com.example.ssairen_app.data.model.request.TransportDetail(
+                hospitalName = data.secondHospitalName,
+                regionType = data.secondRegionType,
+                arrivalTime = data.secondArrivalTime,
+                distanceKm = data.secondDistanceKm,
+                selectedBy = data.secondSelectedBy,
+                retransportReason = buildList {
+                    // 병상부족 사유
+                    if (data.secondBedShortageReasons.isNotEmpty()) {
+                        add(com.example.ssairen_app.data.model.request.RetransportReason(
+                            type = "병상부족",
+                            name = data.secondBedShortageReasons.toList(),
+                            isCustom = false
+                        ))
+                    }
+                    // 기타 사유
+                    data.secondOtherReasons.forEach { reason ->
+                        add(com.example.ssairen_app.data.model.request.RetransportReason(
+                            type = reason,
+                            name = null,
+                            isCustom = reason == "기타"
+                        ))
+                    }
+                },
+                receiver = data.secondReceiver,
+                receiverSign = null  // 서명 기능은 추후 구현
+            )
+        } else null
+
+        return com.example.ssairen_app.data.model.request.TransportRequest(
+            data = com.example.ssairen_app.data.model.request.TransportRequestData(
+                schemaVersion = 1,
+                transport = com.example.ssairen_app.data.model.request.TransportInfo(
+                    firstTransport = firstTransport,
+                    secondTransport = secondTransport,
+                    createdAt = currentTime,
+                    updatedAt = currentTime
                 )
             )
         )
@@ -703,6 +1016,117 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             saveToBackend(4) // 응급처치
 
             Log.d(TAG, "✅ 전체 데이터 전송 완료")
+        }
+    }
+
+    /**
+     * 세부사항 섹션 저장 (탭 이탈 시 자동 호출)
+     */
+    suspend fun saveDetailReportSection(activityViewModel: ActivityViewModel): Result<Unit> {
+        return try {
+            val detailData = _activityLogData.value.reportDetail
+            val emergencyReportId = currentEmergencyReportId
+
+            if (emergencyReportId == 0) {
+                Log.e(TAG, "❌ emergencyReportId가 0입니다. 저장 불가")
+                return Result.failure(Exception("emergencyReportId가 없습니다"))
+            }
+
+            Log.d(TAG, "🔄 세부사항 섹션 저장 시작 - emergencyReportId: $emergencyReportId")
+
+            // 의사 정보 변환 (이름이 있을 경우에만 포함)
+            val doctor = if (detailData.doctorName.isNotEmpty()) {
+                ParamedicMember(
+                    affiliation = detailData.doctorAffiliation.ifEmpty { null },
+                    name = detailData.doctorName,
+                    grade = null,
+                    rank = null,
+                    signature = if (detailData.doctorSignature.isNotEmpty()) "" else null
+                )
+            } else null
+
+            // 구급대원1 정보 변환
+            val paramedic1 = if (detailData.paramedic1Name.isNotEmpty()) {
+                ParamedicMember(
+                    affiliation = null,
+                    name = detailData.paramedic1Name,
+                    grade = detailData.paramedic1Grade.ifEmpty { null },
+                    rank = detailData.paramedic1Rank.ifEmpty { null },
+                    signature = if (detailData.paramedic1Signature.isNotEmpty()) "" else null
+                )
+            } else null
+
+            // 구급대원2 정보 변환
+            val paramedic2 = if (detailData.paramedic2Name.isNotEmpty()) {
+                ParamedicMember(
+                    affiliation = null,
+                    name = detailData.paramedic2Name,
+                    grade = detailData.paramedic2Grade.ifEmpty { null },
+                    rank = detailData.paramedic2Rank.ifEmpty { null },
+                    signature = if (detailData.paramedic2Signature.isNotEmpty()) "" else null
+                )
+            } else null
+
+            // 운전요원 정보 변환
+            val driver = if (detailData.driverName.isNotEmpty()) {
+                ParamedicMember(
+                    affiliation = null,
+                    name = detailData.driverName,
+                    grade = detailData.driverGrade.ifEmpty { null },
+                    rank = detailData.driverRank.ifEmpty { null },
+                    signature = if (detailData.driverSignature.isNotEmpty()) "" else null
+                )
+            } else null
+
+            // 기타 인원 정보 변환
+            val other = if (detailData.otherName.isNotEmpty()) {
+                ParamedicMember(
+                    affiliation = null,
+                    name = detailData.otherName,
+                    grade = detailData.otherGrade.ifEmpty { null },
+                    rank = detailData.otherRank.ifEmpty { null },
+                    signature = if (detailData.otherSignature.isNotEmpty()) "" else null
+                )
+            } else null
+
+            // 장애요인 변환 - Set<String>을 List<ObstacleItem>으로 변환
+            val obstacles = detailData.obstacles.map { obstacleName ->
+                ObstacleItem(
+                    type = obstacleName,
+                    isCustom = obstacleName == "기타",
+                    value = if (obstacleName == "기타") detailData.obstacleOtherValue else null
+                )
+            }
+
+            // createdAt, updatedAt 생성
+            val currentTime = java.time.ZonedDateTime.now()
+            val formatter = java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
+            val currentIsoTime = currentTime.format(formatter)
+
+            val request = DetailReportRequest(
+                data = DetailReportRequestData(
+                    schemaVersion = 1,
+                    detailReport = DetailReportInfo(
+                        doctor = doctor,
+                        paramedic1 = paramedic1,
+                        paramedic2 = paramedic2,
+                        driver = driver,
+                        other = other,
+                        obstacles = obstacles,
+                        createdAt = currentIsoTime,
+                        updatedAt = currentIsoTime
+                    )
+                )
+            )
+
+            // ActivityViewModel의 updateDetailReport 호출
+            activityViewModel.updateDetailReport(emergencyReportId, request)
+
+            Log.d(TAG, "✅ 세부사항 섹션 저장 요청 완료")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ 세부사항 섹션 저장 실패: ${e.message}", e)
+            Result.failure(e)
         }
     }
 

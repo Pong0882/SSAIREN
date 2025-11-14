@@ -20,6 +20,9 @@ import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.viewmodel.LogViewModel
 import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.SaveState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun ActivityLogHome(
@@ -216,7 +219,11 @@ fun ActivityLogHome(
                         data = activityLogData,
                         isReadOnly = isReadOnly
                     )
-                    1 -> Text("구급출동", color = Color.White)  // TODO: DispatchSection()
+                    1 -> DispatchSection(
+                        viewModel = viewModel,
+                        data = activityLogData,
+                        isReadOnly = isReadOnly
+                    )
                     2 -> PatientType(
                         viewModel = viewModel,
                         data = activityLogData,
@@ -232,9 +239,33 @@ fun ActivityLogHome(
                         data = activityLogData,
                         isReadOnly = isReadOnly
                     )
-                    5 -> Text("의료지도", color = Color.White)  // TODO: MedicalGuidance()
-                    6 -> Text("환자이송", color = Color.White)  // TODO: PatientTransport()
-                    7 -> Text("세부상황표", color = Color.White)  // TODO: ReportDetail()
+                    5 -> MedicalGuidance(
+                        viewModel = viewModel,
+                        data = activityLogData,
+                        isReadOnly = isReadOnly
+                    )
+                    6 -> PatientTransport(
+                        viewModel = viewModel,
+                        data = activityLogData,
+                        isReadOnly = isReadOnly
+                    )
+                    7 -> {
+                        ReportDetail(
+                            viewModel = viewModel,
+                            data = activityLogData,
+                            isReadOnly = isReadOnly
+                        )
+
+                        DisposableEffect(Unit) {
+                            onDispose {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    Log.d("ActivityLogHome", "🔄 세부사항 탭 벗어남 - 백그라운드 저장")
+                                    viewModel.saveDetailReportSection(activityViewModel)
+                                }
+                            }
+                        }
+                    }
+
                 }
             }
 

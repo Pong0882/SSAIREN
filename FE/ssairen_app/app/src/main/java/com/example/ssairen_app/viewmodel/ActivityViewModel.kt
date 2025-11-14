@@ -17,6 +17,15 @@ import com.example.ssairen_app.data.model.request.PatientTypeRequest
 import com.example.ssairen_app.data.model.request.PatientEvaRequest
 import com.example.ssairen_app.data.model.request.FirstAidRequest
 import com.example.ssairen_app.data.dto.SttResponse  // ✅ 추가: STT 응답 모델
+import com.example.ssairen_app.data.model.request.DispatchRequest
+import com.example.ssairen_app.data.model.response.DispatchResponse
+import com.example.ssairen_app.data.model.request.MedicalGuidanceRequest
+import com.example.ssairen_app.data.model.response.MedicalGuidanceResponse
+import com.example.ssairen_app.data.model.request.TransportRequest
+import com.example.ssairen_app.data.model.response.TransportResponse
+import com.example.ssairen_app.data.model.request.DetailReportRequest
+import com.example.ssairen_app.data.model.response.DetailReportResponse
+
 
 import kotlinx.coroutines.launch
 
@@ -91,6 +100,249 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
         Log.d(TAG, "🔄 STT 데이터 상태 초기화")
         _sttDataState.postValue(SttDataState.Idle)
     }
+
+    // ==========================================
+    // 구급출동 (조회 + 업데이트)
+    // ==========================================
+    private val _dispatchState = MutableLiveData<DispatchApiState>(DispatchApiState.Idle)
+    val dispatchState: LiveData<DispatchApiState> = _dispatchState
+
+    fun getDispatch() {
+        val reportId = _currentEmergencyReportId.value
+        if (reportId == null) {
+            Log.e(TAG, "❌ emergencyReportId가 설정되지 않았습니다")
+            _dispatchState.postValue(DispatchApiState.Error("보고서 ID가 설정되지 않았습니다"))
+            return
+        }
+        getDispatch(reportId)
+    }
+
+    fun getDispatch(emergencyReportId: Int) {
+        Log.d(TAG, "=== 구급출동 조회 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _dispatchState.postValue(DispatchApiState.Loading)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.getDispatch(emergencyReportId)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 구급출동 조회 성공 (ViewModel)")
+                    _dispatchState.postValue(DispatchApiState.Success(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 구급출동 조회 실패 (ViewModel): ${error.message}")
+                    _dispatchState.postValue(DispatchApiState.Error(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 구급출동 조회 중 예외 발생 (ViewModel)", e)
+                _dispatchState.postValue(DispatchApiState.Error(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    fun updateDispatch(emergencyReportId: Int, request: DispatchRequest) {
+        Log.d(TAG, "=== 구급출동 업데이트 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _dispatchState.postValue(DispatchApiState.Updating)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.updateDispatch(emergencyReportId, request)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 구급출동 업데이트 성공 (ViewModel)")
+                    _dispatchState.postValue(DispatchApiState.UpdateSuccess(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 구급출동 업데이트 실패 (ViewModel): ${error.message}")
+                    _dispatchState.postValue(DispatchApiState.UpdateError(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 구급출동 업데이트 중 예외 발생 (ViewModel)", e)
+                _dispatchState.postValue(DispatchApiState.UpdateError(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    // ==========================================
+    // 의료지도 (조회 + 업데이트)
+    // ==========================================
+    private val _medicalGuidanceState = MutableLiveData<MedicalGuidanceApiState>(MedicalGuidanceApiState.Idle)
+    val medicalGuidanceState: LiveData<MedicalGuidanceApiState> = _medicalGuidanceState
+
+    fun getMedicalGuidance() {
+        val reportId = _currentEmergencyReportId.value
+        if (reportId == null) {
+            Log.e(TAG, "❌ emergencyReportId가 설정되지 않았습니다")
+            _medicalGuidanceState.postValue(MedicalGuidanceApiState.Error("보고서 ID가 설정되지 않았습니다"))
+            return
+        }
+        getMedicalGuidance(reportId)
+    }
+
+    fun getMedicalGuidance(emergencyReportId: Int) {
+        Log.d(TAG, "=== 의료지도 조회 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _medicalGuidanceState.postValue(MedicalGuidanceApiState.Loading)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.getMedicalGuidance(emergencyReportId)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 의료지도 조회 성공 (ViewModel)")
+                    _medicalGuidanceState.postValue(MedicalGuidanceApiState.Success(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 의료지도 조회 실패 (ViewModel): ${error.message}")
+                    _medicalGuidanceState.postValue(MedicalGuidanceApiState.Error(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 의료지도 조회 중 예외 발생 (ViewModel)", e)
+                _medicalGuidanceState.postValue(MedicalGuidanceApiState.Error(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    fun updateMedicalGuidance(emergencyReportId: Int, request: MedicalGuidanceRequest) {
+        Log.d(TAG, "=== 의료지도 업데이트 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _medicalGuidanceState.postValue(MedicalGuidanceApiState.Updating)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.updateMedicalGuidance(emergencyReportId, request)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 의료지도 업데이트 성공 (ViewModel)")
+                    _medicalGuidanceState.postValue(MedicalGuidanceApiState.UpdateSuccess(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 의료지도 업데이트 실패 (ViewModel): ${error.message}")
+                    _medicalGuidanceState.postValue(MedicalGuidanceApiState.UpdateError(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 의료지도 업데이트 중 예외 발생 (ViewModel)", e)
+                _medicalGuidanceState.postValue(MedicalGuidanceApiState.UpdateError(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    // ==========================================
+    // 환자이송 (조회 + 업데이트)
+    // ==========================================
+    private val _transportState = MutableLiveData<TransportApiState>(TransportApiState.Idle)
+    val transportState: LiveData<TransportApiState> = _transportState
+
+    fun getTransport() {
+        val reportId = _currentEmergencyReportId.value
+        if (reportId == null) {
+            Log.e(TAG, "❌ emergencyReportId가 설정되지 않았습니다")
+            _transportState.postValue(TransportApiState.Error("보고서 ID가 설정되지 않았습니다"))
+            return
+        }
+        getTransport(reportId)
+    }
+
+    fun getTransport(emergencyReportId: Int) {
+        Log.d(TAG, "=== 환자이송 조회 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _transportState.postValue(TransportApiState.Loading)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.getTransport(emergencyReportId)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 환자이송 조회 성공 (ViewModel)")
+                    _transportState.postValue(TransportApiState.Success(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 환자이송 조회 실패 (ViewModel): ${error.message}")
+                    _transportState.postValue(TransportApiState.Error(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 환자이송 조회 중 예외 발생 (ViewModel)", e)
+                _transportState.postValue(TransportApiState.Error(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    fun updateTransport(emergencyReportId: Int, request: TransportRequest) {
+        Log.d(TAG, "=== 환자이송 업데이트 시작 (ViewModel) ===")
+        Log.d(TAG, "출동보고서 ID: $emergencyReportId")
+
+        _transportState.postValue(TransportApiState.Updating)
+
+        viewModelScope.launch {
+            try {
+                val result = repository.updateTransport(emergencyReportId, request)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 환자이송 업데이트 성공 (ViewModel)")
+                    _transportState.postValue(TransportApiState.UpdateSuccess(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 환자이송 업데이트 실패 (ViewModel): ${error.message}")
+                    _transportState.postValue(TransportApiState.UpdateError(error.message ?: "알 수 없는 오류"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 환자이송 업데이트 중 예외 발생 (ViewModel)", e)
+                _transportState.postValue(TransportApiState.UpdateError(e.message ?: "알 수 없는 오류"))
+            }
+        }
+    }
+
+    // ==========================================
+    // 세부사항 (조회 + 업데이트)
+    // ==========================================
+    private val _detailReportState = MutableLiveData<DetailReportApiState>(DetailReportApiState.Idle)
+    val detailReportState: LiveData<DetailReportApiState> = _detailReportState
+
+    fun getDetailReport(emergencyReportId: Int) {
+        viewModelScope.launch {
+            _detailReportState.postValue(DetailReportApiState.Loading)
+            Log.d(TAG, "📞 세부사항 조회 시작 - emergencyReportId: $emergencyReportId")
+
+            try {
+                val result = repository.getDetailReport(emergencyReportId)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 세부사항 조회 성공")
+                    _detailReportState.postValue(DetailReportApiState.Success(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 세부사항 조회 실패: ${error.message}")
+                    _detailReportState.postValue(DetailReportApiState.Error(error.message ?: "세부사항 조회 실패"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 세부사항 조회 예외 발생", e)
+                _detailReportState.postValue(DetailReportApiState.Error(e.message ?: "세부사항 조회 실패"))
+            }
+        }
+    }
+
+    fun updateDetailReport(emergencyReportId: Int, request: DetailReportRequest) {
+        viewModelScope.launch {
+            _detailReportState.postValue(DetailReportApiState.Updating)
+            Log.d(TAG, "📞 세부사항 업데이트 시작 - emergencyReportId: $emergencyReportId")
+
+            try {
+                val result = repository.updateDetailReport(emergencyReportId, request)
+
+                result.onSuccess { response ->
+                    Log.d(TAG, "✅ 세부사항 업데이트 성공")
+                    _detailReportState.postValue(DetailReportApiState.UpdateSuccess(response))
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ 세부사항 업데이트 실패: ${error.message}")
+                    _detailReportState.postValue(DetailReportApiState.UpdateError(error.message ?: "세부사항 업데이트 실패"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 세부사항 업데이트 예외 발생", e)
+                _detailReportState.postValue(DetailReportApiState.UpdateError(e.message ?: "세부사항 업데이트 실패"))
+            }
+        }
+    }
+
 
     // ==========================================
     // 환자정보 (조회 + 업데이트)
@@ -510,4 +762,48 @@ sealed class FirstAidApiState {
     object Updating : FirstAidApiState()
     data class UpdateSuccess(val firstAidResponse: FirstAidResponse) : FirstAidApiState()
     data class UpdateError(val message: String) : FirstAidApiState()
+}
+
+sealed class DispatchApiState {
+    object Idle : DispatchApiState()
+    object Loading : DispatchApiState()
+    data class Success(val dispatchResponse: DispatchResponse) : DispatchApiState()
+    data class Error(val message: String) : DispatchApiState()
+
+    object Updating : DispatchApiState()
+    data class UpdateSuccess(val dispatchResponse: DispatchResponse) : DispatchApiState()
+    data class UpdateError(val message: String) : DispatchApiState()
+}
+
+sealed class MedicalGuidanceApiState {
+    object Idle : MedicalGuidanceApiState()
+    object Loading : MedicalGuidanceApiState()
+    data class Success(val medicalGuidanceResponse: MedicalGuidanceResponse) : MedicalGuidanceApiState()
+    data class Error(val message: String) : MedicalGuidanceApiState()
+
+    object Updating : MedicalGuidanceApiState()
+    data class UpdateSuccess(val medicalGuidanceResponse: MedicalGuidanceResponse) : MedicalGuidanceApiState()
+    data class UpdateError(val message: String) : MedicalGuidanceApiState()
+}
+
+sealed class TransportApiState {
+    object Idle : TransportApiState()
+    object Loading : TransportApiState()
+    data class Success(val transportResponse: TransportResponse) : TransportApiState()
+    data class Error(val message: String) : TransportApiState()
+
+    object Updating : TransportApiState()
+    data class UpdateSuccess(val transportResponse: TransportResponse) : TransportApiState()
+    data class UpdateError(val message: String) : TransportApiState()
+}
+
+sealed class DetailReportApiState {
+    object Idle : DetailReportApiState()
+    object Loading : DetailReportApiState()
+    data class Success(val detailReportResponse: DetailReportResponse) : DetailReportApiState()
+    data class Error(val message: String) : DetailReportApiState()
+
+    object Updating : DetailReportApiState()
+    data class UpdateSuccess(val detailReportResponse: DetailReportResponse) : DetailReportApiState()
+    data class UpdateError(val message: String) : DetailReportApiState()
 }
