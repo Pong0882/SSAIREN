@@ -66,15 +66,22 @@ object SttManager {
 
     /**
      * STT 녹음 중지
+     * @return 마지막 누적된 텍스트
      */
-    fun stopRecording() {
+    fun stopRecording(): String {
         sttHelper?.stopListening()
         isSttRecording = false
         Log.d(TAG, "🛑 STT Recording Stopped")
 
-        // 녹음 중지 시 누적 텍스트 초기화
+        // 녹음 중지 전에 마지막 텍스트 가져오기
+        val finalText = getAccumulatedText()
+        Log.d(TAG, "📝 최종 누적 텍스트: $finalText")
+
+        // 녹음 중지 후 누적 텍스트 초기화
         sttHelper?.clearAccumulatedText()
         sttText = ""
+
+        return finalText
     }
 
     /**

@@ -70,51 +70,7 @@ fun ActivityMain(
     val isSttRecording = SttManager.isSttRecording
     val sttText = SttManager.sttText
 
-    val context = LocalContext.current
-
-    // ✅ STT 녹음 중일 때 20초마다 자동으로 텍스트 전송 (ActivityMain 레벨)
-    LaunchedEffect(isSttRecording) {
-        if (isSttRecording) {
-            Log.d("ActivityMain", "⏰ STT 자동 전송 스케줄링 시작 (20초 간격)")
-            while (isSttRecording) {
-                kotlinx.coroutines.delay(20000L) // 20초 대기
-                if (isSttRecording) { // 대기 중 중지되지 않았는지 확인
-                    Log.d("ActivityMain", "⏰ 20초 경과 - 자동 텍스트 전송")
-
-                    // ✅ 텍스트 전송
-                    val accumulatedText = SttManager.getAccumulatedText()
-                    val currentText = if (SttManager.sttText.isNotEmpty()) SttManager.sttText else accumulatedText
-                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
-
-                    if (currentText.isNotEmpty() && currentReportId > 0) {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            try {
-                                val response = RetrofitClient.fileApiService.textToJson(
-                                    text = currentText,
-                                    emergencyReportId = currentReportId.toLong(),
-                                    maxNewTokens = 700,
-                                    temperature = 0.1
-                                )
-
-                                withContext(Dispatchers.Main) {
-                                    if (response.isSuccessful) {
-                                        Log.d("ActivityMain", "✅ API Success")
-                                        Toast.makeText(context, "전송 완료", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        Log.e("ActivityMain", "❌ API Error: ${response.code()}")
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                Log.e("ActivityMain", "❌ API Exception: ${e.message}")
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            Log.d("ActivityMain", "⏰ STT 자동 전송 스케줄링 중지")
-        }
-    }
+    // ✅ 20초 자동 전송은 AppNavigation 레벨에서 처리 (모든 화면에서 동작)
 
     Column(
         modifier = Modifier
@@ -388,9 +344,40 @@ private fun HomeContent(
         SttManager.startRecording()
     }
 
-    // ✅ STT 녹음 중지 함수 (API 전송 없이 녹음만 중지)
+    // ✅ STT 녹음 중지 함수 + 마지막 텍스트 전송
     fun stopSttRecording() {
-        SttManager.stopRecording()
+        val finalText = SttManager.stopRecording()
+
+        // ✅ 마지막 누적된 텍스트가 있으면 전송
+        if (finalText.isNotEmpty()) {
+            val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+
+            if (currentReportId > 0) {
+                Log.d("ActivityMain", "📤 녹음 종료 - 마지막 텍스트 전송")
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val response = RetrofitClient.fileApiService.textToJson(
+                            text = finalText,
+                            emergencyReportId = currentReportId.toLong(),
+                            maxNewTokens = 700,
+                            temperature = 0.1
+                        )
+
+                        withContext(Dispatchers.Main) {
+                            if (response.isSuccessful) {
+                                Log.d("ActivityMain", "✅ 마지막 텍스트 전송 성공")
+                                Toast.makeText(context, "녹음 종료 - 전송 완료", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Log.e("ActivityMain", "❌ API Error: ${response.code()}")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("ActivityMain", "❌ API Exception: ${e.message}")
+                    }
+                }
+            }
+        }
     }
 
     // ✅ 누적된 텍스트를 API로 전송하는 함수 (녹음은 계속 진행)
