@@ -47,6 +47,7 @@ export default function PatientListPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 10;
@@ -84,6 +85,7 @@ export default function PatientListPage() {
 
       setPatients(result.patients);
       setTotalPages(result.totalPages);
+      setTotalElements(result.totalElements);
     } catch (err) {
       setError(
         err instanceof Error
@@ -227,14 +229,13 @@ export default function PatientListPage() {
 
   // 통계 데이터 계산
   const statistics = useMemo(() => {
-    const totalCount = totalPages * itemsPerPage;
     const waitingCount = patients.filter(p => p.status === "ACCEPTED").length;
     const completedCount = patients.filter(p => p.status === "ARRIVED").length;
     const maleCount = patients.filter(p => p.gender === "M").length;
     const femaleCount = patients.filter(p => p.gender === "F").length;
 
     return {
-      total: totalCount,
+      total: totalElements,
       waiting: waitingCount,
       completed: completedCount,
       male: maleCount,
@@ -242,7 +243,7 @@ export default function PatientListPage() {
       maleRatio: patients.length > 0 ? Math.round((maleCount / patients.length) * 100) : 0,
       femaleRatio: patients.length > 0 ? Math.round((femaleCount / patients.length) * 100) : 0,
     };
-  }, [patients, totalPages, itemsPerPage]);
+  }, [patients, totalElements]);
 
   // recordTime을 문자열로 포맷하는 헬퍼 함수
   const formatRecordTime = (recordTime: Patient["recordTime"] | string) => {
