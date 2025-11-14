@@ -429,6 +429,22 @@ private fun HomeContent(
         }
     }
 
+    // ✅ Whisper 오디오 녹음 중일 때 20초마다 자동으로 전송
+    LaunchedEffect(isAudioRecording) {
+        if (isAudioRecording) {
+            Log.d("ActivityMain", "⏰ Whisper 자동 전송 스케줄링 시작 (20초 간격)")
+            while (isAudioRecording) {
+                kotlinx.coroutines.delay(20000L) // 20초 대기
+                if (isAudioRecording) { // 대기 중 중지되지 않았는지 확인
+                    Log.d("ActivityMain", "⏰ 20초 경과 - 자동 오디오 전송")
+                    sendCurrentAudio()
+                }
+            }
+        } else {
+            Log.d("ActivityMain", "⏰ Whisper 자동 전송 스케줄링 중지")
+        }
+    }
+
     Log.d("ActivityMain", "🎨 HomeContent Composable 렌더링")
     Log.d("ActivityMain", "📱 ViewModel 인스턴스: $wearViewModel")
 
