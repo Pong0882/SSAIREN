@@ -2,6 +2,7 @@
 package com.example.ssairen_app
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -36,17 +37,17 @@ import com.example.ssairen_app.ui.screens.report.ReportHome
 import com.example.ssairen_app.ui.screens.emergencyact.ActivityMain
 import com.example.ssairen_app.ui.screens.emergencyact.ActivityLogHome
 import com.example.ssairen_app.ui.screens.Summation
-import com.example.ssairen_app.ui.screens.Login  // ⭐ 추가
-import com.example.ssairen_app.viewmodel.AuthViewModel  // ⭐ 추가
-import com.example.ssairen_app.viewmodel.ReportViewModel  // ⭐ 새 일지 등록용
-import com.example.ssairen_app.viewmodel.CreateReportState  // ⭐ 일지 생성 상태
-import com.example.ssairen_app.data.api.RetrofitClient  // ⭐ 바디캠 업로드용 & API 호출용
-import com.example.ssairen_app.ui.components.DispatchModal  // ⭐ 모달 추가
-import com.example.ssairen_app.ui.components.HospitalResponseModal  // ⭐ 병원 응답 모달 추가
-import com.example.ssairen_app.ui.screens.report.DispatchDetail  // ⭐ 출동 상세 모달
-import com.example.ssairen_app.ui.screens.report.DispatchDetailData  // ⭐ 출동 상세 데이터
-import com.example.ssairen_app.service.MyFirebaseMessagingService  // ⭐ FCM 서비스
-import com.example.ssairen_app.utils.SttManager  // ⭐ STT 전역 상태 관리
+import com.example.ssairen_app.ui.screens.Login
+import com.example.ssairen_app.viewmodel.AuthViewModel
+import com.example.ssairen_app.viewmodel.ReportViewModel
+import com.example.ssairen_app.viewmodel.CreateReportState
+import com.example.ssairen_app.data.api.RetrofitClient
+import com.example.ssairen_app.ui.components.DispatchModal
+import com.example.ssairen_app.ui.components.HospitalResponseModal
+import com.example.ssairen_app.ui.screens.report.DispatchDetail
+import com.example.ssairen_app.ui.screens.report.DispatchDetailData
+import com.example.ssairen_app.service.MyFirebaseMessagingService
+import com.example.ssairen_app.utils.SttManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -110,6 +111,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 
     // ✅ 새로운 Intent 수신 (앱이 이미 실행 중일 때)
     override fun onNewIntent(intent: Intent) {
@@ -377,6 +379,9 @@ fun AppNavigation(
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
+
+    // ✅ dispatchId 에러 다이얼로그 상태 추가
+    var showDispatchIdErrorDialog by remember { mutableStateOf(false) }
 
     // ✅ DispatchContext 가져오기
     val dispatchState = rememberDispatchState()
