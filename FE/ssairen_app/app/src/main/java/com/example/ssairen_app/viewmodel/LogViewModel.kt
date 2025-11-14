@@ -1037,7 +1037,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             // 의사 정보 변환 (이름이 있을 경우에만 포함)
             val doctor = if (detailData.doctorName.isNotEmpty()) {
                 ParamedicMember(
-                    affiliation = detailData.doctorAffiliation.ifEmpty { null },
+                    affiliation = detailData.doctorAffiliation.takeIf { it.isNotEmpty() },
                     name = detailData.doctorName,
                     grade = null,
                     rank = null,
@@ -1050,8 +1050,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 ParamedicMember(
                     affiliation = null,
                     name = detailData.paramedic1Name,
-                    grade = detailData.paramedic1Grade.ifEmpty { null },
-                    rank = detailData.paramedic1Rank.ifEmpty { null },
+                    grade = detailData.paramedic1Grade.takeIf { it.isNotEmpty() },
+                    rank = detailData.paramedic1Rank.takeIf { it.isNotEmpty() },
                     signature = if (detailData.paramedic1Signature.isNotEmpty()) "" else null
                 )
             } else null
@@ -1061,8 +1061,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 ParamedicMember(
                     affiliation = null,
                     name = detailData.paramedic2Name,
-                    grade = detailData.paramedic2Grade.ifEmpty { null },
-                    rank = detailData.paramedic2Rank.ifEmpty { null },
+                    grade = detailData.paramedic2Grade.takeIf { it.isNotEmpty() },
+                    rank = detailData.paramedic2Rank.takeIf { it.isNotEmpty() },
                     signature = if (detailData.paramedic2Signature.isNotEmpty()) "" else null
                 )
             } else null
@@ -1072,8 +1072,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 ParamedicMember(
                     affiliation = null,
                     name = detailData.driverName,
-                    grade = detailData.driverGrade.ifEmpty { null },
-                    rank = detailData.driverRank.ifEmpty { null },
+                    grade = detailData.driverGrade.takeIf { it.isNotEmpty() },
+                    rank = detailData.driverRank.takeIf { it.isNotEmpty() },
                     signature = if (detailData.driverSignature.isNotEmpty()) "" else null
                 )
             } else null
@@ -1083,20 +1083,23 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 ParamedicMember(
                     affiliation = null,
                     name = detailData.otherName,
-                    grade = detailData.otherGrade.ifEmpty { null },
-                    rank = detailData.otherRank.ifEmpty { null },
+                    grade = detailData.otherGrade.takeIf { it.isNotEmpty() },
+                    rank = detailData.otherRank.takeIf { it.isNotEmpty() },
                     signature = if (detailData.otherSignature.isNotEmpty()) "" else null
                 )
             } else null
 
             // 장애요인 변환 - Set<String>을 List<ObstacleItem>으로 변환
-            val obstacles = detailData.obstacles.map { obstacleName ->
-                ObstacleItem(
-                    type = obstacleName,
-                    isCustom = obstacleName == "기타",
-                    value = if (obstacleName == "기타") detailData.obstacleOtherValue else null
-                )
-            }
+            val obstacles = detailData.obstacles
+                .filterNotNull()
+                .filter { it.isNotEmpty() }
+                .map { obstacleName ->
+                    ObstacleItem(
+                        type = obstacleName,
+                        isCustom = obstacleName == "기타",
+                        value = if (obstacleName == "기타") detailData.obstacleOtherValue else null
+                    )
+                }
 
             // createdAt, updatedAt 생성
             val currentTime = java.time.ZonedDateTime.now()
