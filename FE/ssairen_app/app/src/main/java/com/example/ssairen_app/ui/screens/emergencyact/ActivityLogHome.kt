@@ -20,6 +20,9 @@ import com.example.ssairen_app.ui.navigation.EmergencyNav
 import com.example.ssairen_app.viewmodel.LogViewModel
 import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.SaveState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun ActivityLogHome(
@@ -170,9 +173,50 @@ fun ActivityLogHome(
                 selectedTab = selectedLogTab,
                 onTabSelected = { newTab ->
                     if (selectedLogTab != newTab) {
+                        // 1️⃣ PATCH: 이전 탭 데이터 저장
                         saveCurrentTabToBackend()
+
+                        // 2️⃣ 탭 전환
                         selectedLogTab = newTab
-                        Log.d("ActivityLogHome", "📑 상단 탭 변경: $selectedLogTab → $newTab")
+
+                        // 3️⃣ GET: 새 탭 데이터 불러오기
+                        Log.d("ActivityLogHome", "🔍 GET 요청 시작 - emergencyReportId: $emergencyReportId, 탭: $newTab")
+                        when (newTab) {
+                            0 -> {
+                                Log.d("ActivityLogHome", "📞 환자정보 조회 호출")
+                                activityViewModel.getPatientInfo(emergencyReportId)
+                            }
+                            1 -> {
+                                Log.d("ActivityLogHome", "📞 구급출동 조회 호출")
+                                activityViewModel.getDispatch(emergencyReportId)
+                            }
+                            2 -> {
+                                Log.d("ActivityLogHome", "📞 환자발생유형 조회 호출")
+                                activityViewModel.getPatientType(emergencyReportId)
+                            }
+                            3 -> {
+                                Log.d("ActivityLogHome", "📞 환자평가 조회 호출")
+                                activityViewModel.getPatientEva(emergencyReportId)
+                            }
+                            4 -> {
+                                Log.d("ActivityLogHome", "📞 응급처치 조회 호출")
+                                activityViewModel.getFirstAid(emergencyReportId)
+                            }
+                            5 -> {
+                                Log.d("ActivityLogHome", "📞 의료지도 조회 호출")
+                                activityViewModel.getMedicalGuidance(emergencyReportId)
+                            }
+                            6 -> {
+                                Log.d("ActivityLogHome", "📞 환자이송 조회 호출")
+                                activityViewModel.getTransport(emergencyReportId)
+                            }
+                            7 -> {
+                                Log.d("ActivityLogHome", "📞 세부사항 조회 호출")
+                                activityViewModel.getDetailReport(emergencyReportId)
+                            }
+                        }
+
+                        Log.d("ActivityLogHome", "📑 상단 탭 변경 완료: $selectedLogTab → $newTab")
                     }
                 },
                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -192,7 +236,11 @@ fun ActivityLogHome(
                         data = activityLogData,
                         isReadOnly = isReadOnly
                     )
-                    1 -> Text("구급출동", color = Color.White)  // TODO: DispatchSection()
+                    1 -> DispatchSection(
+                        viewModel = viewModel,
+                        data = activityLogData,
+                        isReadOnly = isReadOnly
+                    )
                     2 -> PatientType(
                         viewModel = viewModel,
                         data = activityLogData,
@@ -208,9 +256,33 @@ fun ActivityLogHome(
                         data = activityLogData,
                         isReadOnly = isReadOnly
                     )
-                    5 -> Text("의료지도", color = Color.White)  // TODO: MedicalGuidance()
-                    6 -> Text("환자이송", color = Color.White)  // TODO: PatientTransport()
-                    7 -> Text("세부상황표", color = Color.White)  // TODO: ReportDetail()
+                    5 -> MedicalGuidance(
+                        viewModel = viewModel,
+                        data = activityLogData,
+                        isReadOnly = isReadOnly
+                    )
+                    6 -> PatientTransport(
+                        viewModel = viewModel,
+                        data = activityLogData,
+                        isReadOnly = isReadOnly
+                    )
+                    7 -> {
+                        ReportDetail(
+                            viewModel = viewModel,
+                            data = activityLogData,
+                            isReadOnly = isReadOnly
+                        )
+
+                        DisposableEffect(Unit) {
+                            onDispose {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    Log.d("ActivityLogHome", "🔄 세부사항 탭 벗어남 - 백그라운드 저장")
+                                    viewModel.saveDetailReportSection(activityViewModel)
+                                }
+                            }
+                        }
+                    }
+
                 }
             }
 
@@ -219,16 +291,43 @@ fun ActivityLogHome(
                 selectedTab = selectedBottomTab,
                 onTabSelected = { newTab ->
                     if (selectedBottomTab != newTab) {
+                        // 1️⃣ PATCH: 현재 상단 탭 데이터 저장
                         saveCurrentTabToBackend()
+
+                        // 2️⃣ 하단 탭 전환
                         selectedBottomTab = newTab
+
                         Log.d("ActivityLogHome", "📑 하단 탭 변경: $selectedBottomTab → $newTab")
 
                         when (newTab) {
-                            0 -> onNavigateToHome()         // 홈
-                            1 -> { /* 현재 화면 유지 */ }  // 구급활동일지
-                            2 -> onNavigateToSummation()    // 요약
-                            3 -> { /* TODO: 메모 */ }
-                            4 -> { /* TODO: 병원이송 */ }
+                            0 -> {
+                                // 홈으로 이동 (GET 불필요)
+                                onNavigateToHome()
+                            }
+                            1 -> {
+                                // 구급활동일지로 복귀
+                                // 3️⃣ GET: 현재 상단 탭 데이터 다시 불러오기
+                                when (selectedLogTab) {
+                                    0 -> activityViewModel.getPatientInfo(emergencyReportId)
+                                    1 -> activityViewModel.getDispatch(emergencyReportId)
+                                    2 -> activityViewModel.getPatientType(emergencyReportId)
+                                    3 -> activityViewModel.getPatientEva(emergencyReportId)
+                                    4 -> activityViewModel.getFirstAid(emergencyReportId)
+                                    5 -> activityViewModel.getMedicalGuidance(emergencyReportId)
+                                    6 -> activityViewModel.getTransport(emergencyReportId)
+                                    7 -> activityViewModel.getDetailReport(emergencyReportId)
+                                }
+                            }
+                            2 -> {
+                                // 요약으로 이동
+                                onNavigateToSummation()
+                            }
+                            3 -> {
+                                // TODO: 메모
+                            }
+                            4 -> {
+                                // TODO: 병원이송
+                            }
                         }
                     }
                 }

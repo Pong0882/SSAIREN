@@ -22,7 +22,6 @@ import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.LogViewModel
 import com.example.ssairen_app.viewmodel.PatienTypeData
 import com.example.ssairen_app.viewmodel.PatientTypeApiState
-
 private const val TAG = "PatientType"
 
 @Composable
@@ -57,6 +56,24 @@ fun PatientType(
 
     // 비외상성 손상 다중 선택용
     var nonTraumaSelections by remember { mutableStateOf(setOf<String>()) }
+
+    // ✅ 자동 저장 함수
+    fun saveData() {
+        val patienTypeData = PatienTypeData(
+            hasMedicalHistory = hasMedicalHistory,
+            medicalHistoryList = medicalHistoryList,
+            mainType = mainType,
+            crimeOption = crimeOption,
+            subType = subType,
+            accidentVictimType = if (subType == "비외상성 손상") {
+                nonTraumaSelections.joinToString(", ")
+            } else {
+                accidentVictimType
+            },
+            etcType = etcType
+        )
+        viewModel.updatePatienType(patienTypeData)
+    }
 
     // ✅ API 응답 처리 - 실제 API 구조에 맞게 완전히 재작성
     LaunchedEffect(patientTypeState) {
@@ -148,6 +165,10 @@ fun PatientType(
                 Log.d(TAG, "   - subType: $subType")
                 Log.d(TAG, "   - accidentVictimType: $accidentVictimType")
                 Log.d(TAG, "   - etcType: $etcType")
+
+                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
+                saveData()
+                Log.d(TAG, "💾 LogViewModel 동기화 완료")
             }
             is PatientTypeApiState.Error -> {
                 Log.e(TAG, "❌ API 오류: ${state.message}")
@@ -159,23 +180,6 @@ fun PatientType(
         }
     }
 
-    // ✅ 자동 저장 함수
-    fun saveData() {
-        val patienTypeData = PatienTypeData(
-            hasMedicalHistory = hasMedicalHistory,
-            medicalHistoryList = medicalHistoryList,
-            mainType = mainType,
-            crimeOption = crimeOption,
-            subType = subType,
-            accidentVictimType = if (subType == "비외상성 손상") {
-                nonTraumaSelections.joinToString(", ")
-            } else {
-                accidentVictimType
-            },
-            etcType = etcType
-        )
-        viewModel.updatePatienType(patienTypeData)
-    }
 
     // ✅ 로딩 화면
     if (patientTypeState is PatientTypeApiState.Loading) {

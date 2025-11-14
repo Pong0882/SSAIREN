@@ -15,6 +15,7 @@ import androidx.core.app.NotificationCompat
 import com.example.ssairen_app.MainActivity
 import com.example.ssairen_app.R
 import com.example.ssairen_app.data.ApiAudioUploader
+import com.example.ssairen_app.viewmodel.ActivityViewModel  // ✅ 추가
 import kotlinx.coroutines.*
 import java.io.File
 import java.text.SimpleDateFormat
@@ -34,6 +35,18 @@ class AudioRecordingService : Service() {
 
         const val ACTION_START_RECORDING = "ACTION_START_RECORDING"
         const val ACTION_STOP_RECORDING = "ACTION_STOP_RECORDING"
+
+        // ✅ 추가: ViewModel 인스턴스를 저장하기 위한 변수
+        private var viewModelInstance: ActivityViewModel? = null
+
+        /**
+         * ViewModel 인스턴스를 설정합니다.
+         * Activity/Fragment에서 호출하여 Service에서 접근할 수 있도록 합니다.
+         */
+        fun setViewModel(viewModel: ActivityViewModel) {
+            viewModelInstance = viewModel
+            Log.d(TAG, "✅ ViewModel 인스턴스 설정됨")
+        }
     }
 
     private val binder = LocalBinder()
@@ -210,19 +223,28 @@ class AudioRecordingService : Service() {
                     }.onSuccess { uploadResult ->
                         Log.d(TAG, "Upload successful: ${uploadResult.fileName}")
 
-                        // STT 구조화된 데이터 로그 출력
+                        // ✅ 수정: STT 구조화된 데이터를 ViewModel로 전달
                         uploadResult.sttData?.let { sttData ->
+                            Log.d(TAG, "===== STT 구조화 데이터 =====")
+
                             val patientName = sttData.reportSectionType.patientInfo.patient.name ?: "없음"
                             val gender = sttData.reportSectionType.patientInfo.patient.gender ?: "없음"
                             val age = sttData.reportSectionType.patientInfo.patient.ageYears?.toString() ?: "없음"
                             val chiefComplaint = sttData.reportSectionType.assessment.notes.cheifComplaint ?: "없음"
 
-                            Log.d(TAG, "===== STT 구조화 데이터 =====")
                             Log.d(TAG, "환자명: $patientName")
                             Log.d(TAG, "성별: $gender")
                             Log.d(TAG, "나이: $age")
                             Log.d(TAG, "주호소: $chiefComplaint")
                             Log.d(TAG, "============================")
+
+                            // ✅ ViewModel로 STT 데이터 전달
+                            if (viewModelInstance != null) {
+                                viewModelInstance?.updateSttData(sttData)
+                                Log.d(TAG, "✅ STT 데이터를 ViewModel로 전달 완료")
+                            } else {
+                                Log.w(TAG, "⚠️ ViewModel 인스턴스가 설정되지 않았습니다. STT 데이터를 전달할 수 없습니다.")
+                            }
                         }
 
                         apiAudioUploader.deleteLocalFile(file)

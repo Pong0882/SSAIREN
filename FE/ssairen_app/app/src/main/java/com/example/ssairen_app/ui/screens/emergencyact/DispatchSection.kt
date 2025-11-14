@@ -1,44 +1,209 @@
 package com.example.ssairen_app.ui.screens.emergencyact
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ssairen_app.viewmodel.LogViewModel
+import com.example.ssairen_app.viewmodel.ActivityLogData
+import com.example.ssairen_app.viewmodel.ActivityViewModel
+import com.example.ssairen_app.viewmodel.DispatchApiState
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-// ==========================================
-// 구급출동 섹션 메인 화면
-// ==========================================
+/**
+ * 구급출동 섹션 메인 화면
+ *
+ * @param viewModel LogViewModel
+ * @param data ActivityLogData
+ * @param isReadOnly 읽기 전용 모드
+ * @param activityViewModel ActivityViewModel (API 호출용)
+ */
 @Composable
 fun DispatchSection(
-    modifier: Modifier = Modifier,
-    initialReportTime: String = "상황실",
-    initialDispatchTime: String = "상황실"
+    viewModel: LogViewModel,
+    data: ActivityLogData,
+    isReadOnly: Boolean = false,
+    activityViewModel: ActivityViewModel = viewModel(),
+    modifier: Modifier = Modifier
 ) {
-    // ==== 상태 관리 ====
-    var arrivalTime by remember { mutableStateOf("00:00:00") }
-    var departureTime by remember { mutableStateOf("00:00:00") }
-    var contactTime by remember { mutableStateOf("00:00:00") }
-    var hospitalArrivalTime by remember { mutableStateOf("00:00:00") }
-    var returnTime by remember { mutableStateOf("00:00:00") }
-    var distance by remember { mutableStateOf("1 km") }
+    val dispatchData = data.dispatch
 
-    var selectedDispatchType by remember { mutableStateOf("정상") }
-    var selectedLocation by remember { mutableStateOf("집") }
+    // API 상태 관찰
+    val dispatchState by activityViewModel.dispatchState.observeAsState(DispatchApiState.Idle)
+    val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState()
 
-    var selectedPains by remember { mutableStateOf(setOf<String>()) }
-    var selectedInjuries by remember { mutableStateOf(setOf<String>()) }
-    var selectedSymptoms by remember { mutableStateOf(setOf<String>()) }
+    // API 호출 (currentReportId가 설정되면 자동 실행)
+    LaunchedEffect(currentReportId) {
+        currentReportId?.let { reportId ->
+            Log.d("DispatchSection", "📞 API 호출: getDispatch($reportId)")
+            activityViewModel.getDispatch(reportId)
+        }
+    }
+
+    // 로컬 UI 상태 - ViewModel에서 가져온 값으로 초기화
+    var reportDatetime by remember { mutableStateOf(dispatchData.reportDatetime) }
+    var departureTime by remember { mutableStateOf(dispatchData.departureTime) }
+    var arrivalSceneTime by remember { mutableStateOf(dispatchData.arrivalSceneTime) }
+    var departureSceneTime by remember { mutableStateOf(dispatchData.departureSceneTime) }
+    var contactTime by remember { mutableStateOf(dispatchData.contactTime) }
+    var arrivalHospitalTime by remember { mutableStateOf(dispatchData.arrivalHospitalTime) }
+    var returnTime by remember { mutableStateOf(dispatchData.returnTime) }
+    var distance by remember { mutableStateOf(if (dispatchData.distanceKm > 0) "${dispatchData.distanceKm}" else "") }
+
+    var selectedDispatchType by remember { mutableStateOf(dispatchData.dispatchType) }
+    var selectedLocation by remember { mutableStateOf(dispatchData.sceneLocationName) }
+    var locationDetailValue by remember { mutableStateOf(dispatchData.sceneLocationValue ?: "") }
+
+    var selectedPains by remember { mutableStateOf(dispatchData.painSymptoms) }
+    var selectedInjuries by remember { mutableStateOf(dispatchData.traumaSymptoms) }
+    var selectedSymptoms by remember { mutableStateOf(dispatchData.otherSymptoms) }
+
+    var otherPainValue by remember { mutableStateOf(dispatchData.otherPainValue ?: "") }
+    var otherSymptomValue by remember { mutableStateOf(dispatchData.otherSymptomValue ?: "") }
+
+    // API 응답 처리
+    LaunchedEffect(dispatchState) {
+        Log.d("DispatchSection", "🟢 dispatchState 변경: $dispatchState")
+
+        when (val state = dispatchState) {
+            is DispatchApiState.Success -> {
+                Log.d("DispatchSection", "✅ API 성공 - 데이터 매핑 시작")
+                val apiData = state.dispatchResponse.data.data.dispatch
+
+                reportDatetime = apiData.reportDatetime ?: ""
+                departureTime = apiData.departureTime ?: ""
+                arrivalSceneTime = apiData.arrivalSceneTime ?: ""
+                departureSceneTime = apiData.departureSceneTime ?: ""
+                contactTime = apiData.contactTime ?: ""
+                arrivalHospitalTime = apiData.arrivalHospitalTime ?: ""
+                returnTime = apiData.returnTime ?: ""
+                distance = apiData.distanceKm?.toString() ?: ""
+
+                selectedDispatchType = apiData.dispatchType ?: "정상"
+                selectedLocation = apiData.sceneLocation.name ?: "집"
+                locationDetailValue = apiData.sceneLocation.value ?: ""
+
+                // 증상 데이터 파싱 (name을 사용)
+                selectedPains = apiData.symptoms.pain?.mapNotNull { it.name }?.toSet() ?: setOf()
+                selectedInjuries = apiData.symptoms.trauma?.mapNotNull { it.name }?.toSet() ?: setOf()
+                selectedSymptoms = apiData.symptoms.otherSymptoms?.mapNotNull { it.name }?.toSet() ?: setOf()
+
+                // 기타 값 처리
+                otherPainValue = apiData.symptoms.pain?.find { it.name == "그 밖의 통증" }?.value ?: ""
+                otherSymptomValue = apiData.symptoms.otherSymptoms?.find { it.name == "기타" }?.value ?: ""
+
+                Log.d("DispatchSection", "✅ 데이터 매핑 완료")
+
+                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
+                viewModel.updateDispatch(
+                    com.example.ssairen_app.viewmodel.DispatchData(
+                        reportDatetime = reportDatetime,
+                        departureTime = departureTime,
+                        arrivalSceneTime = arrivalSceneTime,
+                        departureSceneTime = departureSceneTime,
+                        contactTime = contactTime,
+                        arrivalHospitalTime = arrivalHospitalTime,
+                        distanceKm = distance.toDoubleOrNull() ?: 0.0,
+                        returnTime = returnTime,
+                        dispatchType = selectedDispatchType,
+                        sceneLocationName = selectedLocation,
+                        sceneLocationValue = if (selectedLocation == "기타") locationDetailValue else null,
+                        painSymptoms = selectedPains,
+                        traumaSymptoms = selectedInjuries,
+                        otherSymptoms = selectedSymptoms,
+                        otherPainValue = if (selectedPains.contains("그 밖의 통증")) otherPainValue else null,
+                        otherSymptomValue = if (selectedSymptoms.contains("기타")) otherSymptomValue else null
+                    )
+                )
+                Log.d("DispatchSection", "💾 LogViewModel 동기화 완료")
+            }
+            is DispatchApiState.Error -> {
+                Log.e("DispatchSection", "❌ API 오류: ${state.message}")
+            }
+            is DispatchApiState.Loading -> {
+                Log.d("DispatchSection", "⏳ 로딩 중...")
+            }
+            else -> {
+                Log.d("DispatchSection", "⚪ Idle 상태")
+            }
+        }
+    }
+
+    // ViewModel 데이터가 변경되면 UI 상태 업데이트
+    LaunchedEffect(dispatchData) {
+        reportDatetime = dispatchData.reportDatetime
+        departureTime = dispatchData.departureTime
+        arrivalSceneTime = dispatchData.arrivalSceneTime
+        departureSceneTime = dispatchData.departureSceneTime
+        contactTime = dispatchData.contactTime
+        arrivalHospitalTime = dispatchData.arrivalHospitalTime
+        returnTime = dispatchData.returnTime
+        distance = if (dispatchData.distanceKm > 0) "${dispatchData.distanceKm}" else ""
+        selectedDispatchType = dispatchData.dispatchType
+        selectedLocation = dispatchData.sceneLocationName
+        locationDetailValue = dispatchData.sceneLocationValue ?: ""
+        selectedPains = dispatchData.painSymptoms
+        selectedInjuries = dispatchData.traumaSymptoms
+        selectedSymptoms = dispatchData.otherSymptoms
+        otherPainValue = dispatchData.otherPainValue ?: ""
+        otherSymptomValue = dispatchData.otherSymptomValue ?: ""
+    }
+
+    // 값이 변경될 때마다 ViewModel 업데이트 (읽기 전용이 아닐 때만)
+    LaunchedEffect(
+        departureTime, arrivalSceneTime, departureSceneTime, contactTime,
+        arrivalHospitalTime, returnTime, distance, selectedDispatchType,
+        selectedLocation, locationDetailValue, selectedPains, selectedInjuries, selectedSymptoms,
+        otherPainValue, otherSymptomValue
+    ) {
+        if (!isReadOnly) {
+            viewModel.updateDispatch(
+                com.example.ssairen_app.viewmodel.DispatchData(
+                reportDatetime = reportDatetime,
+                departureTime = departureTime,
+                arrivalSceneTime = arrivalSceneTime,
+                departureSceneTime = departureSceneTime,
+                contactTime = contactTime,
+                arrivalHospitalTime = arrivalHospitalTime,
+                distanceKm = distance.toDoubleOrNull() ?: 0.0,
+                returnTime = returnTime,
+                dispatchType = selectedDispatchType,
+                sceneLocationName = selectedLocation,
+                sceneLocationValue = if (selectedLocation == "기타") locationDetailValue else null,
+                painSymptoms = selectedPains,
+                traumaSymptoms = selectedInjuries,
+                otherSymptoms = selectedSymptoms,
+                otherPainValue = if (selectedPains.contains("그 밖의 통증")) otherPainValue else null,
+                otherSymptomValue = if (selectedSymptoms.contains("기타")) otherSymptomValue else null
+                )
+            )
+        }
+    }
+
+    // 로딩 중일 때 표시
+    if (dispatchState is DispatchApiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 40.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = Color(0xFF3b7cff))
+        }
+        return
+    }
 
     LazyColumn(
         modifier = modifier
@@ -47,62 +212,54 @@ fun DispatchSection(
         verticalArrangement = Arrangement.spacedBy(24.dp),
         contentPadding = PaddingValues(vertical = 16.dp)
     ) {
-        // ==== 1. 시간 정보 섹션 ====
+        // 시간 정보 섹션
         item {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                // 신고 일시 / 출동 시작 (읽기 전용)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     TimeFieldRow(
                         label = "신고 일시",
-                        value = initialReportTime,
-                        onValueChange = {},
+                        value = reportDatetime,
+                        onValueChange = { reportDatetime = it },
                         readOnly = true,
-                        placeholder = "상황실",
+                        placeholder = "상황실에서 자동 입력",
                         modifier = Modifier.weight(1f)
                     )
 
                     TimeFieldRow(
                         label = "출동 시작",
-                        value = initialDispatchTime,
-                        onValueChange = {},
-                        readOnly = true,
-                        placeholder = "상황실",
+                        value = departureTime,
+                        onValueChange = { departureTime = it },
+                        placeholder = "HH:mm",
                         modifier = Modifier.weight(1f)
                     )
                 }
 
-                // 현장 도착 / 현장 출발
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     TimeFieldRowWithButton(
                         label = "현장 도착",
-                        value = arrivalTime,
-                        onValueChange = { arrivalTime = it },
+                        value = arrivalSceneTime,
+                        onValueChange = { arrivalSceneTime = it },
                         buttonText = "도착",
-                        onButtonClick = {
-                            arrivalTime = getCurrentTime()
-                        },
+                        onButtonClick = { arrivalSceneTime = getCurrentTime() },
                         modifier = Modifier.weight(1f)
                     )
 
                     TimeFieldRowWithButton(
                         label = "현장 출발",
-                        value = departureTime,
-                        onValueChange = { departureTime = it },
+                        value = departureSceneTime,
+                        onValueChange = { departureSceneTime = it },
                         buttonText = "출발",
-                        onButtonClick = {
-                            departureTime = getCurrentTime()
-                        },
+                        onButtonClick = { departureSceneTime = getCurrentTime() },
                         modifier = Modifier.weight(1f)
                     )
                 }
 
-                // 환자 접촉 / 병원 도착
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -111,29 +268,28 @@ fun DispatchSection(
                         label = "환자 접촉",
                         value = contactTime,
                         onValueChange = { contactTime = it },
-                        placeholder = "00:00:00",
+                        placeholder = "HH:mm",
                         modifier = Modifier.weight(1f)
                     )
 
                     TimeFieldRow(
                         label = "병원 도착",
-                        value = hospitalArrivalTime,
-                        onValueChange = { hospitalArrivalTime = it },
-                        placeholder = "00:00:00",
+                        value = arrivalHospitalTime,
+                        onValueChange = { arrivalHospitalTime = it },
+                        placeholder = "HH:mm",
                         modifier = Modifier.weight(1f)
                     )
                 }
 
-                // 거리 / 귀소 시각
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     TimeFieldRow(
-                        label = "거리",
+                        label = "거리 (km)",
                         value = distance,
                         onValueChange = { distance = it },
-                        placeholder = "0 km",
+                        placeholder = "0",
                         modifier = Modifier.weight(1f)
                     )
 
@@ -141,14 +297,14 @@ fun DispatchSection(
                         label = "귀소 시각",
                         value = returnTime,
                         onValueChange = { returnTime = it },
-                        placeholder = "00:00:00",
+                        placeholder = "HH:mm",
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
         }
 
-        // ==== 2. 출동유형 섹션 ====
+        // 출동유형 섹션
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
@@ -166,7 +322,7 @@ fun DispatchSection(
             }
         }
 
-        // ==== 3. 환자 발생 장소 섹션 ====
+        // 환자 발생 장소 섹션
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
@@ -186,10 +342,32 @@ fun DispatchSection(
                     onOptionSelected = { selectedLocation = it },
                     columns = 5
                 )
+
+                if (selectedLocation == "기타") {
+                    TextField(
+                        value = locationDetailValue,
+                        onValueChange = { locationDetailValue = it },
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        placeholder = {
+                            Text("환자 발생 장소를 입력하세요", color = Color(0xFF999999), fontSize = 14.sp)
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF2a2a2a),
+                            unfocusedContainerColor = Color(0xFF2a2a2a),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedIndicatorColor = Color(0xFF3b7cff),
+                            unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                            cursorColor = Color(0xFF3b7cff)
+                        ),
+                        textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color.White),
+                        singleLine = true
+                    )
+                }
             }
         }
 
-        // ==== 4. 환자 증상 - 통증 ====
+        // 환자 증상 - 통증
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
@@ -211,10 +389,32 @@ fun DispatchSection(
                     onOptionsChanged = { selectedPains = it },
                     columns = 5
                 )
+
+                if (selectedPains.contains("그 밖의 통증")) {
+                    TextField(
+                        value = otherPainValue,
+                        onValueChange = { otherPainValue = it },
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        placeholder = {
+                            Text("그 밖의 통증을 입력하세요", color = Color(0xFF999999), fontSize = 14.sp)
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF2a2a2a),
+                            unfocusedContainerColor = Color(0xFF2a2a2a),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedIndicatorColor = Color(0xFF3b7cff),
+                            unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                            cursorColor = Color(0xFF3b7cff)
+                        ),
+                        textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color.White),
+                        singleLine = true
+                    )
+                }
             }
         }
 
-        // ==== 5. 환자 증상 - 외상 ====
+        // 환자 증상 - 외상
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
@@ -224,7 +424,7 @@ fun DispatchSection(
                 )
 
                 MultiSelectButtonGroup(
-                    options = listOf("골절", "탈구", "뼈", "열상", "찰과상", "타박상", "절단", "압궤손상", "화상"),
+                    options = listOf("골절", "탈구", "삠", "열상", "찰과상", "타박상", "절단", "압궤손상", "화상"),
                     selectedOptions = selectedInjuries,
                     onOptionsChanged = { selectedInjuries = it },
                     columns = 4
@@ -232,7 +432,7 @@ fun DispatchSection(
             }
         }
 
-        // ==== 6. 환자 증상 - 그 외 증상 ====
+        // 환자 증상 - 그 외 증상
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
@@ -253,14 +453,34 @@ fun DispatchSection(
                     onOptionsChanged = { selectedSymptoms = it },
                     columns = 6
                 )
+
+                if (selectedSymptoms.contains("기타")) {
+                    TextField(
+                        value = otherSymptomValue,
+                        onValueChange = { otherSymptomValue = it },
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        placeholder = {
+                            Text("기타 증상을 입력하세요", color = Color(0xFF999999), fontSize = 14.sp)
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF2a2a2a),
+                            unfocusedContainerColor = Color(0xFF2a2a2a),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedIndicatorColor = Color(0xFF3b7cff),
+                            unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                            cursorColor = Color(0xFF3b7cff)
+                        ),
+                        textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color.White),
+                        singleLine = true
+                    )
+                }
             }
         }
     }
 }
 
-// ==========================================
 // 시간 필드 (라벨 + 입력 필드)
-// ==========================================
 @Composable
 private fun TimeFieldRow(
     label: String,
@@ -313,9 +533,7 @@ private fun TimeFieldRow(
     }
 }
 
-// ==========================================
-// 시간 필드 + 버튼 (라벨 + 입력 필드 + 액션 버튼)
-// ==========================================
+// 시간 필드 + 버튼
 @Composable
 private fun TimeFieldRowWithButton(
     label: String,
@@ -346,7 +564,7 @@ private fun TimeFieldRowWithButton(
                 modifier = Modifier.weight(1f),
                 placeholder = {
                     Text(
-                        text = "00:00:00",
+                        text = "HH:mm",
                         color = Color(0xFF999999),
                         fontSize = 14.sp
                     )
@@ -386,9 +604,7 @@ private fun TimeFieldRowWithButton(
     }
 }
 
-// ==========================================
 // 단일 선택 버튼 그룹
-// ==========================================
 @Composable
 private fun SingleSelectButtonGroup(
     options: List<String>,
@@ -414,7 +630,6 @@ private fun SingleSelectButtonGroup(
                         modifier = Modifier.weight(1f)
                     )
                 }
-                // 빈 공간 채우기
                 repeat(columns - rowOptions.size) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
@@ -423,9 +638,7 @@ private fun SingleSelectButtonGroup(
     }
 }
 
-// ==========================================
 // 다중 선택 버튼 그룹
-// ==========================================
 @Composable
 private fun MultiSelectButtonGroup(
     options: List<String>,
@@ -459,7 +672,6 @@ private fun MultiSelectButtonGroup(
                         modifier = Modifier.weight(1f)
                     )
                 }
-                // 빈 공간 채우기
                 repeat(columns - rowOptions.size) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
@@ -468,9 +680,7 @@ private fun MultiSelectButtonGroup(
     }
 }
 
-// ==========================================
-// 선택 버튼 (단일/다중 선택 모두 사용)
-// ==========================================
+// 선택 버튼
 @Composable
 private fun SelectButton(
     text: String,
@@ -498,33 +708,9 @@ private fun SelectButton(
     }
 }
 
-// ==========================================
 // 유틸리티: 현재 시간 가져오기
-// ==========================================
 private fun getCurrentTime(): String {
     val currentTime = LocalTime.now()
-    val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
     return currentTime.format(formatter)
-}
-
-// ==========================================
-// Preview
-// ==========================================
-@Preview(
-    showBackground = true,
-    backgroundColor = 0xFF1a1a1a,
-    heightDp = 2000,
-    widthDp = 400
-)
-@Composable
-private fun DispatchSectionPreview() {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color(0xFF1a1a1a)
-    ) {
-        DispatchSection(
-            initialReportTime = "2025-01-05 07:52",
-            initialDispatchTime = "2025-01-05 07:55"
-        )
-    }
 }

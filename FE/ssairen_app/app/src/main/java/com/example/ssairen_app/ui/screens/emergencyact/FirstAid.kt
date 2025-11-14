@@ -22,6 +22,7 @@ import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.FirstAidData
 import com.example.ssairen_app.viewmodel.FirstAidApiState
 import com.example.ssairen_app.viewmodel.LogViewModel
+import com.example.ssairen_app.viewmodel.SttDataState
 
 @Composable
 fun FirstAid(
@@ -33,6 +34,7 @@ fun FirstAid(
     // ✅ API 상태 관찰
     val firstAidState by activityViewModel.firstAidState.observeAsState(FirstAidApiState.Idle)
     val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState()
+    val sttDataState by activityViewModel.sttDataState.observeAsState(SttDataState.Idle)
 
     // ✅ API에서 데이터를 로드했는지 추적
     var isApiDataLoaded by remember { mutableStateOf(false) }
@@ -73,6 +75,43 @@ fun FirstAid(
     var woundBandage by remember { mutableStateOf(false) }
     var woundHemostasis by remember { mutableStateOf(false) }
     var woundParalysis by remember { mutableStateOf(false) }
+
+    // ✅ 4. 자동 저장 함수 (LogViewModel에 저장)
+    fun saveData() {
+        val firstAidData = FirstAidData(
+            airwayJawThrust = airwayJawThrust,
+            airwayHeadTilt = airwayHeadTilt,
+            airwayNPA = airwayNPA,
+            airwayOPA = airwayOPA,
+            airwayIntubation = airwayIntubation,
+            airwaySupraglottic = airwaySupraglottic,
+            oxygenMask = oxygenMask,
+            oxygenNasal = oxygenNasal,
+            oxygenBVM = oxygenBVM,
+            oxygenVentilator = oxygenVentilator,
+            oxygenSuction = oxygenSuction,
+            cprPerformed = cprPerformed,
+            cprManual = cprManual,
+            cprDNR = cprDNR,
+            cprTermination = cprTermination,
+            aedShock = aedShock,
+            aedMonitoring = aedMonitoring,
+            aedApplicationOnly = aedApplicationOnly,
+            treatmentOxygenSaturation = treatmentOxygenSaturation,
+            treatmentShockPrevention = treatmentShockPrevention,
+            treatmentInjection = treatmentInjection,
+            immobilizationSpinal = immobilizationSpinal,
+            immobilizationCSpine = immobilizationCSpine,
+            immobilizationSplint = immobilizationSplint,
+            immobilizationOther = immobilizationOther,
+            woundDressing = woundDressing,
+            woundBandage = woundBandage,
+            woundHemostasis = woundHemostasis,
+            woundParalysis = woundParalysis
+        )
+        viewModel.updateFirstAid(firstAidData)
+        android.util.Log.d("FirstAid", "💾 로컬 저장 완료")
+    }
 
     // ✅ 1. 초기 로컬 데이터 로드 (API 데이터 로드 전에만)
     LaunchedEffect(data) {
@@ -198,49 +237,16 @@ fun FirstAid(
                 isApiDataLoaded = true
 
                 android.util.Log.d("FirstAid", "📋 매핑 완료 - CPR: $cprPerformed, AED Shock: $aedShock")
+
+                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
+                saveData()
+                android.util.Log.d("FirstAid", "💾 LogViewModel 동기화 완료")
             }
             is FirstAidApiState.Error -> {
                 android.util.Log.e("FirstAid", "❌ API 오류: ${state.message}")
             }
             else -> { /* Loading or Idle */ }
         }
-    }
-
-    // ✅ 4. 자동 저장 함수 (LogViewModel에 저장)
-    fun saveData() {
-        val firstAidData = FirstAidData(
-            airwayJawThrust = airwayJawThrust,
-            airwayHeadTilt = airwayHeadTilt,
-            airwayNPA = airwayNPA,
-            airwayOPA = airwayOPA,
-            airwayIntubation = airwayIntubation,
-            airwaySupraglottic = airwaySupraglottic,
-            oxygenMask = oxygenMask,
-            oxygenNasal = oxygenNasal,
-            oxygenBVM = oxygenBVM,
-            oxygenVentilator = oxygenVentilator,
-            oxygenSuction = oxygenSuction,
-            cprPerformed = cprPerformed,
-            cprManual = cprManual,
-            cprDNR = cprDNR,
-            cprTermination = cprTermination,
-            aedShock = aedShock,
-            aedMonitoring = aedMonitoring,
-            aedApplicationOnly = aedApplicationOnly,
-            treatmentOxygenSaturation = treatmentOxygenSaturation,
-            treatmentShockPrevention = treatmentShockPrevention,
-            treatmentInjection = treatmentInjection,
-            immobilizationSpinal = immobilizationSpinal,
-            immobilizationCSpine = immobilizationCSpine,
-            immobilizationSplint = immobilizationSplint,
-            immobilizationOther = immobilizationOther,
-            woundDressing = woundDressing,
-            woundBandage = woundBandage,
-            woundHemostasis = woundHemostasis,
-            woundParalysis = woundParalysis
-        )
-        viewModel.updateFirstAid(firstAidData)
-        android.util.Log.d("FirstAid", "💾 로컬 저장 완료")
     }
 
     // ✅ 로딩 중일 때 표시

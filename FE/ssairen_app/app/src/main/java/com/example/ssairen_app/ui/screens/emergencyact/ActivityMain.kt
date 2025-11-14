@@ -62,7 +62,8 @@ fun ActivityMain(
     onNavigateToDispatch: () -> Unit = {},
     onNavigateToMedicalGuidance: () -> Unit = {},
     onNavigateToPatientTransport: () -> Unit = {},
-    onNavigateToReportDetail: () -> Unit = {}
+    onNavigateToReportDetail: () -> Unit = {},
+    activityViewModel: com.example.ssairen_app.viewmodel.ActivityViewModel = viewModel()
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -95,7 +96,8 @@ fun ActivityMain(
                     onNavigateToDispatch = onNavigateToDispatch,
                     onNavigateToMedicalGuidance = onNavigateToMedicalGuidance,
                     onNavigateToPatientTransport = onNavigateToPatientTransport,
-                    onNavigateToReportDetail = onNavigateToReportDetail
+                    onNavigateToReportDetail = onNavigateToReportDetail,
+                    activityViewModel = activityViewModel
                 )
                 1 -> Text("구급활동일지 화면", color = Color.White)
                 2 -> Text("요약 화면", color = Color.White)
@@ -127,7 +129,8 @@ private fun HomeContent(
     onNavigateToDispatch: () -> Unit = {},
     onNavigateToMedicalGuidance: () -> Unit = {},
     onNavigateToPatientTransport: () -> Unit = {},
-    onNavigateToReportDetail: () -> Unit = {}
+    onNavigateToReportDetail: () -> Unit = {},
+    activityViewModel: com.example.ssairen_app.viewmodel.ActivityViewModel = viewModel()
 ) {
     // ✅ 전역 STT 상태 사용 (싱글톤)
     val isSttRecording = SttManager.isSttRecording
@@ -418,8 +421,19 @@ private fun HomeContent(
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
                         val data = response.body()?.data
-                        Log.d("ActivityMain", "✅ API Success: $data")
-                        // TODO: 받은 JSON 데이터 처리
+                        Log.d("ActivityMain", "✅ textToJson API 성공!")
+                        Log.d("ActivityMain", "📦 전체 응답: ${response.body()}")
+                        Log.d("ActivityMain", "📄 응답 데이터: $data")
+                        Log.d("ActivityMain", "🔍 응답 코드: ${response.code()}")
+
+                        // 응답 데이터 구조 확인
+                        response.body()?.let { apiResponse ->
+                            Log.d("ActivityMain", "  - success: ${apiResponse.success}")
+                            Log.d("ActivityMain", "  - message: ${apiResponse.message}")
+                            apiResponse.data?.let { sttData ->
+                                Log.d("ActivityMain", "  - reportSectionType: ${sttData.reportSectionType}")
+                            }
+                        }
 
                         // ✅ 전송 후에도 텍스트는 계속 누적됨 (초기화하지 않음)
                         Log.d("ActivityMain", "📝 Text sent successfully, continuing to accumulate")
@@ -427,7 +441,9 @@ private fun HomeContent(
                         // ✅ 전송 완료 Toast 알림
                         Toast.makeText(context, "전송 완료", Toast.LENGTH_SHORT).show()
                     } else {
-                        Log.e("ActivityMain", "❌ API Error: ${response.code()}")
+                        Log.e("ActivityMain", "❌ textToJson API 실패!")
+                        Log.e("ActivityMain", "  - 응답 코드: ${response.code()}")
+                        Log.e("ActivityMain", "  - 에러 바디: ${response.errorBody()?.string()}")
                     }
                 }
             } catch (e: Exception) {
@@ -531,12 +547,11 @@ private fun HomeContent(
                     )
                 }
 
-                // ✅ 바디캠 녹화 + 오디오 녹음 + STT 버튼
+                // ✅ 바디캠 녹화 + STT 버튼
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // 첫 번째 줄: 바디캠, 오디오, STT 버튼
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -570,35 +585,7 @@ private fun HomeContent(
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        // ✅ 오디오 녹음 버튼 - 주석 처리
-                        /*
-                        IconButton(
-                            onClick = {
-                                if (isAudioRecording) {
-                                    stopAudioRecording()
-                                } else {
-                                    startAudioRecording()
-                                }
-                            },
-                            modifier = Modifier
-                                .size(56.dp)
-                                .background(
-                                    if (isAudioRecording) Color(0xFFff3b30) else Color(0xFF2a2a2a),
-                                    CircleShape
-                                )
-                        ) {
-                            Icon(
-                                imageVector = if (isAudioRecording) Icons.Filled.Stop else Icons.Filled.Mic,
-                                contentDescription = if (isAudioRecording) "녹음 중지" else "녹음 시작",
-                                tint = Color.White,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(16.dp))
-                        */
-
-                        // ✅ STT 버튼 (음성인식) - 활성화
+                        // ✅ STT 버튼 (음성인식)
                         IconButton(
                             onClick = {
                                 if (isSttRecording) {
@@ -622,68 +609,6 @@ private fun HomeContent(
                             )
                         }
                     }
-
-                    // 두 번째 줄: 전송 버튼들 - 모두 주석 처리
-                    /*
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // 오디오 중간 전송 버튼 (오디오 녹음 중일 때만 표시)
-                        if (isAudioRecording) {
-                            Button(
-                                onClick = { sendCurrentAudio() },
-                                modifier = Modifier.height(40.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFFF9800)
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Send,
-                                    contentDescription = "오디오 전송",
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "오디오 전송",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-
-                        // 간격
-                        if (isAudioRecording && isSttRecording) {
-                            Spacer(modifier = Modifier.width(12.dp))
-                        }
-
-                        // STT 전송 버튼 (STT 녹음 중일 때만 표시)
-                        if (isSttRecording) {
-                            Button(
-                                onClick = { sendAccumulatedTextToApi() },
-                                modifier = Modifier.height(40.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF2196F3)
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Send,
-                                    contentDescription = "텍스트 전송",
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "텍스트 전송",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-                    */
                 }
             }
 
@@ -696,7 +621,13 @@ private fun HomeContent(
             ) {
                 // 1. 환자정보 버튼
                 MainButton(
-                    onClick = onNavigateToPatientInfo,
+                    onClick = {
+                        val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        if (reportId > 0) {
+                            activityViewModel.getPatientInfo(reportId)
+                        }
+                        onNavigateToPatientInfo()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -718,7 +649,13 @@ private fun HomeContent(
 
                 // 2. 환자평가 버튼
                 MainButton(
-                    onClick = onNavigateToPatientEva,
+                    onClick = {
+                        val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        if (reportId > 0) {
+                            activityViewModel.getPatientEva(reportId)
+                        }
+                        onNavigateToPatientEva()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -740,7 +677,13 @@ private fun HomeContent(
 
                 // 3. 환자이송 버튼
                 MainButton(
-                    onClick = onNavigateToPatientTransport,
+                    onClick = {
+                        val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        if (reportId > 0) {
+                            activityViewModel.getTransport(reportId)
+                        }
+                        onNavigateToPatientTransport()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -762,7 +705,13 @@ private fun HomeContent(
 
                 // 4. 구급출동 버튼
                 MainButton(
-                    onClick = onNavigateToDispatch,
+                    onClick = {
+                        val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        if (reportId > 0) {
+                            activityViewModel.getDispatch(reportId)
+                        }
+                        onNavigateToDispatch()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -784,7 +733,13 @@ private fun HomeContent(
 
                 // 5. 환자 발생 유형 버튼
                 MainButton(
-                    onClick = onNavigateToPatientType,
+                    onClick = {
+                        val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        if (reportId > 0) {
+                            activityViewModel.getPatientType(reportId)
+                        }
+                        onNavigateToPatientType()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -806,7 +761,13 @@ private fun HomeContent(
 
                 // 6. 응급처치 버튼
                 MainButton(
-                    onClick = onNavigateToFirstAid,
+                    onClick = {
+                        val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        if (reportId > 0) {
+                            activityViewModel.getFirstAid(reportId)
+                        }
+                        onNavigateToFirstAid()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -828,7 +789,13 @@ private fun HomeContent(
 
                 // 7. 의료지도 버튼
                 MainButton(
-                    onClick = onNavigateToMedicalGuidance,
+                    onClick = {
+                        val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        if (reportId > 0) {
+                            activityViewModel.getMedicalGuidance(reportId)
+                        }
+                        onNavigateToMedicalGuidance()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -850,7 +817,13 @@ private fun HomeContent(
 
                 // 8. 세부 상황정보 버튼
                 MainButton(
-                    onClick = onNavigateToReportDetail,
+                    onClick = {
+                        val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        if (reportId > 0) {
+                            activityViewModel.getDetailReport(reportId)
+                        }
+                        onNavigateToReportDetail()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -869,61 +842,6 @@ private fun HomeContent(
                         fontWeight = FontWeight.Medium
                     )
                 }
-
-                // ✅ STT 텍스트 표시 영역 (STT 녹음 중일 때만 표시) - 주석 처리
-                /*
-                if (isSttRecording && sttText.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    DarkCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        cornerRadius = 8.dp
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(8.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.KeyboardVoice,
-                                    contentDescription = "STT",
-                                    tint = Color(0xFF4CAF50),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "음성 인식 중",
-                                    color = Color(0xFF4CAF50),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(
-                                        Color(0xFF1a1a1a),
-                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
-                                    )
-                                    .verticalScroll(rememberScrollState())
-                                    .padding(6.dp)
-                            ) {
-                                Text(
-                                    text = sttText,
-                                    color = Color.White,
-                                    fontSize = 11.sp,
-                                    lineHeight = 14.sp
-                                )
-                            }
-                        }
-                    }
-                }
-                */
             }
         }
     }
