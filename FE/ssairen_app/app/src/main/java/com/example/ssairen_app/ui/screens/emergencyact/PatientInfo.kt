@@ -46,7 +46,7 @@ fun PatientInfo(
     isReadOnly: Boolean = false,
     activityViewModel: ActivityViewModel = viewModel()  // ✅ ActivityViewModel 추가
 ) {
-    // ✅ API 상태 관찰
+    // ✅ API 상태 관찰, STT 데이터 상태 관찰 추가
     val patientInfoState by activityViewModel.patientInfoState.observeAsState(PatientInfoApiState.Idle)
     val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState()
 
@@ -71,6 +71,25 @@ fun PatientInfo(
     var guardianName by remember { mutableStateOf(data.patientInfo.guardianName) }
     var guardianRelation by remember { mutableStateOf(data.patientInfo.guardianRelation) }
     var guardianPhone by remember { mutableStateOf(data.patientInfo.guardianPhone) }
+
+    // ✅ 자동 저장 함수 (LogViewModel에 임시 저장)
+    fun saveData() {
+        val patientInfoData = PatientInfoData(
+            reporterPhone = reporterPhone,
+            reportMethod = selectedReportMethod,
+            patientName = patientName,
+            patientGender = selectedGender,
+            birthYear = birthYear,
+            birthMonth = birthMonth,
+            birthDay = birthDay,
+            patientAge = patientAge,
+            patientAddress = patientAddress,
+            guardianName = guardianName,
+            guardianRelation = guardianRelation,
+            guardianPhone = guardianPhone
+        )
+        viewModel.updatePatientInfo(patientInfoData)
+    }
 
     // ✅ API 응답 처리
     LaunchedEffect(patientInfoState) {
@@ -132,24 +151,6 @@ fun PatientInfo(
         }
     }
 
-    // ✅ 자동 저장 함수 (LogViewModel에 임시 저장)
-    fun saveData() {
-        val patientInfoData = PatientInfoData(
-            reporterPhone = reporterPhone,
-            reportMethod = selectedReportMethod,
-            patientName = patientName,
-            patientGender = selectedGender,
-            birthYear = birthYear,
-            birthMonth = birthMonth,
-            birthDay = birthDay,
-            patientAge = patientAge,
-            patientAddress = patientAddress,
-            guardianName = guardianName,
-            guardianRelation = guardianRelation,
-            guardianPhone = guardianPhone
-        )
-        viewModel.updatePatientInfo(patientInfoData)
-    }
 
     // ✅ 로딩 중일 때 표시
     if (patientInfoState is PatientInfoApiState.Loading) {
