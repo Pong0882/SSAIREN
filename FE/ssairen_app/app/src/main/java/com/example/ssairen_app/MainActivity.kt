@@ -150,8 +150,21 @@ class MainActivity : ComponentActivity() {
             Log.d(TAG, "========================================")
 
             // Intent에서 출동 데이터 추출
+            val dispatchIdString = intent.getStringExtra("dispatchId")
+            val id = dispatchIdString?.toIntOrNull() ?: 0
+
+            Log.d(TAG, "🔍 출동 ID 파싱:")
+            Log.d(TAG, "  - dispatchId (String): $dispatchIdString")
+            Log.d(TAG, "  - dispatchId (Int): $id")
+
+            if (id == 0) {
+                Log.e(TAG, "⚠️⚠️⚠️ 출동 ID가 0입니다!")
+                Log.e(TAG, "⚠️ FCM data에 id/dispatchId/dispatchID/dispatch_id 필드가 없거나 값이 null입니다!")
+                Log.e(TAG, "⚠️ 위의 Intent extras 로그를 확인하세요!")
+            }
+
             val dispatch = DispatchMessage(
-                id = intent.getStringExtra("id")?.toIntOrNull() ?: 0,
+                id = id,
                 fireStateId = intent.getStringExtra("fireStateId")?.toIntOrNull() ?: 0,
                 paramedicId = intent.getStringExtra("paramedicId")?.toIntOrNull() ?: 0,
                 disasterNumber = intent.getStringExtra("disasterNumber") ?: "UNKNOWN",
@@ -168,6 +181,7 @@ class MainActivity : ComponentActivity() {
             )
 
             Log.d(TAG, "📦 출동 데이터 추출 완료:")
+            Log.d(TAG, "  ✓ 출동 ID: ${dispatch.id}")
             Log.d(TAG, "  ✓ 재난번호: ${dispatch.disasterNumber}")
             Log.d(TAG, "  ✓ 위치: ${dispatch.locationAddress}")
             Log.d(TAG, "  ✓ 유형: ${dispatch.disasterType}")
@@ -358,6 +372,9 @@ fun AppNavigation(
     val reportViewModel: ReportViewModel = viewModel()
     val createReportState by reportViewModel.createReportState.observeAsState(CreateReportState.Idle)
 
+    // ✅ dispatchId 에러 상태 관리
+    var showDispatchIdErrorDialog by remember { mutableStateOf(false) }
+
     // ✅ 일지 생성 성공 시 화면 이동
     LaunchedEffect(createReportState) {
         if (createReportState is CreateReportState.Success) {
@@ -405,11 +422,13 @@ fun AppNavigation(
 
                 if (dispatch.dispatchId == 0) {
                     Log.e("AppNavigation", "❌❌❌ dispatchId가 0입니다! API 호출 불가!")
+                    showDispatchIdErrorDialog = true
+                    dispatchState.closeDispatchModal()
                 } else {
                     Log.d("AppNavigation", "✅ dispatchId 정상, API 호출 시작")
+                    reportViewModel.createReport(dispatch.dispatchId)
                 }
 
-                reportViewModel.createReport(dispatch.dispatchId)
                 Log.d("AppNavigation", "========================================")
             }
         )
@@ -427,6 +446,28 @@ fun AppNavigation(
                 Log.d("AppNavigation", "✅ Hospital response modal confirmed - closing")
                 onClearHospitalResponse()
             }
+        )
+    }
+
+    // ✅ dispatchId 에러 다이얼로그
+    if (showDispatchIdErrorDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showDispatchIdErrorDialog = false },
+            title = { androidx.compose.material3.Text("출동 ID 오류", color = androidx.compose.ui.graphics.Color.White) },
+            text = {
+                androidx.compose.material3.Text(
+                    "출동 ID를 가져올 수 없습니다.\n백엔드 FCM 데이터에 'id' 필드가 포함되어 있는지 확인하세요.",
+                    color = androidx.compose.ui.graphics.Color.White
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = { showDispatchIdErrorDialog = false }
+                ) {
+                    androidx.compose.material3.Text("확인")
+                }
+            },
+            containerColor = androidx.compose.ui.graphics.Color(0xFF2a2a2a)
         )
     }
 

@@ -416,6 +416,37 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
         _firstAidState.postValue(FirstAidApiState.Idle)
     }
 
+    // ==========================================
+    // ✅ STT 완료 후 모든 섹션 새로고침
+    // ==========================================
+
+    /**
+     * STT 완료 후 DB에서 최신 데이터를 가져오기 위해 모든 섹션 GET API 재호출
+     * AudioRecordingService에서 호출됨
+     */
+    fun refreshAllSectionsAfterStt() {
+        val reportId = _currentEmergencyReportId.value
+        if (reportId == null || reportId == 0) {
+            Log.e(TAG, "❌ refreshAllSectionsAfterStt: emergencyReportId가 설정되지 않았습니다")
+            return
+        }
+
+        Log.d(TAG, "🔄 STT 완료 - 모든 섹션 새로고침 시작 (reportId: $reportId)")
+
+        viewModelScope.launch {
+            // 약간의 지연 후 호출 (STT 서버가 DB 저장 완료할 시간 확보)
+            kotlinx.coroutines.delay(500)
+
+            // 모든 섹션 GET API 재호출
+            getPatientInfo(reportId)
+            getPatientType(reportId)
+            getPatientEva(reportId)
+            getFirstAid(reportId)
+
+            Log.d(TAG, "✅ 모든 섹션 새로고침 완료")
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         Log.w(TAG, "🧹 ActivityViewModel 정리됨")

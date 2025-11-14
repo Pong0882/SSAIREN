@@ -61,7 +61,8 @@ fun ActivityMain(
     onNavigateToDispatch: () -> Unit = {},
     onNavigateToMedicalGuidance: () -> Unit = {},
     onNavigateToPatientTransport: () -> Unit = {},
-    onNavigateToReportDetail: () -> Unit = {}
+    onNavigateToReportDetail: () -> Unit = {},
+    activityViewModel: com.example.ssairen_app.viewmodel.ActivityViewModel = viewModel()  // ✅ 추가
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -88,7 +89,8 @@ fun ActivityMain(
                     onNavigateToDispatch = onNavigateToDispatch,
                     onNavigateToMedicalGuidance = onNavigateToMedicalGuidance,
                     onNavigateToPatientTransport = onNavigateToPatientTransport,
-                    onNavigateToReportDetail = onNavigateToReportDetail
+                    onNavigateToReportDetail = onNavigateToReportDetail,
+                    activityViewModel = activityViewModel  // ✅ 전달
                 )
                 1 -> Text("구급활동일지 화면", color = Color.White)
                 2 -> Text("요약 화면", color = Color.White)
@@ -120,7 +122,8 @@ private fun HomeContent(
     onNavigateToDispatch: () -> Unit = {},
     onNavigateToMedicalGuidance: () -> Unit = {},
     onNavigateToPatientTransport: () -> Unit = {},
-    onNavigateToReportDetail: () -> Unit = {}
+    onNavigateToReportDetail: () -> Unit = {},
+    activityViewModel: com.example.ssairen_app.viewmodel.ActivityViewModel = viewModel()
 ) {
     var isAudioRecording by remember { mutableStateOf(false) }
     var isVideoRecording by remember { mutableStateOf(false) }
@@ -686,7 +689,10 @@ private fun HomeContent(
             ) {
                 // 1. 환자정보 버튼
                 MainButton(
-                    onClick = onNavigateToPatientInfo,
+                    onClick = {
+                        activityViewModel.getPatientInfo()  // ✅ GET 추가
+                        onNavigateToPatientInfo()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -708,7 +714,10 @@ private fun HomeContent(
 
                 // 2. 환자평가 버튼
                 MainButton(
-                    onClick = onNavigateToPatientEva,
+                    onClick = {
+                        activityViewModel.getPatientEva()  // ✅ GET 추가
+                        onNavigateToPatientEva()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -728,9 +737,9 @@ private fun HomeContent(
                     )
                 }
 
-                // 3. 환자이송 버튼
+                // 3. 환자이송 버튼 (API 미구현)
                 MainButton(
-                    onClick = onNavigateToPatientTransport,
+                    onClick = onNavigateToPatientTransport,  // ✅ API 없음 (TODO)
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -750,7 +759,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 4. 구급출동 버튼
+                // 4. 구급출동 버튼 (API 미구현)
                 MainButton(
                     onClick = onNavigateToDispatch,
                     modifier = Modifier
@@ -774,7 +783,10 @@ private fun HomeContent(
 
                 // 5. 환자 발생 유형 버튼
                 MainButton(
-                    onClick = onNavigateToPatientType,
+                    onClick = {
+                        activityViewModel.getPatientType()  // ✅ GET 추가
+                        onNavigateToPatientType()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -796,7 +808,10 @@ private fun HomeContent(
 
                 // 6. 응급처치 버튼
                 MainButton(
-                    onClick = onNavigateToFirstAid,
+                    onClick = {
+                        activityViewModel.getFirstAid()  // ✅ GET 추가
+                        onNavigateToFirstAid()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -816,7 +831,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 7. 의료지도 버튼
+                // 7. 의료지도 버튼 (API 미구현)
                 MainButton(
                     onClick = onNavigateToMedicalGuidance,
                     modifier = Modifier
@@ -838,7 +853,7 @@ private fun HomeContent(
                     )
                 }
 
-                // 8. 세부 상황정보 버튼
+                // 8. 세부 상황정보 버튼 (API 미구현)
                 MainButton(
                     onClick = onNavigateToReportDetail,
                     modifier = Modifier
