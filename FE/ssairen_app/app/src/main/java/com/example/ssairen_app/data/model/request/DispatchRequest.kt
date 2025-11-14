@@ -10,8 +10,7 @@ data class DispatchRequest(
 )
 
 data class DispatchRequestData(
-    val dispatch: DispatchInfo,
-    val schemaVersion: Int = 1
+    val dispatch: DispatchInfo
 )
 
 data class DispatchInfo(

@@ -10,7 +10,6 @@ data class MedicalGuidanceRequest(
 )
 
 data class MedicalGuidanceRequestData(
-    val schemaVersion: Int = 1,
     val medicalGuidance: MedicalGuidanceInfo
 )
 

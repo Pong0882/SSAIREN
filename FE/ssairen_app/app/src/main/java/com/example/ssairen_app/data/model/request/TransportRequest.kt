@@ -10,7 +10,6 @@ data class TransportRequest(
 )
 
 data class TransportRequestData(
-    val schemaVersion: Int = 1,
     val transport: TransportInfo
 )
 

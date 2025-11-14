@@ -25,7 +25,6 @@ data class TransportResponseData(
 )
 
 data class TransportDataWrapper(
-    val schemaVersion: Int,
     @SerializedName("transport")
     val patientTransport: PatientTransportResponseInfo?
 )
