@@ -10,11 +10,14 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -36,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.data.api.RetrofitClient
 import com.example.ssairen_app.service.VideoRecordingService
 import com.example.ssairen_app.service.AudioRecordingService
+import com.example.ssairen_app.service.AudioRecordingServiceNew
 import com.example.ssairen_app.ui.components.DarkCard
 import com.example.ssairen_app.ui.components.MainButton
 import com.example.ssairen_app.ui.components.HeartRateChart
@@ -126,8 +130,8 @@ private fun HomeContent(
     var videoService by remember { mutableStateOf<VideoRecordingService?>(null) }
     var isBound by remember { mutableStateOf(false) }
 
-    // ✅ 오디오 서비스 변수 추가
-    var audioService by remember { mutableStateOf<AudioRecordingService?>(null) }
+    // ✅ 오디오 서비스 변수 추가 (새로운 AudioRecord 방식)
+    var audioService by remember { mutableStateOf<AudioRecordingServiceNew?>(null) }
     var isAudioBound by remember { mutableStateOf(false) }
 
     // ✅ STT 관련 상태 추가
@@ -183,14 +187,14 @@ private fun HomeContent(
         }
     }
 
-    // ✅ 오디오 서비스 연결
+    // ✅ 오디오 서비스 연결 (새로운 AudioRecord 방식)
     val audioServiceConnection = remember {
         object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-                val binder = service as AudioRecordingService.LocalBinder
+                val binder = service as AudioRecordingServiceNew.LocalBinder
                 audioService = binder.getService()
                 isAudioBound = true
-                Log.d("ActivityMain", "AudioRecordingService connected")
+                Log.d("ActivityMain", "AudioRecordingServiceNew connected")
 
                 audioService?.setRecordingCallbacks(
                     onStarted = {
@@ -218,7 +222,7 @@ private fun HomeContent(
             override fun onServiceDisconnected(name: ComponentName?) {
                 audioService = null
                 isAudioBound = false
-                Log.d("ActivityMain", "AudioRecordingService disconnected")
+                Log.d("ActivityMain", "AudioRecordingServiceNew disconnected")
             }
         }
     }
@@ -287,7 +291,7 @@ private fun HomeContent(
         videoService?.stopRecording()
     }
 
-    // ✅ 오디오 녹음 시작 함수
+    // ✅ 오디오 녹음 시작 함수 (새로운 AudioRecord 방식)
     fun startAudioRecording() {
         if (!checkPermissions()) {
             permissionLauncher.launch(requiredPermissions.toTypedArray())
@@ -295,12 +299,12 @@ private fun HomeContent(
         }
 
         if (!isAudioBound) {
-            val intent = Intent(context, AudioRecordingService::class.java)
+            val intent = Intent(context, AudioRecordingServiceNew::class.java)
             context.bindService(intent, audioServiceConnection, Context.BIND_AUTO_CREATE)
         }
 
-        val intent = Intent(context, AudioRecordingService::class.java).apply {
-            action = AudioRecordingService.ACTION_START_RECORDING
+        val intent = Intent(context, AudioRecordingServiceNew::class.java).apply {
+            action = AudioRecordingServiceNew.ACTION_START_RECORDING
         }
         ContextCompat.startForegroundService(context, intent)
     }
@@ -308,6 +312,12 @@ private fun HomeContent(
     // ✅ 오디오 녹음 중지 함수
     fun stopAudioRecording() {
         audioService?.stopRecording()
+    }
+
+    // ✅ 현재까지 녹음된 오디오를 전송 (녹음은 계속)
+    fun sendCurrentAudio() {
+        audioService?.sendCurrentRecording()
+        Log.d("ActivityMain", "📤 Sending current audio recording")
     }
 
     // ✅ STT 녹음 시작 함수
@@ -351,11 +361,18 @@ private fun HomeContent(
 
     // ✅ 누적된 텍스트를 API로 전송하는 함수 (녹음은 계속 진행)
     fun sendAccumulatedTextToApi() {
-        val currentText = sttHelper?.getAccumulatedText() ?: ""
+        // ✅ 현재 누적된 텍스트 가져오기
+        val accumulatedText = sttHelper?.getAccumulatedText() ?: ""
+
+        // ✅ 화면에 표시되는 텍스트도 함께 가져오기 (부분 결과 포함)
+        val currentText = if (sttText.isNotEmpty()) sttText else accumulatedText
+
         val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
 
         Log.d("ActivityMain", "📤 Sending accumulated text to API")
-        Log.d("ActivityMain", "  - Text: $currentText")
+        Log.d("ActivityMain", "  - Accumulated Text: $accumulatedText")
+        Log.d("ActivityMain", "  - Display Text (sttText): $sttText")
+        Log.d("ActivityMain", "  - Sending Text: $currentText")
         Log.d("ActivityMain", "  - ReportId: $currentReportId")
 
         if (currentText.isEmpty()) {
@@ -385,10 +402,11 @@ private fun HomeContent(
                         Log.d("ActivityMain", "✅ API Success: $data")
                         // TODO: 받은 JSON 데이터 처리
 
-                        // 전송 성공 후 누적 텍스트 초기화
-                        sttHelper?.clearAccumulatedText()
-                        sttText = ""
-                        Log.d("ActivityMain", "🗑️ Accumulated text cleared")
+                        // ✅ 전송 후에도 텍스트는 계속 누적됨 (초기화하지 않음)
+                        Log.d("ActivityMain", "📝 Text sent successfully, continuing to accumulate")
+
+                        // ✅ 전송 완료 Toast 알림
+                        Toast.makeText(context, "전송 완료", Toast.LENGTH_SHORT).show()
                     } else {
                         Log.e("ActivityMain", "❌ API Error: ${response.code()}")
                     }
@@ -399,6 +417,38 @@ private fun HomeContent(
                     // 에러 처리
                 }
             }
+        }
+    }
+
+    // ✅ STT 녹음 중일 때 20초마다 자동으로 텍스트 전송
+    LaunchedEffect(isSttRecording) {
+        if (isSttRecording) {
+            Log.d("ActivityMain", "⏰ STT 자동 전송 스케줄링 시작 (20초 간격)")
+            while (isSttRecording) {
+                kotlinx.coroutines.delay(20000L) // 20초 대기
+                if (isSttRecording) { // 대기 중 중지되지 않았는지 확인
+                    Log.d("ActivityMain", "⏰ 20초 경과 - 자동 텍스트 전송")
+                    sendAccumulatedTextToApi()
+                }
+            }
+        } else {
+            Log.d("ActivityMain", "⏰ STT 자동 전송 스케줄링 중지")
+        }
+    }
+
+    // ✅ Whisper 오디오 녹음 중일 때 20초마다 자동으로 전송
+    LaunchedEffect(isAudioRecording) {
+        if (isAudioRecording) {
+            Log.d("ActivityMain", "⏰ Whisper 자동 전송 스케줄링 시작 (20초 간격)")
+            while (isAudioRecording) {
+                kotlinx.coroutines.delay(20000L) // 20초 대기
+                if (isAudioRecording) { // 대기 중 중지되지 않았는지 확인
+                    Log.d("ActivityMain", "⏰ 20초 경과 - 자동 오디오 전송")
+                    sendCurrentAudio()
+                }
+            }
+        } else {
+            Log.d("ActivityMain", "⏰ Whisper 자동 전송 스케줄링 중지")
         }
     }
 
@@ -513,7 +563,8 @@ private fun HomeContent(
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        // ✅ 오디오 녹음 버튼
+                        // ✅ 오디오 녹음 버튼 - 주석 처리
+                        /*
                         IconButton(
                             onClick = {
                                 if (isAudioRecording) {
@@ -538,8 +589,9 @@ private fun HomeContent(
                         }
 
                         Spacer(modifier = Modifier.width(16.dp))
+                        */
 
-                        // ✅ STT 버튼 (음성인식)
+                        // ✅ STT 버튼 (음성인식) - 활성화
                         IconButton(
                             onClick = {
                                 if (isSttRecording) {
@@ -564,36 +616,75 @@ private fun HomeContent(
                         }
                     }
 
-                    // 두 번째 줄: STT 전송 버튼 (STT 녹음 중일 때만 표시)
-                    if (isSttRecording) {
-                        Button(
-                            onClick = { sendAccumulatedTextToApi() },
-                            modifier = Modifier
-                                .padding(top = 8.dp)
-                                .height(40.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF2196F3)
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Send,
-                                contentDescription = "텍스트 전송",
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "텍스트 전송",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium
-                            )
+                    // 두 번째 줄: 전송 버튼들 - 모두 주석 처리
+                    /*
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // 오디오 중간 전송 버튼 (오디오 녹음 중일 때만 표시)
+                        if (isAudioRecording) {
+                            Button(
+                                onClick = { sendCurrentAudio() },
+                                modifier = Modifier.height(40.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFFF9800)
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Send,
+                                    contentDescription = "오디오 전송",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "오디오 전송",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+
+                        // 간격
+                        if (isAudioRecording && isSttRecording) {
+                            Spacer(modifier = Modifier.width(12.dp))
+                        }
+
+                        // STT 전송 버튼 (STT 녹음 중일 때만 표시)
+                        if (isSttRecording) {
+                            Button(
+                                onClick = { sendAccumulatedTextToApi() },
+                                modifier = Modifier.height(40.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF2196F3)
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Send,
+                                    contentDescription = "텍스트 전송",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "텍스트 전송",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
+                    */
                 }
             }
 
             // 우측 메뉴 버튼들
             Column(
-                modifier = Modifier.width(140.dp),
+                modifier = Modifier
+                    .width(140.dp)
+                    .fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // 1. 환자정보 버튼
@@ -783,6 +874,61 @@ private fun HomeContent(
                         fontWeight = FontWeight.Medium
                     )
                 }
+
+                // ✅ STT 텍스트 표시 영역 (STT 녹음 중일 때만 표시) - 주석 처리
+                /*
+                if (isSttRecording && sttText.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    DarkCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        cornerRadius = 8.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.KeyboardVoice,
+                                    contentDescription = "STT",
+                                    tint = Color(0xFF4CAF50),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "음성 인식 중",
+                                    color = Color(0xFF4CAF50),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Color(0xFF1a1a1a),
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
+                                    )
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(6.dp)
+                            ) {
+                                Text(
+                                    text = sttText,
+                                    color = Color.White,
+                                    fontSize = 11.sp,
+                                    lineHeight = 14.sp
+                                )
+                            }
+                        }
+                    }
+                }
+                */
             }
         }
     }

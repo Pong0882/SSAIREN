@@ -105,6 +105,13 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="microphone" />
+
+        <!-- ✅ 새로운 AudioRecord 방식 서비스 -->
+        <service
+            android:name=".service.AudioRecordingServiceNew"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
     </application>
 
 </manifest>

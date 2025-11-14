@@ -56,12 +56,14 @@ interface FileApiService {
      * 오디오 파일 업로드 및 STT 변환
      *
      * @param file 업로드할 오디오 파일 (Multipart)
+     * @param emergencyReportId 구급일지 ID
      * @return 업로드 결과 + STT 변환된 텍스트
      */
     @Multipart
     @POST("/api/files/stt/local/full-to-json")
     suspend fun uploadAudioAndGetStructuredData(
-        @Part file: MultipartBody.Part
+        @Part file: MultipartBody.Part,
+        @retrofit2.http.Query("emergencyReportId") emergencyReportId: Long
     ): Response<ApiResponse<SttResponse>>
 
     /**
