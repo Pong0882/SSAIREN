@@ -23,6 +23,12 @@ import com.example.ssairen_app.viewmodel.SaveState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Description  // ✅ 추가
+import androidx.compose.material.icons.filled.Check
+import com.example.ssairen_app.viewmodel.ReportViewModel
+import com.example.ssairen_app.viewmodel.CompleteReportState
+import androidx.compose.runtime.livedata.observeAsState
+
 
 @Composable
 fun ActivityLogHome(
@@ -31,9 +37,11 @@ fun ActivityLogHome(
     isReadOnly: Boolean = false,
     onNavigateBack: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
+    onNavigateToReportHome: () -> Unit = {},
     onNavigateToSummation: () -> Unit = {},
     viewModel: LogViewModel = viewModel(),
-    activityViewModel: ActivityViewModel = viewModel()
+    activityViewModel: ActivityViewModel = viewModel(),
+    reportViewModel: ReportViewModel = viewModel()
 ) {
     var selectedLogTab by remember { mutableIntStateOf(initialTab) }
     var selectedBottomTab by remember { mutableIntStateOf(1) }
@@ -44,6 +52,40 @@ fun ActivityLogHome(
 
     // ✅ Snackbar 상태
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // ✅ 작성완료 상태 관찰
+    val completeReportState by reportViewModel.completeReportState.observeAsState(CompleteReportState.Idle)
+
+    LaunchedEffect(completeReportState) {
+        when (completeReportState) {
+            is CompleteReportState.Success -> {
+                Log.d("ActivityLogHome", "✅ 작성 완료 성공")
+
+                // 1. Snackbar 표시
+                snackbarHostState.showSnackbar(
+                    message = "보고서 작성이 완료되었습니다",
+                    duration = SnackbarDuration.Short
+                )
+
+                // 2. 상태 초기화
+                reportViewModel.resetCompleteState()
+
+                // 3. ReportHome으로 이동 (ReportHome에서 자동으로 새로고침됨)
+                Log.d("ActivityLogHome", "🏠 ReportHome으로 이동")
+                onNavigateToReportHome()
+            }
+            is CompleteReportState.Error -> {
+                val message = (completeReportState as CompleteReportState.Error).message
+                Log.e("ActivityLogHome", "❌ 작성 완료 실패: $message")
+                snackbarHostState.showSnackbar(
+                    message = "작성 완료 실패: $message",
+                    duration = SnackbarDuration.Long
+                )
+                reportViewModel.resetCompleteState()
+            }
+            else -> {}
+        }
+    }
 
     // ✅ emergencyReportId를 두 ViewModel에 모두 설정
     LaunchedEffect(emergencyReportId) {
@@ -121,46 +163,102 @@ fun ActivityLogHome(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "뒤로가기",
-                        tint = Color.White
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Column {
-                    Text(
-                        text = "구급활동일지",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        if (lastSavedTime.isNotEmpty()) {
-                            Text(
-                                text = "마지막 저장: $lastSavedTime",
-                                color = Color.Gray,
-                                fontSize = 12.sp
-                            )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "뒤로가기",
+                            tint = Color.White
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "구급활동일지",
+                            color = Color.White,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (lastSavedTime.isNotEmpty()) {
+                                Text(
+                                    text = "마지막 저장: $lastSavedTime",
+                                    color = Color.Gray,
+                                    fontSize = 12.sp
+                                )
+                            }
+                            // ✅ 저장 중 표시
+                            if (saveState is SaveState.Saving) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(12.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color(0xFF3b7cff)
+                                )
+                                Text(
+                                    text = "저장 중...",
+                                    color = Color(0xFF3b7cff),
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
-                        // ✅ 저장 중 표시
-                        if (saveState is SaveState.Saving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(12.dp),
-                                strokeWidth = 2.dp,
-                                color = Color(0xFF3b7cff)
-                            )
-                            Text(
-                                text = "저장 중...",
-                                color = Color(0xFF3b7cff),
-                                fontSize = 12.sp
-                            )
+                    }
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    IconButton(onClick = onNavigateToReportHome) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = "보고서 홈",
+                            tint = Color.White
+                        )
+                    }
+                    if (!isReadOnly) {
+                        IconButton(
+                            onClick = {
+                                Log.d("ActivityLogHome", "📝 작성완료 버튼 클릭")
+
+                                // 코루틴으로 순차 실행
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    // 1. 현재 탭 저장
+                                    viewModel.saveToBackend(selectedLogTab)
+
+                                    // 2. 저장 완료 대기 (최대 2초)
+                                    var waitCount = 0
+                                    while (saveState is SaveState.Saving && waitCount < 20) {
+                                        kotlinx.coroutines.delay(100)
+                                        waitCount++
+                                    }
+
+                                    // 3. 작성 완료 API 호출
+                                    Log.d("ActivityLogHome", "💾 저장 완료, 작성완료 API 호출")
+                                    reportViewModel.completeReport(emergencyReportId)
+                                }
+                            },
+                            enabled = completeReportState !is CompleteReportState.Loading
+                        ) {
+                            if (completeReportState is CompleteReportState.Loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color(0xFF28a745)
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "작성완료",
+                                    tint = Color(0xFF28a745),  // 초록색
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
                         }
                     }
                 }

@@ -48,6 +48,7 @@ data class MyParamedicInfo(
     val studentNumber: String
 )
 
+// ✅ 중복 제거하고 isCompleted 필드 추가
 data class MyEmergencyReport(
     @SerializedName("id")
     val id: Int,
@@ -56,7 +57,10 @@ data class MyEmergencyReport(
     val dispatchInfo: MyDispatchInfo,
 
     @SerializedName("createdAt")
-    val createdAt: String
+    val createdAt: String,
+
+    @SerializedName("isCompleted")  // ✅ 추가
+    val isCompleted: Boolean = false  // 기본값: 작성중
 )
 
 data class MyDispatchInfo(
@@ -85,4 +89,27 @@ data class MyFireStateInfo(
 
     @SerializedName("name")
     val name: String
+)
+
+// ✅ 작성 완료 API 응답 (기존 구조 재활용)
+data class CompleteReportResponse(
+    @SerializedName("success")
+    val success: Boolean,
+
+    @SerializedName("data")
+    val data: CompleteReportData?,
+
+    @SerializedName("message")
+    val message: String,
+
+    @SerializedName("timestamp")
+    val timestamp: String
+)
+
+data class CompleteReportData(
+    @SerializedName("emergencyReportId")
+    val emergencyReportId: Int,
+
+    @SerializedName("isCompleted")
+    val isCompleted: Boolean
 )
