@@ -23,6 +23,7 @@ import com.example.ssairen_app.data.model.response.TransportResponse
 import com.example.ssairen_app.data.model.request.DetailReportRequest
 import com.example.ssairen_app.data.model.response.DetailReportResponse
 import com.example.ssairen_app.data.model.response.DispatchListResponse
+import com.example.ssairen_app.data.model.response.FireStateReportResponse
 
 import retrofit2.Response
 import retrofit2.http.*
@@ -73,6 +74,12 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Query("limit") limit: Int = 100
     ): Response<DispatchListResponse>
+
+    // 관내 보고서 목록 조회 API
+    @GET("api/emergency-reports/fire-state")
+    suspend fun getFireStateReports(
+        @Header("Authorization") token: String
+    ): Response<FireStateReportResponse>
 
     // ==========================================
     // 섹션 조회 API
