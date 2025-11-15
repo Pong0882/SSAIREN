@@ -69,6 +69,7 @@ public class EmergencyReportMapper {
 
         return new EmergencyReportItemResponse(
                 emergencyReport.getId(),
+                emergencyReport.getIsCompleted(),
                 dispatchInfo,
                 emergencyReport.getCreatedAt()
         );
