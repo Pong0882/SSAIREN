@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ssairen_app.ui.components.MainButton
 import com.example.ssairen_app.viewmodel.ActivityLogData
 import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.LogViewModel
@@ -46,16 +47,27 @@ fun PatientInfo(
     isReadOnly: Boolean = false,
     activityViewModel: ActivityViewModel = viewModel()
 ) {
+    // ✅ API 상태 관찰, STT 데이터 상태 관찰 추가
     val patientInfoState by activityViewModel.patientInfoState.observeAsState(PatientInfoApiState.Idle)
     val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState()
 
+    // ✅ 최초 로딩 여부 추적 (깜빡임 방지)
+    var isInitialLoad by remember { mutableStateOf(true) }
+
+    // ✅ 5초마다 자동으로 GET 요청 (AI 입력 내용 반영)
     LaunchedEffect(currentReportId) {
         currentReportId?.let { reportId ->
-            Log.d("PatientInfo", "📞 API 호출: getPatientInfo($reportId)")
-            activityViewModel.getPatientInfo(reportId)
+            while (true) {
+                Log.d("PatientInfo", "📞 자동 API 호출: getPatientInfo($reportId)")
+                activityViewModel.getPatientInfo(reportId)
+
+                // 5초 대기
+                kotlinx.coroutines.delay(5000)
+            }
         }
     }
 
+    // ✅ State 변수들 (data.patientInfo로 초기화)
     var reporterPhone by remember { mutableStateOf(data.patientInfo.reporterPhone) }
     var selectedReportMethod by remember { mutableStateOf(data.patientInfo.reportMethod) }
     var patientName by remember { mutableStateOf(data.patientInfo.patientName) }
@@ -69,6 +81,7 @@ fun PatientInfo(
     var guardianRelation by remember { mutableStateOf(data.patientInfo.guardianRelation) }
     var guardianPhone by remember { mutableStateOf(data.patientInfo.guardianPhone) }
 
+    // ✅ 자동 저장 함수 (LogViewModel에 임시 저장)
     fun saveData() {
         val patientInfoData = PatientInfoData(
             reporterPhone = reporterPhone,
@@ -87,20 +100,24 @@ fun PatientInfo(
         viewModel.updatePatientInfo(patientInfoData)
     }
 
+    // ✅ API 응답 처리
     LaunchedEffect(patientInfoState) {
         Log.d("PatientInfo", "🟢 patientInfoState 변경: $patientInfoState")
 
         when (val state = patientInfoState) {
             is PatientInfoApiState.Success -> {
                 Log.d("PatientInfo", "✅ API 성공 - 데이터 매핑 시작")
+                isInitialLoad = false  // 최초 로딩 완료
                 val apiData = state.patientInfoResponse.data.data.patientInfo
 
+                // 신고자 정보 매핑
                 apiData.reporter?.let { reporter ->
                     reporterPhone = reporter.phone ?: ""
                     selectedReportMethod = reporter.reportMethod ?: ""
                     Log.d("PatientInfo", "신고자: phone=$reporterPhone, method=$selectedReportMethod")
                 }
 
+                // 환자 정보 매핑
                 apiData.patient?.let { patient ->
                     patientName = patient.name ?: ""
                     selectedGender = patient.gender ?: ""
@@ -110,6 +127,7 @@ fun PatientInfo(
                     Log.d("PatientInfo", "환자: name=$patientName, gender=$selectedGender, age=$patientAge")
                     Log.d("PatientInfo", "주소: $patientAddress")
 
+                    // 생년월일 파싱 (YYYY-MM-DD)
                     patient.birthDate?.let { birthDate ->
                         val parts = birthDate.split("-")
                         if (parts.size == 3) {
@@ -121,6 +139,7 @@ fun PatientInfo(
                     }
                 }
 
+                // 보호자 정보 매핑
                 apiData.guardian?.let { guardian ->
                     guardianName = guardian.name ?: ""
                     guardianRelation = guardian.relation ?: ""
@@ -129,6 +148,8 @@ fun PatientInfo(
                 }
 
                 Log.d("PatientInfo", "✅ 데이터 매핑 완료")
+
+                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
                 saveData()
                 Log.d("PatientInfo", "💾 LogViewModel 동기화 완료")
             }
@@ -144,7 +165,9 @@ fun PatientInfo(
         }
     }
 
-    if (patientInfoState is PatientInfoApiState.Loading) {
+
+    // ✅ 최초 로딩 중일 때만 로딩 화면 표시 (깜빡임 방지)
+    if (isInitialLoad && patientInfoState is PatientInfoApiState.Loading) {
         Box(
             modifier = Modifier
                 .fillMaxSize()

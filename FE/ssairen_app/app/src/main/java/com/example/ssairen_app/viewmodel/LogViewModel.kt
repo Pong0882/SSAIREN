@@ -58,11 +58,11 @@ data class DispatchData(
 
 // 의료지도
 data class MedicalGuidanceData(
-    val contactStatus: String = "연결",                      // 의료지도 연결 여부: 연결 | 미연결
+    val contactStatus: String = "",                         // 의료지도 연결 여부: 연결 | 미연결
     val requestTime: String = "",                           // 요청 시각 (HH:mm)
-    val requestMethod: String = "일반전화",                  // 요청 방법
+    val requestMethod: String = "",                         // 요청 방법
     val requestMethodValue: String? = null,                 // 기타 요청 방법 입력값
-    val guidanceAgency: String = "소방",                     // 의료지도 기관: 소방 | 병원 | 기타
+    val guidanceAgency: String = "",                        // 의료지도 기관: 소방 | 병원 | 기타
     val guidanceAgencyValue: String? = null,                // 기타 기관 입력값
     val guidanceDoctor: String = "",                        // 의료지도 의사 성명
     val emergencyTreatment: Set<String> = setOf(),          // 응급처치 (복수 선택)
@@ -630,7 +630,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
         return DispatchRequest(
             data = DispatchRequestData(
-                schemaVersion = 1,
                 dispatch = DispatchInfo(
                     reportDatetime = data.reportDatetime.ifEmpty { currentTime },
                     departureTime = data.departureTime.ifEmpty { "00:00" },
@@ -682,7 +681,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
         return MedicalGuidanceRequest(
             data = MedicalGuidanceRequestData(
-                schemaVersion = 1,
                 medicalGuidance = MedicalGuidanceInfo(
                     contactStatus = data.contactStatus.ifEmpty { "연결" },
                     requestTime = data.requestTime.ifEmpty { "00:00" },
@@ -782,7 +780,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
         return com.example.ssairen_app.data.model.request.TransportRequest(
             data = com.example.ssairen_app.data.model.request.TransportRequestData(
-                schemaVersion = 1,
                 transport = com.example.ssairen_app.data.model.request.TransportInfo(
                     firstTransport = firstTransport,
                     secondTransport = secondTransport,
@@ -1037,7 +1034,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             // 의사 정보 변환 (이름이 있을 경우에만 포함)
             val doctor = if (detailData.doctorName.isNotEmpty()) {
                 ParamedicMember(
-                    affiliation = detailData.doctorAffiliation.ifEmpty { null },
+                    affiliation = detailData.doctorAffiliation.takeIf { it.isNotEmpty() },
                     name = detailData.doctorName,
                     grade = null,
                     rank = null,
@@ -1050,8 +1047,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 ParamedicMember(
                     affiliation = null,
                     name = detailData.paramedic1Name,
-                    grade = detailData.paramedic1Grade.ifEmpty { null },
-                    rank = detailData.paramedic1Rank.ifEmpty { null },
+                    grade = detailData.paramedic1Grade.takeIf { it.isNotEmpty() },
+                    rank = detailData.paramedic1Rank.takeIf { it.isNotEmpty() },
                     signature = if (detailData.paramedic1Signature.isNotEmpty()) "" else null
                 )
             } else null
@@ -1061,8 +1058,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 ParamedicMember(
                     affiliation = null,
                     name = detailData.paramedic2Name,
-                    grade = detailData.paramedic2Grade.ifEmpty { null },
-                    rank = detailData.paramedic2Rank.ifEmpty { null },
+                    grade = detailData.paramedic2Grade.takeIf { it.isNotEmpty() },
+                    rank = detailData.paramedic2Rank.takeIf { it.isNotEmpty() },
                     signature = if (detailData.paramedic2Signature.isNotEmpty()) "" else null
                 )
             } else null
@@ -1072,8 +1069,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 ParamedicMember(
                     affiliation = null,
                     name = detailData.driverName,
-                    grade = detailData.driverGrade.ifEmpty { null },
-                    rank = detailData.driverRank.ifEmpty { null },
+                    grade = detailData.driverGrade.takeIf { it.isNotEmpty() },
+                    rank = detailData.driverRank.takeIf { it.isNotEmpty() },
                     signature = if (detailData.driverSignature.isNotEmpty()) "" else null
                 )
             } else null
@@ -1083,20 +1080,23 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 ParamedicMember(
                     affiliation = null,
                     name = detailData.otherName,
-                    grade = detailData.otherGrade.ifEmpty { null },
-                    rank = detailData.otherRank.ifEmpty { null },
+                    grade = detailData.otherGrade.takeIf { it.isNotEmpty() },
+                    rank = detailData.otherRank.takeIf { it.isNotEmpty() },
                     signature = if (detailData.otherSignature.isNotEmpty()) "" else null
                 )
             } else null
 
             // 장애요인 변환 - Set<String>을 List<ObstacleItem>으로 변환
-            val obstacles = detailData.obstacles.map { obstacleName ->
-                ObstacleItem(
-                    type = obstacleName,
-                    isCustom = obstacleName == "기타",
-                    value = if (obstacleName == "기타") detailData.obstacleOtherValue else null
-                )
-            }
+            val obstacles = detailData.obstacles
+                .filterNotNull()
+                .filter { it.isNotEmpty() }
+                .map { obstacleName ->
+                    ObstacleItem(
+                        type = obstacleName,
+                        isCustom = obstacleName == "기타",
+                        value = if (obstacleName == "기타") detailData.obstacleOtherValue else null
+                    )
+                }
 
             // createdAt, updatedAt 생성
             val currentTime = java.time.ZonedDateTime.now()
@@ -1105,7 +1105,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
             val request = DetailReportRequest(
                 data = DetailReportRequestData(
-                    schemaVersion = 1,
                     detailReport = DetailReportInfo(
                         doctor = doctor,
                         paramedic1 = paramedic1,

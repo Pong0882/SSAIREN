@@ -38,11 +38,19 @@ fun PatientEva(
     val patientEvaState by activityViewModel.patientEvaState.observeAsState(PatientEvaApiState.Idle)
     val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState()
 
-    // ✅ API 호출 (currentReportId가 설정되면 자동 실행)
+    // ✅ 최초 로딩 여부 추적 (깜빡임 방지)
+    var isInitialLoad by remember { mutableStateOf(true) }
+
+    // ✅ 5초마다 자동으로 GET 요청 (AI 입력 내용 반영)
     LaunchedEffect(currentReportId) {
         currentReportId?.let { reportId ->
-            Log.d(TAG, "📞 API 호출: getPatientEva($reportId)")
-            activityViewModel.getPatientEva(reportId)
+            while (true) {
+                Log.d(TAG, "📞 자동 API 호출: getPatientEva($reportId)")
+                activityViewModel.getPatientEva(reportId)
+
+                // 5초 대기
+                kotlinx.coroutines.delay(5000)
+            }
         }
     }
 
@@ -129,6 +137,7 @@ fun PatientEva(
         when (val state = patientEvaState) {
             is PatientEvaApiState.Success -> {
                 Log.d(TAG, "✅ API 응답 성공")
+                isInitialLoad = false  // 최초 로딩 완료
                 val apiData = state.patientEvaResponse.data.data.assessment
 
                 // 환자 레벨 매핑
@@ -258,8 +267,8 @@ fun PatientEva(
         }
     }
 
-    // ✅ 로딩 중일 때 표시
-    if (patientEvaState is PatientEvaApiState.Loading) {
+    // ✅ 최초 로딩 중일 때만 로딩 화면 표시 (깜빡임 방지)
+    if (isInitialLoad && patientEvaState is PatientEvaApiState.Loading) {
         Box(
             modifier = Modifier
                 .fillMaxSize()

@@ -24,7 +24,6 @@ data class MedicalGuidanceResponseData(
 )
 
 data class MedicalGuidanceDataWrapper(
-    val schemaVersion: Int,
     val medicalGuidance: MedicalGuidanceResponseInfo
 )
 
