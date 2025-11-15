@@ -22,6 +22,7 @@ import com.example.ssairen_app.data.model.request.TransportRequest
 import com.example.ssairen_app.data.model.response.TransportResponse
 import com.example.ssairen_app.data.model.request.DetailReportRequest
 import com.example.ssairen_app.data.model.response.DetailReportResponse
+import com.example.ssairen_app.data.model.response.DispatchListResponse
 
 import retrofit2.Response
 import retrofit2.http.*
@@ -65,6 +66,13 @@ interface ApiService {
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
     ): Response<ReportListResponse>
+
+    // 출동지령 내역 목록 조회 API
+    @GET("api/dispatches/fire-state")
+    suspend fun getDispatchList(
+        @Header("Authorization") token: String,
+        @Query("limit") limit: Int = 100
+    ): Response<DispatchListResponse>
 
     // ==========================================
     // 섹션 조회 API

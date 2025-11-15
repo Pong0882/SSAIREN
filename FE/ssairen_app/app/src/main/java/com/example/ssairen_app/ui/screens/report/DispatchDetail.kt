@@ -22,13 +22,14 @@ import androidx.compose.ui.window.Dialog
 // ==========================================
 data class DispatchDetailData(
     val dispatchNumber: String,      // 재난번호
-    val status: String,              // 실전/1차
-    val type: String,                // 화재/고층건물
-    val area: String,                // 관할
-    val location: String,            // 오창안전센터
-    val reporter: String,            // 신고자
+    val dispatchLevel: String,       // 출동구분 (실전, 훈련 등)
+    val dispatchOrder: String,       // 출동차수 (1차, 2차 등)
+    val disasterType: String,        // 재난유형 (화재, 구급 등)
+    val disasterSubtype: String,     // 재난세부유형
+    val dispatchStation: String,     // 출동소방서
+    val reporter: String,            // 신고자명
     val reporterPhone: String,       // 신고자 전화번호
-    val dispatchTime: String,        // 출동지령일시
+    val dispatchTime: String,        // 출동지령일시 (yyyy-MM-dd HH:mm)
     val address: String,             // 주소
     val cause: String                // 사고 원인
 )
@@ -97,7 +98,7 @@ fun DispatchDetail(
                         )
                         InfoColumn(
                             label = "구분/출동차수",
-                            value = dispatchData.status,
+                            value = "${dispatchData.dispatchLevel} / ${dispatchData.dispatchOrder}",
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -109,12 +110,12 @@ fun DispatchDetail(
                     ) {
                         InfoColumn(
                             label = "층별 / 분류",
-                            value = dispatchData.type,
+                            value = "${dispatchData.disasterType} / ${dispatchData.disasterSubtype}",
                             modifier = Modifier.weight(1f)
                         )
                         InfoColumn(
                             label = "관할",
-                            value = dispatchData.area,
+                            value = dispatchData.dispatchStation,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -126,7 +127,7 @@ fun DispatchDetail(
                     ) {
                         InfoColumn(
                             label = "신고자",
-                            value = "${dispatchData.reporter}(${dispatchData.reporterPhone})",
+                            value = "${dispatchData.reporter} (${dispatchData.reporterPhone})",
                             modifier = Modifier.weight(1f)
                         )
                         InfoColumn(
