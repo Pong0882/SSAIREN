@@ -1306,6 +1306,8 @@ public interface EmergencyReportApi {
                                             "emergencyReports": [
                                                 {
                                                     "id": 1,
+                                                    "isCompleted": false,
+                                                    "patientName": "홍길동",
                                                     "paramedicInfo": {
                                                         "id": 1,
                                                         "name": "김철수"
@@ -1315,14 +1317,16 @@ public interface EmergencyReportApi {
                                                         "disasterNumber": "CB0000000662",
                                                         "disasterType": "화재",
                                                         "disasterSubtype": "건물화재",
+                                                        "reporterName": "박영희",
                                                         "locationAddress": "서울특별시 강남구 테헤란로 123",
                                                         "date": "2025-10-30 17:43:28.235931"
                                                     },
-                                                    "createdAt": "2025-10-30 17:43:28.235931",
-                                                    "updatedAt": "2025-10-30 17:43:28.235931"
+                                                    "createdAt": "2025-10-30 17:43:28.235931"
                                                 },
                                                 {
                                                     "id": 2,
+                                                    "isCompleted": true,
+                                                    "patientName": "환자 이름 정보 없음",
                                                     "paramedicInfo": {
                                                         "id": 1,
                                                         "name": "김철수"
@@ -1332,11 +1336,11 @@ public interface EmergencyReportApi {
                                                         "disasterNumber": "CB0000000662",
                                                         "disasterType": "구조구급",
                                                         "disasterSubtype": "교통사고",
+                                                        "reporterName": "이민수",
                                                         "locationAddress": "서울특별시 서초구 서초대로 456",
                                                         "date": "2025-11-01 21:00:41.284828"
                                                     },
-                                                    "createdAt": "2025-11-01 21:00:41.284828",
-                                                    "updatedAt": "2025-11-01 21:00:41.284828"
+                                                    "createdAt": "2025-11-01 21:00:41.284828"
                                                 }
                                             ]
                                         }

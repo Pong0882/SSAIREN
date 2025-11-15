@@ -9,6 +9,7 @@ public record DispatchInfoSimple(
         String disasterNumber,
         String disasterType,
         String disasterSubtype,
+        String reporterName,
         String locationAddress,
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
         LocalDateTime date
