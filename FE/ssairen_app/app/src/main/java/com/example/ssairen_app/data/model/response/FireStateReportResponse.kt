@@ -40,6 +40,12 @@ data class EmergencyReportData(
     @SerializedName("id")
     val id: Int,
 
+    @SerializedName("isCompleted")
+    val isCompleted: Boolean,
+
+    @SerializedName("patientName")
+    val patientName: String,
+
     @SerializedName("paramedicInfo")
     val paramedicInfo: ParamedicInfoData,
 
@@ -47,10 +53,7 @@ data class EmergencyReportData(
     val dispatchInfo: DispatchInfoData,
 
     @SerializedName("createdAt")
-    val createdAt: String,
-
-    @SerializedName("updatedAt")
-    val updatedAt: String
+    val createdAt: String
 )
 
 data class ParamedicInfoData(
@@ -73,6 +76,9 @@ data class DispatchInfoData(
 
     @SerializedName("disasterSubtype")
     val disasterSubtype: String,
+
+    @SerializedName("reporterName")
+    val reporterName: String,
 
     @SerializedName("locationAddress")
     val locationAddress: String,

@@ -34,16 +34,13 @@ import java.util.*
 // ==========================================
 data class ReportSearchResult(
     val id: String,                     // disasterNumber
-    // TODO: 추후 API에서 제공 예정
-    val patient: String? = null,        // 응답 데이터에 없음
-    val status: Int = 100,              // 응답 데이터에 없음, 임시로 100 (작성완료)
-    // TODO: 추후 API에서 제공 예정
-    val statusText: String? = null,     // 응답 데이터에 없음
+    val patient: String,                // patientName
+    val status: Int,                    // isCompleted 기반 계산 (0 or 100)
+    val statusText: String,             // isCompleted 기반 ("작성 중" or "작성 완료")
     val date: String,                   // dispatchInfo.date 파싱 (yyyy-MM-dd)
     val time: String,                   // dispatchInfo.date 파싱 (HH:mm)
     val location: String,               // dispatchInfo.locationAddress
-    // TODO: 추후 API에서 제공 예정
-    val reporterName: String? = null,   // 응답 데이터에 없음
+    val reporterName: String,           // dispatchInfo.reporterName
     val teamName: String,               // fireStateInfo.name
     val emergencyReportId: Int          // emergencyReports[].id (상세 화면 이동용)
 )
@@ -94,16 +91,18 @@ fun ReportSearchScreen(
 
                         fireStateData.emergencyReports.forEach { report ->
                             val parsedDateTime = parseDateTimeForSearch(report.dispatchInfo.date)
+                            val isCompleted = report.isCompleted
+
                             allReports.add(
                                 ReportSearchResult(
                                     id = report.dispatchInfo.disasterNumber,
-                                    patient = null,
-                                    status = 100,
-                                    statusText = null,
+                                    patient = report.patientName,
+                                    status = if (isCompleted) 100 else 0,
+                                    statusText = if (isCompleted) "작성 완료" else "작성 중",
                                     date = parsedDateTime.first,
                                     time = parsedDateTime.second,
                                     location = report.dispatchInfo.locationAddress,
-                                    reporterName = null,
+                                    reporterName = report.dispatchInfo.reporterName,
                                     teamName = teamName,
                                     emergencyReportId = report.id
                                 )
@@ -351,31 +350,27 @@ private fun ReportCard(
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
-                    item.patient?.let { patient ->
-                        Text(
-                            text = patient,
-                            fontSize = 13.sp,
-                            color = Color(0xFF999999)
-                        )
-                    }
+                    Text(
+                        text = item.patient,
+                        fontSize = 13.sp,
+                        color = Color(0xFF999999)
+                    )
                 }
 
                 // 오른쪽: 상태 뱃지
-                item.statusText?.let { statusText ->
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = if (item.status == 100) Color(0xFF28a745) else Color(0xFF4a4a4a),
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = statusText,
-                            fontSize = 12.sp,
-                            color = Color.White
+                Box(
+                    modifier = Modifier
+                        .background(
+                            color = if (item.status == 100) Color(0xFF28a745) else Color(0xFFffc107),
+                            shape = RoundedCornerShape(4.dp)
                         )
-                    }
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = item.statusText,
+                        fontSize = 12.sp,
+                        color = Color.White
+                    )
                 }
             }
 
@@ -419,13 +414,8 @@ private fun ReportCard(
                         color = Color.White,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
-                    val writerText = if (item.reporterName != null) {
-                        "작성자: ${item.reporterName} (${item.teamName})"
-                    } else {
-                        "소방서: ${item.teamName}"
-                    }
                     Text(
-                        text = writerText,
+                        text = "신고자: ${item.reporterName} (${item.teamName})",
                         fontSize = 11.sp,
                         color = Color(0xFF999999)
                     )
