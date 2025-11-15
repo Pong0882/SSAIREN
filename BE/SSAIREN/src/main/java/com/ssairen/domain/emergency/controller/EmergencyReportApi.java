@@ -174,6 +174,7 @@ public interface EmergencyReportApi {
                                         "emergencyReports": [
                                           {
                                             "id": 1,
+                                            "isCompleted": false,
                                             "dispatchInfo": {
                                               "dispatchId": 1,
                                               "disasterNumber": "CB0000000662",
@@ -189,6 +190,7 @@ public interface EmergencyReportApi {
                                           },
                                           {
                                             "id": 2,
+                                            "isCompleted": true,
                                             "dispatchInfo": {
                                               "dispatchId": 2,
                                               "disasterNumber": "CB0000000663",
