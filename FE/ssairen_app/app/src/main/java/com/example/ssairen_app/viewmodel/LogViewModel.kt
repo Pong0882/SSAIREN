@@ -198,6 +198,7 @@ data class PatientTransportData(
     val firstBedShortageReasons: Set<String> = setOf(), // 병상부족 사유 (복수선택)
     val firstOtherReasons: Set<String> = setOf(),   // 기타 재이송 사유 (복수선택)
     val firstReceiver: String = "",                 // 환자 인수자
+    val firstReceiverSignature: List<androidx.compose.ui.geometry.Offset> = emptyList(), // 1차 인수자 서명
 
     // 2차 이송 (선택)
     val secondHospitalName: String = "",
@@ -207,7 +208,8 @@ data class PatientTransportData(
     val secondSelectedBy: String = "",
     val secondBedShortageReasons: Set<String> = setOf(),
     val secondOtherReasons: Set<String> = setOf(),
-    val secondReceiver: String = ""
+    val secondReceiver: String = "",
+    val secondReceiverSignature: List<androidx.compose.ui.geometry.Offset> = emptyList() // 2차 인수자 서명
 )
 
 // 7. 세부사항표
