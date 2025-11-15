@@ -547,6 +547,11 @@ fun AppNavigation(
 
         composable("activity_main") {
             ActivityMain(
+                onNavigateToReportHome = {  // ✅ 이 부분 추가!
+                    navController.navigate("report_home") {
+                        popUpTo("activity_main") { inclusive = true }
+                    }
+                },
                 onNavigateToActivityLog = {
                     val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
                     navController.navigate("activity_log/$currentReportId/0")
@@ -609,9 +614,11 @@ fun AppNavigation(
                         popUpTo("activity_log/{emergencyReportId}/{tab}?isReadOnly={isReadOnly}") { inclusive = true }
                     }
                 },
+                onNavigateToReportHome = { navController.navigate("report_Home") },
                 onNavigateToSummation = {
                     navController.navigate("summation")
-                }
+                },
+                reportViewModel = reportViewModel
             )
         }
 

@@ -10,6 +10,7 @@ import com.example.ssairen_app.data.local.AuthManager
 import com.example.ssairen_app.data.repository.ReportRepository
 import com.example.ssairen_app.data.model.response.CreatedReportData
 import com.example.ssairen_app.data.model.response.MyReportsData
+import com.example.ssairen_app.data.model.response.CompleteReportData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,6 +47,10 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     private val _isLoadingMore = MutableLiveData<Boolean>(false)
     val isLoadingMore: LiveData<Boolean> = _isLoadingMore
 
+    // 보고서 작성 완료 상태
+    private val _completeReportState = MutableLiveData<CompleteReportState>()
+    val completeReportState: LiveData<CompleteReportState> = _completeReportState
+
     /**
      * 보고서 목록 조회 (초기 로드)
      */
@@ -58,11 +63,9 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             currentPage = 0
             allReports.clear()
 
-            // ✅ postValue 사용
             _hasMoreData.postValue(true)
             isLoading = false
 
-            // ✅ postValue 사용
             _reportListState.postValue(ReportListState.Loading)
             Log.d(TAG, "📋 보고서 목록 조회 시작...")
 
@@ -105,8 +108,6 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         isLoading = true
-
-        // ✅ postValue 사용
         _isLoadingMore.postValue(true)
 
         Log.d(TAG, "📄 페이지 $currentPage 로딩 시작...")
@@ -114,14 +115,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         Log.d(TAG, "🧵 loadReportsPage 스레드: ${Thread.currentThread().name}")
 
         try {
-            // ✅ IO 스레드에서 네트워크 호출
             val result: Result<MyReportsData> = withContext(Dispatchers.IO) {
                 Log.d(TAG, "🧵 API 호출 스레드: ${Thread.currentThread().name}")
                 repository.getReports(currentPage, 10)
             }
 
             result.onSuccess { reportListData: MyReportsData ->
-                // ✅ 모든 보고서 사용 (필터링 제거)
                 val newReports = reportListData.emergencyReports
 
                 Log.d(TAG, "✅ API 응답 성공!")
@@ -129,7 +128,6 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 Log.d(TAG, "   - 기존 데이터 개수: ${allReports.size}")
 
                 if (newReports.isEmpty()) {
-                    // ✅ postValue 사용
                     _hasMoreData.postValue(false)
                     Log.d(TAG, "🏁 더 이상 로드할 데이터가 없습니다")
                 } else {
@@ -151,14 +149,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                         Log.d(TAG, "⚠️ 모든 데이터가 중복입니다")
                     }
 
-                    // 10개 미만이면 마지막 페이지
                     if (newReports.size < 10) {
                         _hasMoreData.postValue(false)
                         Log.d(TAG, "🏁 마지막 페이지 도달 (${newReports.size}개 < 10개)")
                     }
                 }
 
-                // ✅ postValue 사용 (가장 중요!)
                 Log.d(TAG, "🔄 UI 업데이트 시도 - 총 ${allReports.size}개 보고서")
                 Log.d(TAG, "🧵 UI 업데이트 스레드: ${Thread.currentThread().name}")
 
@@ -170,30 +166,22 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 )
 
                 _reportListState.postValue(successState)
-
                 Log.d(TAG, "✅ postValue 완료")
 
             }.onFailure { error: Throwable ->
                 Log.e(TAG, "❌ 보고서 목록 조회 실패: ${error.message}")
-
-                // ✅ postValue 사용
                 _reportListState.postValue(
                     ReportListState.Error(error.message ?: "보고서 목록 조회 실패")
                 )
             }
         } catch (e: Exception) {
             Log.e(TAG, "💥 보고서 목록 조회 예외", e)
-
-            // ✅ postValue 사용
             _reportListState.postValue(
                 ReportListState.Error(e.message ?: "보고서 목록 조회 오류")
             )
         } finally {
             isLoading = false
-
-            // ✅ postValue 사용
             _isLoadingMore.postValue(false)
-
             Log.d(TAG, "🏁 로딩 완료 (isLoading = false)")
         }
     }
@@ -205,7 +193,6 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             Log.d(TAG, "📝 새 일지 생성 시작... (Dispatch ID: $dispatchId)")
 
-            // ✅ postValue 사용
             _createReportState.postValue(CreateReportState.Loading)
 
             try {
@@ -215,23 +202,17 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
                 result.onSuccess { reportData: CreatedReportData ->
                     Log.d(TAG, "✅ 일지 생성 성공 - ID: ${reportData.emergencyReportId}")
-
-                    // ✅ postValue 사용
                     _createReportState.postValue(CreateReportState.Success(reportData))
                     _currentReportId.postValue(reportData.emergencyReportId)
 
                 }.onFailure { error: Throwable ->
                     Log.e(TAG, "❌ 일지 생성 실패: ${error.message}")
-
-                    // ✅ postValue 사용
                     _createReportState.postValue(
                         CreateReportState.Error(error.message ?: "일지 생성 실패")
                     )
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "💥 일지 생성 예외", e)
-
-                // ✅ postValue 사용
                 _createReportState.postValue(
                     CreateReportState.Error(e.message ?: "일지 생성 오류")
                 )
@@ -252,7 +233,57 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     fun resetReportListState() {
         _reportListState.postValue(ReportListState.Idle)
     }
+
+    // ==========================================
+    // 보고서 작성 완료
+    // ==========================================
+
+    /**
+     * 보고서 작성 완료 처리
+     */
+    fun completeReport(emergencyReportId: Int) {
+        viewModelScope.launch {
+            Log.d(TAG, "📝 보고서 작성 완료 처리 시작... (Report ID: $emergencyReportId)")
+
+            _completeReportState.postValue(CompleteReportState.Loading)
+
+            try {
+                val result: Result<CompleteReportData> = withContext(Dispatchers.IO) {
+                    repository.completeReport(emergencyReportId)
+                }
+
+                result.onSuccess { data ->
+                    Log.d(TAG, "✅ 보고서 작성 완료 성공")
+                    Log.d(TAG, "   - emergencyReportId: ${data.emergencyReportId}")
+                    Log.d(TAG, "   - isCompleted: ${data.isCompleted}")
+
+                    _completeReportState.postValue(CompleteReportState.Success(data))
+                }.onFailure { error: Throwable ->
+                    Log.e(TAG, "❌ 보고서 작성 완료 실패: ${error.message}")
+                    _completeReportState.postValue(
+                        CompleteReportState.Error(error.message ?: "작성 완료 실패")
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "💥 보고서 작성 완료 예외", e)
+                _completeReportState.postValue(
+                    CompleteReportState.Error(e.message ?: "작성 완료 오류")
+                )
+            }
+        }
+    }
+
+    /**
+     * 작성 완료 상태 초기화
+     */
+    fun resetCompleteState() {
+        _completeReportState.postValue(CompleteReportState.Idle)
+    }
 }
+
+// ==========================================
+// State 클래스들
+// ==========================================
 
 /**
  * 일지 생성 상태
@@ -272,4 +303,14 @@ sealed class ReportListState {
     object Loading : ReportListState()
     data class Success(val reportListData: MyReportsData) : ReportListState()
     data class Error(val message: String) : ReportListState()
+}
+
+/**
+ * 보고서 작성 완료 상태
+ */
+sealed class CompleteReportState {
+    object Idle : CompleteReportState()
+    object Loading : CompleteReportState()
+    data class Success(val data: CompleteReportData) : CompleteReportState()
+    data class Error(val message: String) : CompleteReportState()
 }

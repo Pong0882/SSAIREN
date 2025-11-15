@@ -22,6 +22,7 @@ import com.example.ssairen_app.data.model.request.TransportRequest
 import com.example.ssairen_app.data.model.response.TransportResponse
 import com.example.ssairen_app.data.model.request.DetailReportRequest
 import com.example.ssairen_app.data.model.response.DetailReportResponse
+import com.example.ssairen_app.data.model.response.CompleteReportResponse
 
 import retrofit2.Response
 import retrofit2.http.*
@@ -65,6 +66,13 @@ interface ApiService {
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
     ): Response<ReportListResponse>
+
+    // ✅ 보고서 작성 완료 API 추가
+    @PATCH("api/emergency-reports/{emergencyReportId}/complete")
+    suspend fun completeReport(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String
+    ): Response<CompleteReportResponse>
 
     // ==========================================
     // 섹션 조회 API

@@ -2,6 +2,7 @@
 package com.example.ssairen_app.ui.screens.emergencyact
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,7 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.ssairen_app.ui.components.MainButton
 import com.example.ssairen_app.viewmodel.ActivityLogData
 import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.LogViewModel
@@ -44,13 +44,11 @@ fun PatientInfo(
     viewModel: LogViewModel,
     data: ActivityLogData,
     isReadOnly: Boolean = false,
-    activityViewModel: ActivityViewModel = viewModel()  // ✅ ActivityViewModel 추가
+    activityViewModel: ActivityViewModel = viewModel()
 ) {
-    // ✅ API 상태 관찰, STT 데이터 상태 관찰 추가
     val patientInfoState by activityViewModel.patientInfoState.observeAsState(PatientInfoApiState.Idle)
     val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState()
 
-    // ✅ API 호출 (currentReportId가 설정되면 자동 실행)
     LaunchedEffect(currentReportId) {
         currentReportId?.let { reportId ->
             Log.d("PatientInfo", "📞 API 호출: getPatientInfo($reportId)")
@@ -58,7 +56,6 @@ fun PatientInfo(
         }
     }
 
-    // ✅ State 변수들 (data.patientInfo로 초기화)
     var reporterPhone by remember { mutableStateOf(data.patientInfo.reporterPhone) }
     var selectedReportMethod by remember { mutableStateOf(data.patientInfo.reportMethod) }
     var patientName by remember { mutableStateOf(data.patientInfo.patientName) }
@@ -72,7 +69,6 @@ fun PatientInfo(
     var guardianRelation by remember { mutableStateOf(data.patientInfo.guardianRelation) }
     var guardianPhone by remember { mutableStateOf(data.patientInfo.guardianPhone) }
 
-    // ✅ 자동 저장 함수 (LogViewModel에 임시 저장)
     fun saveData() {
         val patientInfoData = PatientInfoData(
             reporterPhone = reporterPhone,
@@ -91,7 +87,6 @@ fun PatientInfo(
         viewModel.updatePatientInfo(patientInfoData)
     }
 
-    // ✅ API 응답 처리
     LaunchedEffect(patientInfoState) {
         Log.d("PatientInfo", "🟢 patientInfoState 변경: $patientInfoState")
 
@@ -100,14 +95,12 @@ fun PatientInfo(
                 Log.d("PatientInfo", "✅ API 성공 - 데이터 매핑 시작")
                 val apiData = state.patientInfoResponse.data.data.patientInfo
 
-                // 신고자 정보 매핑
                 apiData.reporter?.let { reporter ->
                     reporterPhone = reporter.phone ?: ""
                     selectedReportMethod = reporter.reportMethod ?: ""
                     Log.d("PatientInfo", "신고자: phone=$reporterPhone, method=$selectedReportMethod")
                 }
 
-                // 환자 정보 매핑
                 apiData.patient?.let { patient ->
                     patientName = patient.name ?: ""
                     selectedGender = patient.gender ?: ""
@@ -117,7 +110,6 @@ fun PatientInfo(
                     Log.d("PatientInfo", "환자: name=$patientName, gender=$selectedGender, age=$patientAge")
                     Log.d("PatientInfo", "주소: $patientAddress")
 
-                    // 생년월일 파싱 (YYYY-MM-DD)
                     patient.birthDate?.let { birthDate ->
                         val parts = birthDate.split("-")
                         if (parts.size == 3) {
@@ -129,7 +121,6 @@ fun PatientInfo(
                     }
                 }
 
-                // 보호자 정보 매핑
                 apiData.guardian?.let { guardian ->
                     guardianName = guardian.name ?: ""
                     guardianRelation = guardian.relation ?: ""
@@ -138,8 +129,6 @@ fun PatientInfo(
                 }
 
                 Log.d("PatientInfo", "✅ 데이터 매핑 완료")
-
-                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
                 saveData()
                 Log.d("PatientInfo", "💾 LogViewModel 동기화 완료")
             }
@@ -155,8 +144,6 @@ fun PatientInfo(
         }
     }
 
-
-    // ✅ 로딩 중일 때 표시
     if (patientInfoState is PatientInfoApiState.Loading) {
         Box(
             modifier = Modifier
@@ -178,299 +165,257 @@ fun PatientInfo(
             .padding(bottom = 80.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // 헤더
-        Text(
-            text = "세부항목-환자정보",
-            color = Color.White,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
 
-        // 환자정보 입력 폼 카드
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
-            color = Color(0xFF2a2a2a)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+            // 신고자 전화번호 + 신고방법
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 신고자 전화번호 + 신고방법
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    UnderlineInputField(
-                        label = "신고자 전화번호",
-                        value = reporterPhone,
-                        onValueChange = {
-                            reporterPhone = it
-                            saveData()
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = !isReadOnly
-                    )
-
-                    // 신고방법
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "신고방법",
-                            color = Color(0xFF999999),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            MainButton(
-                                onClick = {
-                                    if (!isReadOnly) {
-                                        selectedReportMethod = "휴대전화"
-                                        saveData()
-                                    }
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(36.dp),
-                                backgroundColor = if (selectedReportMethod == "휴대전화")
-                                    Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-                                cornerRadius = 6.dp
-                            ) {
-                                Text(text = "일반전화", fontSize = 12.sp)
-                            }
-                            MainButton(
-                                onClick = {
-                                    if (!isReadOnly) {
-                                        selectedReportMethod = "유선전화"
-                                        saveData()
-                                    }
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(36.dp),
-                                backgroundColor = if (selectedReportMethod == "유선전화")
-                                    Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-                                cornerRadius = 6.dp
-                            ) {
-                                Text(text = "유선전화", fontSize = 12.sp)
-                            }
-                            MainButton(
-                                onClick = {
-                                    if (!isReadOnly) {
-                                        selectedReportMethod = "기타"
-                                        saveData()
-                                    }
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(36.dp),
-                                backgroundColor = if (selectedReportMethod == "기타")
-                                    Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-                                cornerRadius = 6.dp
-                            ) {
-                                Text(text = "기타", fontSize = 12.sp)
-                            }
-                        }
-                    }
-                }
-
-                // 환자 성명 + 성별
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    UnderlineInputField(
-                        label = "환자 성명",
-                        value = patientName,
-                        onValueChange = {
-                            patientName = it
-                            saveData()
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = !isReadOnly
-                    )
-
-                    // 성별
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "환자 성별",
-                            color = Color(0xFF999999),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            MainButton(
-                                onClick = {
-                                    if (!isReadOnly) {
-                                        selectedGender = "남성"
-                                        saveData()
-                                    }
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(36.dp),
-                                backgroundColor = if (selectedGender == "남성")
-                                    Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-                                cornerRadius = 6.dp
-                            ) {
-                                Text(text = "남성", fontSize = 13.sp)
-                            }
-                            MainButton(
-                                onClick = {
-                                    if (!isReadOnly) {
-                                        selectedGender = "여성"
-                                        saveData()
-                                    }
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(36.dp),
-                                backgroundColor = if (selectedGender == "여성")
-                                    Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-                                cornerRadius = 6.dp
-                            ) {
-                                Text(text = "여성", fontSize = 13.sp)
-                            }
-                        }
-                    }
-                }
-
-                // 생년월일 + 나이
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // 생년월일
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "생년월일",
-                            color = Color(0xFF999999),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            BirthDateField(
-                                value = birthYear,
-                                onValueChange = { birthYear = it; saveData() },
-                                label = "년",
-                                modifier = Modifier.weight(1f),
-                                enabled = !isReadOnly
-                            )
-                            BirthDateField(
-                                value = birthMonth,
-                                onValueChange = { birthMonth = it; saveData() },
-                                label = "월",
-                                modifier = Modifier.weight(1f),
-                                enabled = !isReadOnly
-                            )
-                            BirthDateField(
-                                value = birthDay,
-                                onValueChange = { birthDay = it; saveData() },
-                                label = "일",
-                                modifier = Modifier.weight(1f),
-                                enabled = !isReadOnly
-                            )
-                        }
-                    }
-
-                    // 나이
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "나이",
-                            color = Color(0xFF999999),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            BasicTextField(
-                                value = patientAge,
-                                onValueChange = {
-                                    patientAge = it
-                                    saveData()
-                                },
-                                modifier = Modifier.padding(bottom = 4.dp),
-                                textStyle = TextStyle(
-                                    color = Color.White,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Normal,
-                                    textAlign = TextAlign.End
-                                ),
-                                singleLine = true,
-                                readOnly = isReadOnly
-                            )
-                            Text(
-                                text = "세",
-                                color = Color.White,
-                                fontSize = 15.sp,
-                                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-                            )
-                        }
-                        HorizontalDivider(
-                            color = Color(0xFF4a4a4a),
-                            thickness = 1.dp
-                        )
-                    }
-                }
-
-                // 환자주소
                 UnderlineInputField(
-                    label = "환자주소",
-                    value = patientAddress,
+                    label = "신고자 전화번호",
+                    value = reporterPhone,
                     onValueChange = {
-                        patientAddress = it
+                        reporterPhone = it
                         saveData()
                     },
+                    modifier = Modifier.weight(1f),
                     enabled = !isReadOnly
                 )
 
-                HorizontalDivider(
-                    color = Color(0xFF4a4a4a),
-                    thickness = 1.dp,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "신고방법",
+                        color = Color(0xFF999999),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        SelectButton(
+                            text = "일반전화",
+                            isSelected = selectedReportMethod == "휴대전화",
+                            onClick = {
+                                if (!isReadOnly) {
+                                    selectedReportMethod = "휴대전화"
+                                    saveData()
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                        SelectButton(
+                            text = "유선전화",
+                            isSelected = selectedReportMethod == "유선전화",
+                            onClick = {
+                                if (!isReadOnly) {
+                                    selectedReportMethod = "유선전화"
+                                    saveData()
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                        SelectButton(
+                            text = "기타",
+                            isSelected = selectedReportMethod == "기타",
+                            onClick = {
+                                if (!isReadOnly) {
+                                    selectedReportMethod = "기타"
+                                    saveData()
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
+            // 환자 성명 + 성별
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                UnderlineInputField(
+                    label = "환자 성명",
+                    value = patientName,
+                    onValueChange = {
+                        patientName = it
+                        saveData()
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isReadOnly
                 )
 
-                // 보호자 성명 + 관계
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    UnderlineInputField(
-                        label = "보호자 성명",
-                        value = guardianName,
-                        onValueChange = {
-                            guardianName = it
-                            saveData()
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = !isReadOnly
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "환자 성별",
+                        color = Color(0xFF999999),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    UnderlineInputField(
-                        label = "보호자 관계",
-                        value = guardianRelation,
-                        onValueChange = {
-                            guardianRelation = it
-                            saveData()
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = !isReadOnly
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        SelectButton(
+                            text = "남성",
+                            isSelected = selectedGender == "남성",
+                            onClick = {
+                                if (!isReadOnly) {
+                                    selectedGender = "남성"
+                                    saveData()
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                        SelectButton(
+                            text = "여성",
+                            isSelected = selectedGender == "여성",
+                            onClick = {
+                                if (!isReadOnly) {
+                                    selectedGender = "여성"
+                                    saveData()
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
+            // 생년월일 + 나이
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "생년월일",
+                        color = Color(0xFF999999),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        BirthDateField(
+                            value = birthYear,
+                            onValueChange = { birthYear = it; saveData() },
+                            label = "년",
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
+                        )
+                        BirthDateField(
+                            value = birthMonth,
+                            onValueChange = { birthMonth = it; saveData() },
+                            label = "월",
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
+                        )
+                        BirthDateField(
+                            value = birthDay,
+                            onValueChange = { birthDay = it; saveData() },
+                            label = "일",
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
+                        )
+                    }
                 }
 
-                // 보호자 연락처
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "나이",
+                        color = Color(0xFF999999),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BasicTextField(
+                            value = patientAge,
+                            onValueChange = {
+                                patientAge = it
+                                saveData()
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(bottom = 4.dp),
+                            textStyle = TextStyle(
+                                color = Color.White,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Normal,
+                                textAlign = TextAlign.Start
+                            ),
+                            singleLine = true,
+                            readOnly = isReadOnly
+                        )
+                        Text(
+                            text = "세",
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                        )
+                    }
+                    HorizontalDivider(
+                        color = Color(0xFF4a4a4a),
+                        thickness = 1.dp
+                    )
+                }
+            }
+
+            // 환자주소
+            UnderlineInputField(
+                label = "환자주소",
+                value = patientAddress,
+                onValueChange = {
+                    patientAddress = it
+                    saveData()
+                },
+                enabled = !isReadOnly
+            )
+
+            // 보호자 성명 + 관계
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                UnderlineInputField(
+                    label = "보호자 성명",
+                    value = guardianName,
+                    onValueChange = {
+                        guardianName = it
+                        saveData()
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isReadOnly
+                )
+                UnderlineInputField(
+                    label = "보호자 관계",
+                    value = guardianRelation,
+                    onValueChange = {
+                        guardianRelation = it
+                        saveData()
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isReadOnly
+                )
+            }
+
+            // 보호자 연락처 (반만 차지)
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 UnderlineInputField(
                     label = "보호자 연락처",
                     value = guardianPhone,
@@ -478,8 +423,10 @@ fun PatientInfo(
                         guardianPhone = it
                         saveData()
                     },
+                    modifier = Modifier.weight(1f),
                     enabled = !isReadOnly
                 )
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
@@ -488,6 +435,34 @@ fun PatientInfo(
 // ==========================================
 // 보조 컴포넌트들
 // ==========================================
+
+@Composable
+private fun SelectButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(36.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) Color(0xFF3b7cff) else Color(0xFF3a3a3a),
+            contentColor = Color.White
+        ),
+        shape = RoundedCornerShape(4.dp),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+        border = if (isSelected) null else BorderStroke(1.dp, Color(0xFF4a4a4a))
+    ) {
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+            color = Color.White,
+            maxLines = 1
+        )
+    }
+}
 
 @Composable
 private fun BirthDateField(
@@ -500,18 +475,20 @@ private fun BirthDateField(
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
-                modifier = Modifier.padding(bottom = 4.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(bottom = 4.dp),
                 textStyle = TextStyle(
                     color = Color.White,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Normal,
-                    textAlign = TextAlign.End
+                    textAlign = TextAlign.Start
                 ),
                 singleLine = true,
                 readOnly = !enabled
@@ -536,7 +513,7 @@ private fun UnderlineInputField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    textAlign: TextAlign = TextAlign.End,
+    textAlign: TextAlign = TextAlign.Start,
     enabled: Boolean = true
 ) {
     Column(modifier = modifier) {
