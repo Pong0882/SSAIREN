@@ -23,7 +23,7 @@ import com.example.ssairen_app.viewmodel.SaveState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import androidx.compose.material.icons.filled.Description  // ✅ 추가
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Check
 import com.example.ssairen_app.viewmodel.ReportViewModel
 import com.example.ssairen_app.viewmodel.CompleteReportState
@@ -38,7 +38,7 @@ fun ActivityLogHome(
     onNavigateBack: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
     onNavigateToReportHome: () -> Unit = {},
-    onNavigateToSummation: () -> Unit = {},
+    onNavigateToSummation: (Int) -> Unit = {},  // ✅ 수정 1: (Int) 추가
     viewModel: LogViewModel = viewModel(),
     activityViewModel: ActivityViewModel = viewModel(),
     reportViewModel: ReportViewModel = viewModel()
@@ -380,7 +380,6 @@ fun ActivityLogHome(
                             }
                         }
                     }
-
                 }
             }
 
@@ -417,8 +416,8 @@ fun ActivityLogHome(
                                 }
                             }
                             2 -> {
-                                // 요약으로 이동
-                                onNavigateToSummation()
+                                // 요약으로 이동 (emergencyReportId 전달)
+                                onNavigateToSummation(emergencyReportId)  // ✅ 수정 2: ID 전달
                             }
                             3 -> {
                                 // TODO: 메모

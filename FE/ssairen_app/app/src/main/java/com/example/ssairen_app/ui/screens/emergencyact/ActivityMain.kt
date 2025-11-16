@@ -64,6 +64,7 @@ fun ActivityMain(
     onNavigateToMedicalGuidance: () -> Unit = {},
     onNavigateToPatientTransport: () -> Unit = {},
     onNavigateToReportDetail: () -> Unit = {},
+    onNavigateToSummation: (Int) -> Unit = {},
     activityViewModel: com.example.ssairen_app.viewmodel.ActivityViewModel = viewModel()
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -115,8 +116,14 @@ fun ActivityMain(
             selectedTab = selectedTab,
             onTabSelected = {
                 selectedTab = it
-                if (it == 1) {
-                    onNavigateToActivityLog()
+                when (it) {
+                    0 -> onNavigateToReportHome()  // 홈 (현재 화면 유지)
+                    1 -> onNavigateToActivityLog()  // 구급활동일지
+                    2 -> {  // ✅ 요약본 추가!
+                        val currentReportId =
+                            com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        onNavigateToSummation(currentReportId)
+                    }
                 }
             }
         )
