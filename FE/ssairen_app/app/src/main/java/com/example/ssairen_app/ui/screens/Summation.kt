@@ -176,70 +176,71 @@ private fun SummaryTable(
 @Composable
 private fun DispatchSection(data: com.example.ssairen_app.data.model.response.DispatchResponseInfo) {
     // 환자 발생 장소
-    TableRow(
-        label = "환자 발생 장소",
-        content = {
-            val locationText = buildString {
-                append(data.sceneLocation.name ?: "")
-                if (data.sceneLocation.name == "기타" && !data.sceneLocation.value.isNullOrBlank()) {
-                    append(" (${data.sceneLocation.value})")
-                }
-            }
-            if (locationText.isNotBlank()) {
+    val locationText = buildString {
+        append(data.sceneLocation.name ?: "")
+        if (data.sceneLocation.name == "기타" && !data.sceneLocation.value.isNullOrBlank()) {
+            append(" (${data.sceneLocation.value})")
+        }
+    }
+
+    if (locationText.isNotBlank()) {
+        TableRow(
+            label = "환자 발생 장소",
+            content = {
                 TableCell(text = locationText, modifier = Modifier.fillMaxWidth())
             }
-        }
-    )
+        )
+    }
 
     // 환자 증상
-    TableRow(
-        label = "환자 증상",
-        content = {
-            Column {
-                // 통증 증상
-                data.symptoms.pain?.let { painList ->
-                    if (painList.isNotEmpty()) {
-                        TableSubRow(
-                            label = "통증",
-                            value = painList.joinToString(", ") { symptom ->
+    val painList = data.symptoms.pain
+    val traumaList = data.symptoms.trauma
+    val otherList = data.symptoms.otherSymptoms
+
+    if (!painList.isNullOrEmpty() || !traumaList.isNullOrEmpty() || !otherList.isNullOrEmpty()) {
+        TableRow(
+            label = "환자 증상",
+            content = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // 통증 증상
+                    painList?.let { list ->
+                        if (list.isNotEmpty()) {
+                            val painText = list.joinToString(", ") { symptom ->
                                 if (symptom.name == "그 밖의 통증" && !symptom.value.isNullOrBlank()) {
                                     "${symptom.name} (${symptom.value})"
                                 } else {
                                     symptom.name
                                 }
                             }
-                        )
+                            TableSubRow(label = "통증", value = painText)
+                        }
                     }
-                }
 
-                // 외상 증상
-                data.symptoms.trauma?.let { traumaList ->
-                    if (traumaList.isNotEmpty()) {
-                        TableSubRow(
-                            label = "외상",
-                            value = traumaList.joinToString(", ") { it.name }
-                        )
+                    // 외상 증상
+                    traumaList?.let { list ->
+                        if (list.isNotEmpty()) {
+                            val traumaText = list.joinToString(", ") { it.name }
+                            TableSubRow(label = "외상", value = traumaText)
+                        }
                     }
-                }
 
-                // 그 외 증상
-                data.symptoms.otherSymptoms?.let { otherList ->
-                    if (otherList.isNotEmpty()) {
-                        TableSubRow(
-                            label = "그 외 증상",
-                            value = otherList.joinToString(", ") { symptom ->
+                    // 그 외 증상
+                    otherList?.let { list ->
+                        if (list.isNotEmpty()) {
+                            val otherText = list.joinToString(", ") { symptom ->
                                 if (symptom.name == "기타" && !symptom.value.isNullOrBlank()) {
                                     "${symptom.name} (${symptom.value})"
                                 } else {
                                     symptom.name
                                 }
                             }
-                        )
+                            TableSubRow(label = "그 외 증상", value = otherText)
+                        }
                     }
                 }
             }
-        }
-    )
+        )
+    }
 }
 
 @Composable
@@ -378,7 +379,7 @@ private fun PatientEvaSection(data: com.example.ssairen_app.data.model.response.
     TableRow(
         label = "환자 평가",
         content = {
-            Column {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 // 의식 상태
                 data.consciousness?.let { consciousness ->
                     Row(
