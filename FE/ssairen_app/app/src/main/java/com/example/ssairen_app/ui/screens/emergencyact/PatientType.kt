@@ -184,13 +184,11 @@ fun PatientType(
                 .fillMaxSize()
                 .background(Color(0xFF1a1a1a))
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 40.dp)  // ✅ 16.dp → 40.dp
+                .padding(horizontal = 40.dp)
                 .padding(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // ✅ 헤더 제거
-
-            // ✅ Surface 제거, Column만 사용
+            // 병력 유무
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -200,7 +198,7 @@ fun PatientType(
                 Text(
                     text = "병력 유무",
                     color = Color.White,
-                    fontSize = 14.sp  // ✅ fontWeight 제거
+                    fontSize = 14.sp
                 )
 
                 Row(
@@ -216,7 +214,8 @@ fun PatientType(
                                 if (option != "있음") medicalHistoryList = setOf()
                                 saveData()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
                         )
                     }
                 }
@@ -250,7 +249,8 @@ fun PatientType(
                                         }
                                         saveData()
                                     },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    enabled = !isReadOnly
                                 )
                             }
                             if (row.size < 5) {
@@ -291,7 +291,8 @@ fun PatientType(
                                 if (type != "기타") etcType = ""
                                 saveData()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
                         )
                     }
                 }
@@ -321,7 +322,8 @@ fun PatientType(
                                     crimeOption = item
                                     saveData()
                                 },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                enabled = !isReadOnly
                             )
                         }
                     }
@@ -345,7 +347,8 @@ fun PatientType(
                                     nonTraumaSelections = setOf()
                                     saveData()
                                 },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                enabled = !isReadOnly
                             )
                         }
                     }
@@ -379,7 +382,8 @@ fun PatientType(
                                             accidentVictimType = item
                                             saveData()
                                         },
-                                        modifier = Modifier.weight(1f)
+                                        modifier = Modifier.weight(1f),
+                                        enabled = !isReadOnly
                                     )
                                 }
                                 if (row.size < 5) {
@@ -414,7 +418,8 @@ fun PatientType(
                                         accidentVictimType = item
                                         saveData()
                                     },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    enabled = !isReadOnly
                                 )
                             }
                         }
@@ -450,7 +455,8 @@ fun PatientType(
                                         }
                                         saveData()
                                     },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    enabled = !isReadOnly
                                 )
                             }
                         }
@@ -483,7 +489,8 @@ fun PatientType(
                                         }
                                         saveData()
                                     },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    enabled = !isReadOnly
                                 )
                             }
                         }
@@ -520,7 +527,8 @@ fun PatientType(
                                             }
                                             saveData()
                                         },
-                                        modifier = Modifier.weight(1f)
+                                        modifier = Modifier.weight(1f),
+                                        enabled = !isReadOnly
                                     )
                                 }
                             }
@@ -544,7 +552,8 @@ fun PatientType(
                                     }
                                     saveData()
                                 },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                enabled = !isReadOnly
                             )
 
                             OutlinedTextField(
@@ -556,15 +565,19 @@ fun PatientType(
                                         saveData()
                                     }
                                 },
+                                enabled = !isReadOnly,
                                 modifier = Modifier.weight(3f).height(36.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = Color(0xFF3a3a3a),
                                     unfocusedContainerColor = Color(0xFF3a3a3a),
+                                    disabledContainerColor = Color(0xFF2a2a2a),
+                                    disabledTextColor = Color(0xFF666666),
                                     focusedTextColor = Color.White,
                                     unfocusedTextColor = Color.White,
                                     cursorColor = Color.White,
                                     focusedBorderColor = Color(0xFF3b7cff),
-                                    unfocusedBorderColor = Color(0xFF4a4a4a)
+                                    unfocusedBorderColor = Color(0xFF4a4a4a),
+                                    disabledBorderColor = Color(0xFF3a3a3a)
                                 ),
                                 textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
                                 singleLine = true,
@@ -595,7 +608,8 @@ fun PatientType(
                                     etcType = item
                                     saveData()
                                 },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                enabled = !isReadOnly
                             )
                         }
                     }
@@ -613,24 +627,27 @@ fun PatientType(
     }
 }
 
-// ✅ SelectButton 컴포넌트 추가 (PatientInfo와 동일)
 @Composable
 private fun SelectButton(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
         modifier = modifier.height(36.dp),
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-            contentColor = Color.White
+            contentColor = Color.White,
+            disabledContainerColor = Color(0xFF2a2a2a),
+            disabledContentColor = Color(0xFF666666)
         ),
-        shape = RoundedCornerShape(4.dp),  // ✅ 6.dp → 4.dp
+        shape = RoundedCornerShape(4.dp),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-        border = if (isSelected) null else BorderStroke(1.dp, Color(0xFF4a4a4a))  // ✅ 테두리 추가
+        border = if (isSelected) null else BorderStroke(1.dp, Color(0xFF4a4a4a))
     ) {
         Text(
             text = text,

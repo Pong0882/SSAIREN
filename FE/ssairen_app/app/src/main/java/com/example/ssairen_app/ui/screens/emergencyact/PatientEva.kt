@@ -267,12 +267,12 @@ fun PatientEva(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // ==========================================
-            // 환자 분류 (Level 1-5) - ✅ 상단 패딩 추가
+            // 환자 분류 (Level 1-5)
             // ==========================================
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),  // ✅ 상단 패딩 추가
+                    .padding(top = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
@@ -285,23 +285,23 @@ fun PatientEva(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // ✅ "Level 1" ~ "Level 5"로 표시
                     listOf("LEVEL 1", "LEVEL 2", "LEVEL 3", "LEVEL 4", "LEVEL 5").forEach { level ->
                         SelectButton(
-                            text = level,  // ✅ "Level 1" 전체 표시
+                            text = level,
                             isSelected = selectedLevel == level,
                             onClick = {
                                 selectedLevel = level
                                 saveData()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
                         )
                     }
                 }
             }
 
             // ==========================================
-            // 의식 상태 - ✅ 1차/2차 옆에 밑줄 (가로 배치)
+            // 의식 상태
             // ==========================================
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -313,13 +313,12 @@ fun PatientEva(
                     fontSize = 14.sp
                 )
 
-                // ✅ 1차 - 가로로 배치 (1차 _____ 버튼들)
+                // 1차
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // ✅ 1차 + 밑줄 (가로)
                     Row(
                         modifier = Modifier.width(120.dp),
                         verticalAlignment = Alignment.Bottom,
@@ -343,12 +342,13 @@ fun PatientEva(
                                     .fillMaxWidth()
                                     .padding(bottom = 4.dp),
                                 textStyle = TextStyle(
-                                    color = Color.White,
+                                    color = if (isReadOnly) Color(0xFF666666) else Color.White,
                                     fontSize = 14.sp,
                                     textAlign = TextAlign.Start
                                 ),
                                 singleLine = true,
-                                readOnly = isReadOnly
+                                readOnly = isReadOnly,
+                                enabled = !isReadOnly
                             )
                             HorizontalDivider(
                                 color = Color(0xFF4a4a4a),
@@ -357,7 +357,6 @@ fun PatientEva(
                         }
                     }
 
-                    // ✅ 4개 버튼 한 줄에
                     Row(
                         modifier = Modifier.weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -372,7 +371,8 @@ fun PatientEva(
                                 consciousness1stUnresponsive = false
                                 saveData()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
                         )
                         SelectButton(
                             text = "Verbal",
@@ -384,7 +384,8 @@ fun PatientEva(
                                 consciousness1stUnresponsive = false
                                 saveData()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
                         )
                         SelectButton(
                             text = "Painful",
@@ -396,7 +397,8 @@ fun PatientEva(
                                 consciousness1stUnresponsive = false
                                 saveData()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
                         )
                         SelectButton(
                             text = "Unresponsive",
@@ -408,18 +410,18 @@ fun PatientEva(
                                 consciousness1stUnresponsive = true
                                 saveData()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
                         )
                     }
                 }
 
-                // ✅ 2차 - 가로로 배치
+                // 2차
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // ✅ 2차 + 밑줄 (가로)
                     Row(
                         modifier = Modifier.width(120.dp),
                         verticalAlignment = Alignment.Bottom,
@@ -443,12 +445,13 @@ fun PatientEva(
                                     .fillMaxWidth()
                                     .padding(bottom = 4.dp),
                                 textStyle = TextStyle(
-                                    color = Color.White,
+                                    color = if (isReadOnly) Color(0xFF666666) else Color.White,
                                     fontSize = 14.sp,
                                     textAlign = TextAlign.Start
                                 ),
                                 singleLine = true,
-                                readOnly = isReadOnly
+                                readOnly = isReadOnly,
+                                enabled = !isReadOnly
                             )
                             HorizontalDivider(
                                 color = Color(0xFF4a4a4a),
@@ -457,7 +460,6 @@ fun PatientEva(
                         }
                     }
 
-                    // ✅ 4개 버튼 한 줄에
                     Row(
                         modifier = Modifier.weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -472,7 +474,8 @@ fun PatientEva(
                                 consciousness2ndUnresponsive = false
                                 saveData()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
                         )
                         SelectButton(
                             text = "Verbal",
@@ -484,7 +487,8 @@ fun PatientEva(
                                 consciousness2ndUnresponsive = false
                                 saveData()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
                         )
                         SelectButton(
                             text = "Painful",
@@ -496,7 +500,8 @@ fun PatientEva(
                                 consciousness2ndUnresponsive = false
                                 saveData()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
                         )
                         SelectButton(
                             text = "Unresponsive",
@@ -508,14 +513,15 @@ fun PatientEva(
                                 consciousness2ndUnresponsive = true
                                 saveData()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
                         )
                     }
                 }
             }
 
             // ==========================================
-            // 동공반응 - 7개 버튼 한 줄로
+            // 동공반응
             // ==========================================
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -527,7 +533,7 @@ fun PatientEva(
                     fontSize = 14.sp
                 )
 
-                // 좌 - 7개 버튼 한 줄
+                // 좌
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -547,7 +553,8 @@ fun PatientEva(
                             leftPupilStatus = if (leftPupilStatus == "정상") "" else "정상"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     SelectButton(
                         text = "축동",
@@ -556,7 +563,8 @@ fun PatientEva(
                             leftPupilStatus = if (leftPupilStatus == "축소") "" else "축소"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     SelectButton(
                         text = "산동",
@@ -565,7 +573,8 @@ fun PatientEva(
                             leftPupilStatus = if (leftPupilStatus == "확대") "" else "확대"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     SelectButton(
                         text = "측정불가",
@@ -574,7 +583,8 @@ fun PatientEva(
                             leftPupilStatus = if (leftPupilStatus == "측정불가") "" else "측정불가"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     SelectButton(
                         text = "반응",
@@ -583,7 +593,8 @@ fun PatientEva(
                             leftPupilReaction = if (leftPupilReaction == "반응") "" else "반응"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     SelectButton(
                         text = "무반응",
@@ -592,7 +603,8 @@ fun PatientEva(
                             leftPupilReaction = if (leftPupilReaction == "무반응") "" else "무반응"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     SelectButton(
                         text = "측정불가",
@@ -601,11 +613,12 @@ fun PatientEva(
                             leftPupilReaction = if (leftPupilReaction == "측정불가") "" else "측정불가"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                 }
 
-                // 우 - 7개 버튼 한 줄
+                // 우
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -625,7 +638,8 @@ fun PatientEva(
                             rightPupilStatus = if (rightPupilStatus == "정상") "" else "정상"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     SelectButton(
                         text = "축동",
@@ -634,7 +648,8 @@ fun PatientEva(
                             rightPupilStatus = if (rightPupilStatus == "축소") "" else "축소"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     SelectButton(
                         text = "산동",
@@ -643,7 +658,8 @@ fun PatientEva(
                             rightPupilStatus = if (rightPupilStatus == "확대") "" else "확대"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     SelectButton(
                         text = "측정불가",
@@ -652,7 +668,8 @@ fun PatientEva(
                             rightPupilStatus = if (rightPupilStatus == "측정불가") "" else "측정불가"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     SelectButton(
                         text = "반응",
@@ -661,7 +678,8 @@ fun PatientEva(
                             rightPupilReaction = if (rightPupilReaction == "반응") "" else "반응"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     SelectButton(
                         text = "무반응",
@@ -670,7 +688,8 @@ fun PatientEva(
                             rightPupilReaction = if (rightPupilReaction == "무반응") "" else "무반응"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     SelectButton(
                         text = "측정불가",
@@ -679,19 +698,19 @@ fun PatientEva(
                             rightPupilReaction = if (rightPupilReaction == "측정불가") "" else "측정불가"
                             saveData()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                 }
             }
 
             // ==========================================
-            // 활력 징후 - ✅ 라벨 바로 옆에 불가/거부 버튼
+            // 활력 징후
             // ==========================================
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // ✅ 활력 징후 + 불가/거부 버튼 (바로 붙여서, Spacer 제거)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -710,7 +729,8 @@ fun PatientEva(
                             vitalSignsStatus = if (vitalSignsStatus == "불가") "" else "불가"
                             saveData()
                         },
-                        modifier = Modifier.width(80.dp)
+                        modifier = Modifier.width(80.dp),
+                        enabled = !isReadOnly
                     )
 
                     SelectButton(
@@ -720,7 +740,8 @@ fun PatientEva(
                             vitalSignsStatus = if (vitalSignsStatus == "거부") "" else "거부"
                             saveData()
                         },
-                        modifier = Modifier.width(80.dp)
+                        modifier = Modifier.width(80.dp),
+                        enabled = !isReadOnly
                     )
                 }
 
@@ -744,7 +765,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "시각(p)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     VitalSignInputField(
                         value = leftBloodPressure,
@@ -753,7 +775,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "혈압(p)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     VitalSignInputField(
                         value = leftPulse,
@@ -762,7 +785,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "맥박(p)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     VitalSignInputField(
                         value = leftRespiratoryRate,
@@ -771,7 +795,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "호흡(p)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     VitalSignInputField(
                         value = leftTemperature,
@@ -780,7 +805,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "체온(p)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     VitalSignInputField(
                         value = leftOxygenSaturation,
@@ -789,7 +815,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "SpO2(p)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     VitalSignInputField(
                         value = leftBloodSugar,
@@ -798,7 +825,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "혈당체크",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                 }
 
@@ -822,7 +850,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "시각(p)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     VitalSignInputField(
                         value = rightBloodPressure,
@@ -831,7 +860,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "혈압(p)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     VitalSignInputField(
                         value = rightPulse,
@@ -840,7 +870,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "맥박(p)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     VitalSignInputField(
                         value = rightRespiratoryRate,
@@ -849,7 +880,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "호흡(p)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     VitalSignInputField(
                         value = rightTemperature,
@@ -858,7 +890,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "체온(p)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     VitalSignInputField(
                         value = rightOxygenSaturation,
@@ -867,7 +900,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "SpO2(p)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                     VitalSignInputField(
                         value = rightBloodSugar,
@@ -876,7 +910,8 @@ fun PatientEva(
                             saveData()
                         },
                         placeholder = "혈당체크",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                 }
             }
@@ -901,14 +936,18 @@ private fun SelectButton(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
         modifier = modifier.height(36.dp),
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-            contentColor = Color.White
+            contentColor = Color.White,
+            disabledContainerColor = Color(0xFF2a2a2a),
+            disabledContentColor = Color(0xFF666666)
         ),
         shape = RoundedCornerShape(4.dp),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
@@ -929,7 +968,8 @@ private fun VitalSignInputField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Column(modifier = modifier) {
         BasicTextField(
@@ -939,11 +979,12 @@ private fun VitalSignInputField(
                 .fillMaxWidth()
                 .padding(bottom = 4.dp),
             textStyle = TextStyle(
-                color = Color.White,
+                color = if (enabled) Color.White else Color(0xFF666666),
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center
             ),
             singleLine = true,
+            enabled = enabled,
             decorationBox = { innerTextField ->
                 Box(
                     modifier = Modifier.fillMaxWidth(),

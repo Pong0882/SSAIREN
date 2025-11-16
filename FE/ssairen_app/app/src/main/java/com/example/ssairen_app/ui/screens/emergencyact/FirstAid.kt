@@ -235,51 +235,51 @@ fun FirstAid(
                 .fillMaxSize()
                 .background(Color(0xFF1a1a1a))
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 40.dp)  // ✅ 16.dp → 40.dp
+                .padding(horizontal = 40.dp)
                 .padding(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
             // ==========================================
-            // 기도 확보 - ✅ 상단 패딩 추가
+            // 기도 확보
             // ==========================================
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),  // ✅ 상단 패딩
+                    .padding(top = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
                     text = "기도 확보",
                     color = Color.White,
-                    fontSize = 14.sp  // ✅ fontWeight 제거
+                    fontSize = 14.sp
                 )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    SelectButton("노숙 조치", airwayJawThrust, Modifier.weight(1f)) {
+                    SelectButton("노숙 조치", airwayJawThrust, Modifier.weight(1f), !isReadOnly) {
                         airwayJawThrust = it
                         saveData()
                     }
-                    SelectButton("기도유지기", airwayHeadTilt, Modifier.weight(1f)) {
+                    SelectButton("기도유지기", airwayHeadTilt, Modifier.weight(1f), !isReadOnly) {
                         airwayHeadTilt = it
                         saveData()
                     }
-                    SelectButton("기도삽관", airwayNPA, Modifier.weight(1f)) {
+                    SelectButton("기도삽관", airwayNPA, Modifier.weight(1f), !isReadOnly) {
                         airwayNPA = it
                         saveData()
                     }
-                    SelectButton("성문 외 기도유지기", airwayOPA, Modifier.weight(1f)) {
+                    SelectButton("성문 외 기도유지기", airwayOPA, Modifier.weight(1f), !isReadOnly) {
                         airwayOPA = it
                         saveData()
                     }
-                    SelectButton("흡기개", airwayIntubation, Modifier.weight(1f)) {
+                    SelectButton("흡기개", airwayIntubation, Modifier.weight(1f), !isReadOnly) {
                         airwayIntubation = it
                         saveData()
                     }
-                    SelectButton("그 밖의 도수법", airwaySupraglottic, Modifier.weight(1f)) {
+                    SelectButton("그 밖의 도수법", airwaySupraglottic, Modifier.weight(1f), !isReadOnly) {
                         airwaySupraglottic = it
                         saveData()
                     }
@@ -299,7 +299,6 @@ fun FirstAid(
                     fontSize = 14.sp
                 )
 
-                // ✅ L/min 입력 필드
                 Column(modifier = Modifier.width(150.dp)) {
                     Text(
                         text = "L/min",
@@ -317,12 +316,13 @@ fun FirstAid(
                             .fillMaxWidth()
                             .padding(bottom = 4.dp),
                         textStyle = TextStyle(
-                            color = Color.White,
+                            color = if (isReadOnly) Color(0xFF666666) else Color.White,
                             fontSize = 14.sp,
                             textAlign = TextAlign.Start
                         ),
                         singleLine = true,
-                        readOnly = isReadOnly
+                        readOnly = isReadOnly,
+                        enabled = !isReadOnly
                     )
                     HorizontalDivider(
                         color = Color(0xFF4a4a4a),
@@ -334,31 +334,31 @@ fun FirstAid(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    SelectButton("비란", oxygenMask, Modifier.weight(1f)) {
+                    SelectButton("비란", oxygenMask, Modifier.weight(1f), !isReadOnly) {
                         oxygenMask = it
                         saveData()
                     }
-                    SelectButton("인공비스크", oxygenNasal, Modifier.weight(1f)) {
+                    SelectButton("인공비스크", oxygenNasal, Modifier.weight(1f), !isReadOnly) {
                         oxygenNasal = it
                         saveData()
                     }
-                    SelectButton("비흡출통로스", oxygenBVM, Modifier.weight(1f)) {
+                    SelectButton("비흡출통로스", oxygenBVM, Modifier.weight(1f), !isReadOnly) {
                         oxygenBVM = it
                         saveData()
                     }
-                    SelectButton("BVM", oxygenVentilator, Modifier.weight(1f)) {
+                    SelectButton("BVM", oxygenVentilator, Modifier.weight(1f), !isReadOnly) {
                         oxygenVentilator = it
                         saveData()
                     }
-                    SelectButton("산소삽입", oxygenSuction, Modifier.weight(1f)) {
+                    SelectButton("산소삽입", oxygenSuction, Modifier.weight(1f), !isReadOnly) {
                         oxygenSuction = it
                         saveData()
                     }
-                    SelectButton("프레이마스크", oxygenNebulizer, Modifier.weight(1f)) {
+                    SelectButton("프레이마스크", oxygenNebulizer, Modifier.weight(1f), !isReadOnly) {
                         oxygenNebulizer = it
                         saveData()
                     }
-                    SelectButton("베드리자이저", false, Modifier.weight(1f)) { }
+                    SelectButton("베드리자이저", false, Modifier.weight(1f), !isReadOnly) { }
                 }
             }
 
@@ -379,19 +379,19 @@ fun FirstAid(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    SelectButton("실시", cprPerformed, Modifier.weight(1f)) {
+                    SelectButton("실시", cprPerformed, Modifier.weight(1f), !isReadOnly) {
                         cprPerformed = it
                         saveData()
                     }
-                    SelectButton("거부", cprManual, Modifier.weight(1f)) {
+                    SelectButton("거부", cprManual, Modifier.weight(1f), !isReadOnly) {
                         cprManual = it
                         saveData()
                     }
-                    SelectButton("DNR", cprDNR, Modifier.weight(1f)) {
+                    SelectButton("DNR", cprDNR, Modifier.weight(1f), !isReadOnly) {
                         cprDNR = it
                         saveData()
                     }
-                    SelectButton("유보", cprTermination, Modifier.weight(1f)) {
+                    SelectButton("유보", cprTermination, Modifier.weight(1f), !isReadOnly) {
                         cprTermination = it
                         saveData()
                     }
@@ -415,7 +415,7 @@ fun FirstAid(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    SelectButton("ECG", ecgUsed, Modifier.weight(1f)) {
+                    SelectButton("ECG", ecgUsed, Modifier.weight(1f), !isReadOnly) {
                         ecgUsed = it
                         saveData()
                     }
@@ -440,15 +440,15 @@ fun FirstAid(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    SelectButton("Shock", aedShock, Modifier.weight(1f)) {
+                    SelectButton("Shock", aedShock, Modifier.weight(1f), !isReadOnly) {
                         aedShock = it
                         saveData()
                     }
-                    SelectButton("Monitoring", aedMonitoring, Modifier.weight(1f)) {
+                    SelectButton("Monitoring", aedMonitoring, Modifier.weight(1f), !isReadOnly) {
                         aedMonitoring = it
                         saveData()
                     }
-                    SelectButton("기타 사용", aedApplicationOnly, Modifier.weight(1f)) {
+                    SelectButton("기타 사용", aedApplicationOnly, Modifier.weight(1f), !isReadOnly) {
                         aedApplicationOnly = it
                         saveData()
                     }
@@ -472,15 +472,15 @@ fun FirstAid(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    SelectButton("정맥로확보", circulationIV, Modifier.weight(1f)) {
+                    SelectButton("정맥로확보", circulationIV, Modifier.weight(1f), !isReadOnly) {
                         circulationIV = it
                         saveData()
                     }
-                    SelectButton("수액공급(p)", circulationFluid, Modifier.weight(1f)) {
+                    SelectButton("수액공급(p)", circulationFluid, Modifier.weight(1f), !isReadOnly) {
                         circulationFluid = it
                         saveData()
                     }
-                    SelectButton("약물투여", circulationDrug, Modifier.weight(1f)) {
+                    SelectButton("약물투여", circulationDrug, Modifier.weight(1f), !isReadOnly) {
                         circulationDrug = it
                         saveData()
                     }
@@ -504,19 +504,19 @@ fun FirstAid(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    SelectButton("경수", immobilizationCervical, Modifier.weight(1f)) {
+                    SelectButton("경수", immobilizationCervical, Modifier.weight(1f), !isReadOnly) {
                         immobilizationCervical = it
                         saveData()
                     }
-                    SelectButton("척추", immobilizationSpinal, Modifier.weight(1f)) {
+                    SelectButton("척추", immobilizationSpinal, Modifier.weight(1f), !isReadOnly) {
                         immobilizationSpinal = it
                         saveData()
                     }
-                    SelectButton("부목", immobilizationSplint, Modifier.weight(1f)) {
+                    SelectButton("부목", immobilizationSplint, Modifier.weight(1f), !isReadOnly) {
                         immobilizationSplint = it
                         saveData()
                     }
-                    SelectButton("머리", immobilizationHead, Modifier.weight(1f)) {
+                    SelectButton("머리", immobilizationHead, Modifier.weight(1f), !isReadOnly) {
                         immobilizationHead = it
                         saveData()
                     }
@@ -540,23 +540,23 @@ fun FirstAid(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    SelectButton("지혈", woundHemostasis, Modifier.weight(1f)) {
+                    SelectButton("지혈", woundHemostasis, Modifier.weight(1f), !isReadOnly) {
                         woundHemostasis = it
                         saveData()
                     }
-                    SelectButton("상처드레싱", woundDressing, Modifier.weight(1f)) {
+                    SelectButton("상처드레싱", woundDressing, Modifier.weight(1f), !isReadOnly) {
                         woundDressing = it
                         saveData()
                     }
-                    SelectButton("붕대", woundBandage, Modifier.weight(1f)) {
+                    SelectButton("붕대", woundBandage, Modifier.weight(1f), !isReadOnly) {
                         woundBandage = it
                         saveData()
                     }
-                    SelectButton("보호(손)", woundHandProtection, Modifier.weight(1f)) {
+                    SelectButton("보호(손)", woundHandProtection, Modifier.weight(1f), !isReadOnly) {
                         woundHandProtection = it
                         saveData()
                     }
-                    SelectButton("보호(발)", woundFootProtection, Modifier.weight(1f)) {
+                    SelectButton("보호(발)", woundFootProtection, Modifier.weight(1f), !isReadOnly) {
                         woundFootProtection = it
                         saveData()
                     }
@@ -574,20 +574,23 @@ fun FirstAid(
     }
 }
 
-// ✅ SelectButton 컴포넌트
 @Composable
 private fun SelectButton(
     text: String,
     isSelected: Boolean,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     onToggle: (Boolean) -> Unit
 ) {
     Button(
         onClick = { onToggle(!isSelected) },
         modifier = modifier.height(36.dp),
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-            contentColor = Color.White
+            contentColor = Color.White,
+            disabledContainerColor = Color(0xFF2a2a2a),
+            disabledContentColor = Color(0xFF666666)
         ),
         shape = RoundedCornerShape(4.dp),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
