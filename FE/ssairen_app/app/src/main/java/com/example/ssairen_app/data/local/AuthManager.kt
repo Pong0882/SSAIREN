@@ -43,7 +43,7 @@ class AuthManager(context: Context) {
             putString(KEY_LOGIN_USER_TYPE, loginUserType)
             putBoolean(KEY_IS_LOGGED_IN, true)
             putLong(KEY_LOGIN_TIME, System.currentTimeMillis())
-            apply()
+            commit()
         }
         Log.d(TAG, "✅ 로그인 정보 저장 완료 - User: $userId")
     }
@@ -53,7 +53,7 @@ class AuthManager(context: Context) {
         prefs.edit().apply {
             putString(KEY_ACCESS_TOKEN, accessToken)
             putString(KEY_REFRESH_TOKEN, refreshToken)
-            apply()
+            commit()
         }
         Log.d(TAG, "✅ 토큰 갱신 완료")
     }
@@ -121,7 +121,7 @@ class AuthManager(context: Context) {
             remove(KEY_LOGIN_PASSWORD)
             remove(KEY_LOGIN_USER_TYPE)
             putBoolean(KEY_IS_LOGGED_IN, false)
-            apply()
+            commit()
         }
         Log.d(TAG, "🗑️ 로그아웃 - 모든 인증 정보 삭제 완료")
     }
