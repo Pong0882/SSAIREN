@@ -39,16 +39,33 @@ enum class HospitalStatus(val displayName: String, val color: Color) {
 @Composable
 fun HospitalSearch(
     modifier: Modifier = Modifier,
-    hospitalSearchViewModel: HospitalSearchViewModel = viewModel(),
     activityViewModel: ActivityViewModel = viewModel()
 ) {
     var selectedHospitalId by remember { mutableStateOf<Int?>(null) }
     var selectedTab by remember { mutableStateOf(0) } // 0: 검색 완료, 1: 선정된 병원
 
+    // ✅ Singleton HospitalSearchViewModel 사용
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val hospitalSearchViewModel = remember {
+        HospitalSearchViewModel.getInstance(context.applicationContext as android.app.Application)
+    }
+
     val aiRecommendationState by hospitalSearchViewModel.aiRecommendationState.collectAsState()
     val hospitals by hospitalSearchViewModel.hospitals.collectAsState()
     // 전역 상태 사용 (ActivityLogHome에서 설정한 값 유지)
     val globalReportId by com.example.ssairen_app.viewmodel.ActivityViewModel.globalCurrentReportId.observeAsState()
+
+    // ✅ hospitals 변경 감지 로그
+    LaunchedEffect(hospitals) {
+        android.util.Log.d("HospitalSearch", "╔════════════════════════════════════════╗")
+        android.util.Log.d("HospitalSearch", "║   🔄 hospitals StateFlow 변경됨!      ║")
+        android.util.Log.d("HospitalSearch", "╚════════════════════════════════════════╝")
+        android.util.Log.d("HospitalSearch", "현재 병원 수: ${hospitals.size}")
+        hospitals.forEachIndexed { index, hospital ->
+            android.util.Log.d("HospitalSearch", "  [$index] ${hospital.hospitalName} - ${hospital.status}")
+        }
+        android.util.Log.d("HospitalSearch", "========================================")
+    }
 
     // 화면 진입 시 환자 정보 생성 후 AI 병원 추천 자동 호출
     LaunchedEffect(globalReportId) {
@@ -325,8 +342,12 @@ private fun HospitalCard(
         "PENDING" -> HospitalStatus.PENDING
         "ACCEPTED" -> HospitalStatus.ACCEPTED
         "REJECTED" -> HospitalStatus.REJECTED
-        "CALLREQUEST" -> HospitalStatus.CALLREQUEST
-        else -> HospitalStatus.PENDING
+        "CALLREQUEST", "CALL_REQUEST" -> HospitalStatus.CALLREQUEST  // 두 가지 형식 모두 지원
+        else -> {
+            // 알 수 없는 상태값 로깅
+            android.util.Log.w("HospitalCard", "⚠️ 알 수 없는 상태값: '${hospital.status}' (병원: ${hospital.hospitalName})")
+            HospitalStatus.PENDING
+        }
     }
 
     ClickableDarkCard(

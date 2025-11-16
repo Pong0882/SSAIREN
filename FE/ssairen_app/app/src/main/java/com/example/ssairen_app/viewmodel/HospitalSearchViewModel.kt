@@ -22,6 +22,16 @@ class HospitalSearchViewModel(application: Application) : AndroidViewModel(appli
 
     companion object {
         private const val TAG = "HospitalSearchViewModel"
+
+        // ✅ Singleton 인스턴스 (전역 접근용)
+        @Volatile
+        private var INSTANCE: HospitalSearchViewModel? = null
+
+        fun getInstance(application: Application): HospitalSearchViewModel {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: HospitalSearchViewModel(application).also { INSTANCE = it }
+            }
+        }
     }
 
     private val repository = ReportRepository(AuthManager(application))
@@ -175,17 +185,59 @@ class HospitalSearchViewModel(application: Application) : AndroidViewModel(appli
         Log.d(TAG, "   - hospitalSelectionId: $hospitalSelectionId")
         Log.d(TAG, "   - newStatus: $newStatus")
 
+        val currentTime = System.currentTimeMillis()
         val currentList = _hospitals.value
+
         val updatedList = currentList.map { hospital ->
             if (hospital.hospitalSelectionId == hospitalSelectionId) {
-                hospital.copy(status = newStatus)
+                hospital.copy(
+                    status = newStatus,
+                    responseTime = currentTime  // 응답 받은 시간 기록
+                )
             } else {
                 hospital
             }
         }
 
-        _hospitals.value = updatedList
-        Log.d(TAG, "✅ 병원 상태 업데이트 완료")
+        // 정렬 적용
+        val sortedList = sortHospitals(updatedList)
+
+        Log.d(TAG, "📊 정렬 결과:")
+        sortedList.forEachIndexed { index, hospital ->
+            Log.d(TAG, "  [$index] ${hospital.hospitalName} - ${hospital.status} (responseTime: ${hospital.responseTime})")
+        }
+
+        _hospitals.value = sortedList
+        Log.d(TAG, "✅ 병원 상태 업데이트 및 정렬 완료")
+        Log.d(TAG, "   현재 hospitals.value 크기: ${_hospitals.value.size}")
+    }
+
+    /**
+     * 병원 리스트 정렬
+     * 우선순위: 수용가능(오래된순) > 전화요망(오래된순) > 거절(오래된순) > 요청중(기존순)
+     */
+    private fun sortHospitals(hospitals: List<HospitalSelectionInfo>): List<HospitalSelectionInfo> {
+        return hospitals.sortedWith(compareBy(
+            { hospital ->
+                // 1차 정렬: 상태별 우선순위
+                when (hospital.status) {
+                    "ACCEPTED" -> 0                      // 수용 가능 (최우선)
+                    "CALLREQUEST", "CALL_REQUEST" -> 1   // 전화 요망 (두 가지 형식 지원)
+                    "REJECTED" -> 2                      // 거절
+                    "PENDING" -> 3                       // 요청중 (최하위)
+                    else -> {
+                        Log.w(TAG, "⚠️ 알 수 없는 상태값: '${hospital.status}' (병원: ${hospital.hospitalName})")
+                        4  // 알 수 없는 상태는 맨 뒤로
+                    }
+                }
+            },
+            { hospital ->
+                // 2차 정렬: responseTime
+                // PENDING이 아닌 경우 응답 시간순 (오래된 것이 위)
+                // PENDING인 경우 원래 순서 유지 (responseTime이 null이므로 자연스럽게 뒤로)
+                hospital.responseTime ?: Long.MAX_VALUE
+            }
+        ))
     }
 
     /**

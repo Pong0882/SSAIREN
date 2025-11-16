@@ -32,5 +32,6 @@ data class HospitalSelectionInfo(
     val hospitalSelectionId: Int,
     val hospitalName: String,
     val status: String,
-    val createdAt: String
+    val createdAt: String,
+    val responseTime: Long? = null  // 응답 받은 시간 (milliseconds since epoch)
 )

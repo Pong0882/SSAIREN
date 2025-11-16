@@ -3,6 +3,7 @@ package com.example.ssairen_app
 
 import android.Manifest
 import android.app.AlertDialog
+import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -27,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.example.ssairen_app.data.websocket.DispatchMessage
-import com.example.ssairen_app.data.websocket.HospitalResponseMessage
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
@@ -46,7 +46,6 @@ import com.example.ssairen_app.viewmodel.ReportViewModel
 import com.example.ssairen_app.viewmodel.CreateReportState
 import com.example.ssairen_app.data.api.RetrofitClient
 import com.example.ssairen_app.ui.components.DispatchModal
-import com.example.ssairen_app.ui.components.HospitalResponseModal
 import com.example.ssairen_app.ui.screens.report.DispatchDetail
 import com.example.ssairen_app.ui.screens.report.DispatchDetailData
 import com.example.ssairen_app.service.MyFirebaseMessagingService
@@ -269,7 +268,29 @@ fun AppRoot(
 
     val dispatchState = rememberDispatchState()
     val dispatchMessage by viewModel.dispatchMessage.observeAsState()
-    val hospitalResponseMessage by viewModel.hospitalResponseMessage.observeAsState()
+
+    // ✅ HospitalSearchViewModel Singleton 인스턴스 가져오기
+    val context = LocalContext.current
+    val hospitalSearchViewModel = remember {
+        com.example.ssairen_app.viewmodel.HospitalSearchViewModel.getInstance(
+            context.applicationContext as Application
+        )
+    }
+
+    // ✅ AuthViewModel의 병원 응답 콜백 설정 (전역)
+    LaunchedEffect(Unit) {
+        Log.d("AppRoot", "🔗 전역 WebSocket 콜백 설정 중...")
+        viewModel.onHospitalResponseReceived = { response ->
+            Log.d("AppRoot", "🏥 병원 응답 수신: ${response.hospitalName} - ${response.status}")
+            Log.d("AppRoot", "   - hospitalSelectionId: ${response.hospitalSelectionId}")
+            Log.d("AppRoot", "   - newStatus: ${response.status}")
+            hospitalSearchViewModel.updateHospitalStatus(
+                hospitalSelectionId = response.hospitalSelectionId,
+                newStatus = response.status
+            )
+        }
+        Log.d("AppRoot", "✅ 전역 WebSocket 콜백 설정 완료")
+    }
 
     // ✅ WebSocket 메시지 수신 시 DispatchContext에 전달
     LaunchedEffect(dispatchMessage) {
@@ -339,22 +360,6 @@ fun AppRoot(
         Log.d("AppRoot", "📌 dispatchState.activeDispatch: ${dispatchState.activeDispatch}")
     }
 
-    LaunchedEffect(hospitalResponseMessage) {
-        Log.d("AppRoot", "╔════════════════════════════════════════╗")
-        Log.d("AppRoot", "║   hospitalResponseMessage Changed     ║")
-        Log.d("AppRoot", "╚════════════════════════════════════════╝")
-        Log.d("AppRoot", "Current value: $hospitalResponseMessage")
-
-        hospitalResponseMessage?.let { response ->
-            Log.d("AppRoot", "✅ Hospital response exists!")
-            Log.d("AppRoot", "  - Hospital: ${response.hospitalName}")
-            Log.d("AppRoot", "  - Status: ${response.status}")
-            Log.d("AppRoot", "🎯 Modal should appear now!")
-        } ?: run {
-            Log.d("AppRoot", "ℹ️ Hospital response is null")
-        }
-        Log.d("AppRoot", "========================================")
-    }
 
     // ✅ 수정: null/true/false 세 가지 상태 처리
     when (isLoggedIn) {
@@ -374,10 +379,6 @@ fun AppRoot(
             AppNavigation(
                 onLogout = {
                     viewModel.logout()
-                },
-                hospitalResponseMessage = hospitalResponseMessage,
-                onClearHospitalResponse = {
-                    viewModel.clearHospitalResponseMessage()
                 }
             )
         }
@@ -395,9 +396,7 @@ fun AppRoot(
 
 @Composable
 fun AppNavigation(
-    onLogout: () -> Unit,
-    hospitalResponseMessage: HospitalResponseMessage? = null,
-    onClearHospitalResponse: () -> Unit = {}
+    onLogout: () -> Unit
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -517,20 +516,6 @@ fun AppNavigation(
         )
     }
 
-    // ✅ 병원 응답 모달 표시
-    hospitalResponseMessage?.let { response ->
-        Log.d("AppNavigation", "🎨 Rendering HospitalResponseModal")
-        Log.d("AppNavigation", "  - Hospital: ${response.hospitalName}")
-        Log.d("AppNavigation", "  - Status: ${response.status}")
-
-        HospitalResponseModal(
-            response = response,
-            onConfirm = {
-                Log.d("AppNavigation", "✅ Hospital response modal confirmed - closing")
-                onClearHospitalResponse()
-            }
-        )
-    }
 
     // ✅ dispatchId 에러 다이얼로그
     if (showDispatchIdErrorDialog) {

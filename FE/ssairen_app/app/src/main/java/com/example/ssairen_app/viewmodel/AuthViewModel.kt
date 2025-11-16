@@ -54,9 +54,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val _dispatchMessage = MutableLiveData<DispatchMessage?>()
     val dispatchMessage: LiveData<DispatchMessage?> = _dispatchMessage
 
-    // ✅ 수신된 병원 응답 메시지 LiveData 추가
-    private val _hospitalResponseMessage = MutableLiveData<HospitalResponseMessage?>()
-    val hospitalResponseMessage: LiveData<HospitalResponseMessage?> = _hospitalResponseMessage
+    // ✅ 병원 응답 처리용 콜백 (외부에서 설정)
+    var onHospitalResponseReceived: ((HospitalResponseMessage) -> Unit)? = null
 
     init {
         checkLoginStatus()
@@ -165,14 +164,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d(TAG, "🏥 Hospital response received!")
                 Log.d(TAG, "  - Hospital: ${response.hospitalName}")
                 Log.d(TAG, "  - Status: ${response.status}")
+                Log.d(TAG, "  - hospitalSelectionId: ${response.hospitalSelectionId}")
                 Log.d(TAG, "")
-                Log.d(TAG, "🎯 Posting to LiveData...")
+                Log.d(TAG, "🎯 Calling external callback...")
 
-                // ✅ 병원 응답 메시지를 LiveData로 전달
-                _hospitalResponseMessage.postValue(response)
+                // ✅ 외부 콜백 호출 (HospitalSearchViewModel로 전달)
+                onHospitalResponseReceived?.invoke(response)
 
-                Log.d(TAG, "✅ Posted to hospitalResponseMessage LiveData!")
-                Log.d(TAG, "Current value: ${_hospitalResponseMessage.value}")
+                Log.d(TAG, "✅ Callback invoked!")
                 Log.d(TAG, "========================================")
             },
             onError = { error ->
@@ -189,11 +188,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     // ✅ 출동 메시지 처리 완료 (모달 띄운 후 호출)
     fun clearDispatchMessage() {
         _dispatchMessage.value = null
-    }
-
-    // ✅ 병원 응답 메시지 처리 완료 (모달 띄운 후 호출)
-    fun clearHospitalResponseMessage() {
-        _hospitalResponseMessage.value = null
     }
 
     // ✅ WebSocket 연결 해제
