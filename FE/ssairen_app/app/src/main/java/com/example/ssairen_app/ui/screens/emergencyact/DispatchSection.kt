@@ -19,8 +19,9 @@ import com.example.ssairen_app.viewmodel.LogViewModel
 import com.example.ssairen_app.viewmodel.ActivityLogData
 import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.DispatchApiState
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * 구급출동 섹션 메인 화면
@@ -278,7 +279,7 @@ fun DispatchSection(
                         enabled = !isReadOnly
                     )
 
-                    TimeFieldRow(
+                    TimeFieldRowWithButton(
                         label = "병원 도착",
                         value = arrivalHospitalTime,
                         onValueChange = { arrivalHospitalTime = it },
@@ -367,10 +368,13 @@ fun DispatchSection(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFF2a2a2a),
                             unfocusedContainerColor = Color(0xFF2a2a2a),
+                            disabledContainerColor = Color(0xFF1a1a1a),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
+                            disabledTextColor = Color(0xFF666666),
                             focusedIndicatorColor = Color(0xFF3b7cff),
                             unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                            disabledIndicatorColor = Color(0xFF2a2a2a),
                             cursorColor = Color(0xFF3b7cff)
                         ),
                         textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color.White),
@@ -416,10 +420,13 @@ fun DispatchSection(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFF2a2a2a),
                             unfocusedContainerColor = Color(0xFF2a2a2a),
+                            disabledContainerColor = Color(0xFF1a1a1a),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
+                            disabledTextColor = Color(0xFF666666),
                             focusedIndicatorColor = Color(0xFF3b7cff),
                             unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                            disabledIndicatorColor = Color(0xFF2a2a2a),
                             cursorColor = Color(0xFF3b7cff)
                         ),
                         textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color.White),
@@ -483,10 +490,13 @@ fun DispatchSection(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFF2a2a2a),
                             unfocusedContainerColor = Color(0xFF2a2a2a),
+                            disabledContainerColor = Color(0xFF1a1a1a),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
+                            disabledTextColor = Color(0xFF666666),
                             focusedIndicatorColor = Color(0xFF3b7cff),
                             unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                            disabledIndicatorColor = Color(0xFF2a2a2a),
                             cursorColor = Color(0xFF3b7cff)
                         ),
                         textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color.White),
@@ -538,7 +548,7 @@ private fun TimeFieldRow(
                 disabledContainerColor = Color.Transparent,
                 focusedTextColor = Color.White,
                 unfocusedTextColor = Color.White,
-                disabledTextColor = Color(0xFF999999),
+                disabledTextColor = Color(0xFF666666),
                 focusedIndicatorColor = Color(0xFF3a3a3a),
                 unfocusedIndicatorColor = Color(0xFF3a3a3a),
                 disabledIndicatorColor = Color(0xFF3a3a3a),
@@ -594,10 +604,13 @@ private fun TimeFieldRowWithButton(
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
+                    disabledTextColor = Color(0xFF666666),
                     focusedIndicatorColor = Color(0xFF3a3a3a),
                     unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                    disabledIndicatorColor = Color(0xFF3a3a3a),
                     cursorColor = Color(0xFF3b7cff)
                 ),
                 textStyle = LocalTextStyle.current.copy(
@@ -612,7 +625,9 @@ private fun TimeFieldRowWithButton(
                 enabled = enabled,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF3b7cff),
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFF2a2a2a),
+                    disabledContentColor = Color(0xFF666666)
                 ),
                 shape = RoundedCornerShape(6.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -722,7 +737,9 @@ private fun SelectButton(
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-            contentColor = Color.White
+            contentColor = Color.White,
+            disabledContainerColor = Color(0xFF2a2a2a),
+            disabledContentColor = Color(0xFF666666)
         ),
         shape = RoundedCornerShape(4.dp),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
@@ -737,9 +754,8 @@ private fun SelectButton(
     }
 }
 
-// 유틸리티: 현재 시간 가져오기
+// 유틸리티: 현재 시간 가져오기 (API 24 호환)
 private fun getCurrentTime(): String {
-    val currentTime = LocalTime.now()
-    val formatter = DateTimeFormatter.ofPattern("HH:mm")
-    return currentTime.format(formatter)
+    val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+    return sdf.format(Date())
 }
