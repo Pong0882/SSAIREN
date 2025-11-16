@@ -19,8 +19,9 @@ import com.example.ssairen_app.viewmodel.LogViewModel
 import com.example.ssairen_app.viewmodel.ActivityLogData
 import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.DispatchApiState
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * 구급출동 섹션 메인 화면
@@ -171,22 +172,22 @@ fun DispatchSection(
         if (!isReadOnly) {
             viewModel.updateDispatch(
                 com.example.ssairen_app.viewmodel.DispatchData(
-                reportDatetime = reportDatetime,
-                departureTime = departureTime,
-                arrivalSceneTime = arrivalSceneTime,
-                departureSceneTime = departureSceneTime,
-                contactTime = contactTime,
-                arrivalHospitalTime = arrivalHospitalTime,
-                distanceKm = distance.toDoubleOrNull() ?: 0.0,
-                returnTime = returnTime,
-                dispatchType = selectedDispatchType,
-                sceneLocationName = selectedLocation,
-                sceneLocationValue = if (selectedLocation == "기타") locationDetailValue else null,
-                painSymptoms = selectedPains,
-                traumaSymptoms = selectedInjuries,
-                otherSymptoms = selectedSymptoms,
-                otherPainValue = if (selectedPains.contains("그 밖의 통증")) otherPainValue else null,
-                otherSymptomValue = if (selectedSymptoms.contains("기타")) otherSymptomValue else null
+                    reportDatetime = reportDatetime,
+                    departureTime = departureTime,
+                    arrivalSceneTime = arrivalSceneTime,
+                    departureSceneTime = departureSceneTime,
+                    contactTime = contactTime,
+                    arrivalHospitalTime = arrivalHospitalTime,
+                    distanceKm = distance.toDoubleOrNull() ?: 0.0,
+                    returnTime = returnTime,
+                    dispatchType = selectedDispatchType,
+                    sceneLocationName = selectedLocation,
+                    sceneLocationValue = if (selectedLocation == "기타") locationDetailValue else null,
+                    painSymptoms = selectedPains,
+                    traumaSymptoms = selectedInjuries,
+                    otherSymptoms = selectedSymptoms,
+                    otherPainValue = if (selectedPains.contains("그 밖의 통증")) otherPainValue else null,
+                    otherSymptomValue = if (selectedSymptoms.contains("기타")) otherSymptomValue else null
                 )
             )
         }
@@ -225,7 +226,8 @@ fun DispatchSection(
                         onValueChange = { reportDatetime = it },
                         readOnly = true,
                         placeholder = "상황실에서 자동 입력",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
 
                     TimeFieldRow(
@@ -233,7 +235,8 @@ fun DispatchSection(
                         value = departureTime,
                         onValueChange = { departureTime = it },
                         placeholder = "HH:mm",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                 }
 
@@ -247,7 +250,8 @@ fun DispatchSection(
                         onValueChange = { arrivalSceneTime = it },
                         buttonText = "도착",
                         onButtonClick = { arrivalSceneTime = getCurrentTime() },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
 
                     TimeFieldRowWithButton(
@@ -256,7 +260,8 @@ fun DispatchSection(
                         onValueChange = { departureSceneTime = it },
                         buttonText = "출발",
                         onButtonClick = { departureSceneTime = getCurrentTime() },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                 }
 
@@ -264,20 +269,24 @@ fun DispatchSection(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    TimeFieldRow(
+                    TimeFieldRowWithButton(
                         label = "환자 접촉",
                         value = contactTime,
                         onValueChange = { contactTime = it },
-                        placeholder = "HH:mm",
-                        modifier = Modifier.weight(1f)
+                        buttonText = "접촉",
+                        onButtonClick = { contactTime = getCurrentTime() },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
 
-                    TimeFieldRow(
+                    TimeFieldRowWithButton(
                         label = "병원 도착",
                         value = arrivalHospitalTime,
                         onValueChange = { arrivalHospitalTime = it },
-                        placeholder = "HH:mm",
-                        modifier = Modifier.weight(1f)
+                        buttonText = "도착",
+                        onButtonClick = { arrivalHospitalTime = getCurrentTime() },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                 }
 
@@ -290,7 +299,8 @@ fun DispatchSection(
                         value = distance,
                         onValueChange = { distance = it },
                         placeholder = "0",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
 
                     TimeFieldRow(
@@ -298,7 +308,8 @@ fun DispatchSection(
                         value = returnTime,
                         onValueChange = { returnTime = it },
                         placeholder = "HH:mm",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
                     )
                 }
             }
@@ -317,7 +328,8 @@ fun DispatchSection(
                 SingleSelectButtonGroup(
                     options = listOf("정상", "오인", "거짓", "취소", "기타"),
                     selectedOption = selectedDispatchType,
-                    onOptionSelected = { selectedDispatchType = it }
+                    onOptionSelected = { selectedDispatchType = it },
+                    enabled = !isReadOnly
                 )
             }
         }
@@ -340,7 +352,8 @@ fun DispatchSection(
                     ),
                     selectedOption = selectedLocation,
                     onOptionSelected = { selectedLocation = it },
-                    columns = 5
+                    columns = 5,
+                    enabled = !isReadOnly
                 )
 
                 if (selectedLocation == "기타") {
@@ -348,16 +361,20 @@ fun DispatchSection(
                         value = locationDetailValue,
                         onValueChange = { locationDetailValue = it },
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        enabled = !isReadOnly,
                         placeholder = {
                             Text("환자 발생 장소를 입력하세요", color = Color(0xFF999999), fontSize = 14.sp)
                         },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFF2a2a2a),
                             unfocusedContainerColor = Color(0xFF2a2a2a),
+                            disabledContainerColor = Color(0xFF1a1a1a),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
+                            disabledTextColor = Color(0xFF666666),
                             focusedIndicatorColor = Color(0xFF3b7cff),
                             unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                            disabledIndicatorColor = Color(0xFF2a2a2a),
                             cursorColor = Color(0xFF3b7cff)
                         ),
                         textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color.White),
@@ -387,7 +404,8 @@ fun DispatchSection(
                     options = listOf("두통", "흉통", "복통", "요통", "분만진통", "그 밖의 통증"),
                     selectedOptions = selectedPains,
                     onOptionsChanged = { selectedPains = it },
-                    columns = 5
+                    columns = 5,
+                    enabled = !isReadOnly
                 )
 
                 if (selectedPains.contains("그 밖의 통증")) {
@@ -395,16 +413,20 @@ fun DispatchSection(
                         value = otherPainValue,
                         onValueChange = { otherPainValue = it },
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        enabled = !isReadOnly,
                         placeholder = {
                             Text("그 밖의 통증을 입력하세요", color = Color(0xFF999999), fontSize = 14.sp)
                         },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFF2a2a2a),
                             unfocusedContainerColor = Color(0xFF2a2a2a),
+                            disabledContainerColor = Color(0xFF1a1a1a),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
+                            disabledTextColor = Color(0xFF666666),
                             focusedIndicatorColor = Color(0xFF3b7cff),
                             unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                            disabledIndicatorColor = Color(0xFF2a2a2a),
                             cursorColor = Color(0xFF3b7cff)
                         ),
                         textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color.White),
@@ -427,7 +449,8 @@ fun DispatchSection(
                     options = listOf("골절", "탈구", "삠", "열상", "찰과상", "타박상", "절단", "압궤손상", "화상"),
                     selectedOptions = selectedInjuries,
                     onOptionsChanged = { selectedInjuries = it },
-                    columns = 4
+                    columns = 4,
+                    enabled = !isReadOnly
                 )
             }
         }
@@ -451,7 +474,8 @@ fun DispatchSection(
                     ),
                     selectedOptions = selectedSymptoms,
                     onOptionsChanged = { selectedSymptoms = it },
-                    columns = 6
+                    columns = 6,
+                    enabled = !isReadOnly
                 )
 
                 if (selectedSymptoms.contains("기타")) {
@@ -459,16 +483,20 @@ fun DispatchSection(
                         value = otherSymptomValue,
                         onValueChange = { otherSymptomValue = it },
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        enabled = !isReadOnly,
                         placeholder = {
                             Text("기타 증상을 입력하세요", color = Color(0xFF999999), fontSize = 14.sp)
                         },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFF2a2a2a),
                             unfocusedContainerColor = Color(0xFF2a2a2a),
+                            disabledContainerColor = Color(0xFF1a1a1a),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
+                            disabledTextColor = Color(0xFF666666),
                             focusedIndicatorColor = Color(0xFF3b7cff),
                             unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                            disabledIndicatorColor = Color(0xFF2a2a2a),
                             cursorColor = Color(0xFF3b7cff)
                         ),
                         textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color.White),
@@ -488,7 +516,8 @@ private fun TimeFieldRow(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     readOnly: Boolean = false,
-    placeholder: String = ""
+    placeholder: String = "",
+    enabled: Boolean = true
 ) {
     Column(
         modifier = modifier,
@@ -505,6 +534,7 @@ private fun TimeFieldRow(
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             readOnly = readOnly,
+            enabled = enabled,
             placeholder = {
                 Text(
                     text = placeholder,
@@ -518,7 +548,7 @@ private fun TimeFieldRow(
                 disabledContainerColor = Color.Transparent,
                 focusedTextColor = Color.White,
                 unfocusedTextColor = Color.White,
-                disabledTextColor = Color(0xFF999999),
+                disabledTextColor = Color(0xFF666666),
                 focusedIndicatorColor = Color(0xFF3a3a3a),
                 unfocusedIndicatorColor = Color(0xFF3a3a3a),
                 disabledIndicatorColor = Color(0xFF3a3a3a),
@@ -541,7 +571,8 @@ private fun TimeFieldRowWithButton(
     onValueChange: (String) -> Unit,
     buttonText: String,
     onButtonClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Column(
         modifier = modifier,
@@ -562,6 +593,7 @@ private fun TimeFieldRowWithButton(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.weight(1f),
+                enabled = enabled,
                 placeholder = {
                     Text(
                         text = "HH:mm",
@@ -572,10 +604,13 @@ private fun TimeFieldRowWithButton(
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
+                    disabledTextColor = Color(0xFF666666),
                     focusedIndicatorColor = Color(0xFF3a3a3a),
                     unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                    disabledIndicatorColor = Color(0xFF3a3a3a),
                     cursorColor = Color(0xFF3b7cff)
                 ),
                 textStyle = LocalTextStyle.current.copy(
@@ -587,9 +622,12 @@ private fun TimeFieldRowWithButton(
 
             Button(
                 onClick = onButtonClick,
+                enabled = enabled,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF3b7cff),
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFF2a2a2a),
+                    disabledContentColor = Color(0xFF666666)
                 ),
                 shape = RoundedCornerShape(6.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -611,7 +649,8 @@ private fun SingleSelectButtonGroup(
     selectedOption: String,
     onOptionSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
-    columns: Int = 5
+    columns: Int = 5,
+    enabled: Boolean = true
 ) {
     Column(
         modifier = modifier,
@@ -627,7 +666,8 @@ private fun SingleSelectButtonGroup(
                         text = option,
                         isSelected = selectedOption == option,
                         onClick = { onOptionSelected(option) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = enabled
                     )
                 }
                 repeat(columns - rowOptions.size) {
@@ -645,7 +685,8 @@ private fun MultiSelectButtonGroup(
     selectedOptions: Set<String>,
     onOptionsChanged: (Set<String>) -> Unit,
     modifier: Modifier = Modifier,
-    columns: Int = 5
+    columns: Int = 5,
+    enabled: Boolean = true
 ) {
     Column(
         modifier = modifier,
@@ -669,7 +710,8 @@ private fun MultiSelectButtonGroup(
                             }
                             onOptionsChanged(newSelection)
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = enabled
                     )
                 }
                 repeat(columns - rowOptions.size) {
@@ -686,14 +728,18 @@ private fun SelectButton(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
         modifier = modifier.height(36.dp),
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-            contentColor = Color.White
+            contentColor = Color.White,
+            disabledContainerColor = Color(0xFF2a2a2a),
+            disabledContentColor = Color(0xFF666666)
         ),
         shape = RoundedCornerShape(4.dp),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
@@ -708,9 +754,8 @@ private fun SelectButton(
     }
 }
 
-// 유틸리티: 현재 시간 가져오기
+// 유틸리티: 현재 시간 가져오기 (API 24 호환)
 private fun getCurrentTime(): String {
-    val currentTime = LocalTime.now()
-    val formatter = DateTimeFormatter.ofPattern("HH:mm")
-    return currentTime.format(formatter)
+    val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+    return sdf.format(Date())
 }

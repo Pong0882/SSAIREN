@@ -244,7 +244,8 @@ fun MedicalGuidance(
                         options = listOf("연결", "미연결"),
                         selectedOption = selectedConnection,
                         onOptionSelected = { selectedConnection = it },
-                        columns = 2
+                        columns = 2,
+                        enabled = !isReadOnly
                     )
                 }
 
@@ -266,6 +267,7 @@ fun MedicalGuidance(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(36.dp),
+                        enabled = !isReadOnly,
                         placeholder = {
                             Text(
                                 text = "00:00",
@@ -276,10 +278,13 @@ fun MedicalGuidance(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
+                            disabledTextColor = Color(0xFF666666),
                             focusedIndicatorColor = Color(0xFF3a3a3a),
                             unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                            disabledIndicatorColor = Color(0xFF3a3a3a),
                             cursorColor = Color(0xFF3b7cff)
                         ),
                         textStyle = LocalTextStyle.current.copy(
@@ -306,7 +311,8 @@ fun MedicalGuidance(
                     options = listOf("일반전화", "휴대전화음성", "휴대전화화상", "무전기", "기타"),
                     selectedOption = selectedRequestMethod,
                     onOptionSelected = { selectedRequestMethod = it },
-                    columns = 5
+                    columns = 5,
+                    enabled = !isReadOnly
                 )
 
                 // "기타" 선택 시 입력 필드 표시
@@ -317,6 +323,7 @@ fun MedicalGuidance(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(36.dp),
+                        enabled = !isReadOnly,
                         placeholder = {
                             Text(
                                 text = "기타 요청 방법을 입력하세요",
@@ -327,10 +334,13 @@ fun MedicalGuidance(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
+                            disabledTextColor = Color(0xFF666666),
                             focusedIndicatorColor = Color(0xFF3a3a3a),
                             unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                            disabledIndicatorColor = Color(0xFF3a3a3a),
                             cursorColor = Color(0xFF3b7cff)
                         ),
                         textStyle = LocalTextStyle.current.copy(
@@ -366,7 +376,8 @@ fun MedicalGuidance(
                         options = listOf("소방", "병원", "기타"),
                         selectedOption = selectedInstitution,
                         onOptionSelected = { selectedInstitution = it },
-                        columns = 3
+                        columns = 3,
+                        enabled = !isReadOnly
                     )
                 }
 
@@ -388,6 +399,7 @@ fun MedicalGuidance(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(36.dp),
+                        enabled = !isReadOnly,
                         placeholder = {
                             Text(
                                 text = "성명 서술",
@@ -398,10 +410,13 @@ fun MedicalGuidance(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
+                            disabledTextColor = Color(0xFF666666),
                             focusedIndicatorColor = Color(0xFF3a3a3a),
                             unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                            disabledIndicatorColor = Color(0xFF3a3a3a),
                             cursorColor = Color(0xFF3b7cff)
                         ),
                         textStyle = LocalTextStyle.current.copy(
@@ -423,6 +438,7 @@ fun MedicalGuidance(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(36.dp),
+                    enabled = !isReadOnly,
                     placeholder = {
                         Text(
                             text = "기타 기관을 입력하세요",
@@ -433,10 +449,13 @@ fun MedicalGuidance(
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
+                        disabledTextColor = Color(0xFF666666),
                         focusedIndicatorColor = Color(0xFF3a3a3a),
                         unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                        disabledIndicatorColor = Color(0xFF3a3a3a),
                         cursorColor = Color(0xFF3b7cff)
                     ),
                     textStyle = LocalTextStyle.current.copy(
@@ -472,7 +491,8 @@ fun MedicalGuidance(
                     ),
                     selectedOptions = selectedEmergencyCare,
                     onOptionsChanged = { selectedEmergencyCare = it },
-                    columns = 5
+                    columns = 5,
+                    enabled = !isReadOnly
                 )
             }
         }
@@ -486,6 +506,7 @@ fun MedicalGuidance(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(36.dp),
+                    enabled = !isReadOnly,
                     placeholder = {
                         Text(
                             text = "기타 응급처치를 입력하세요",
@@ -496,10 +517,13 @@ fun MedicalGuidance(
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
+                        disabledTextColor = Color(0xFF666666),
                         focusedIndicatorColor = Color(0xFF3a3a3a),
                         unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                        disabledIndicatorColor = Color(0xFF3a3a3a),
                         cursorColor = Color(0xFF3b7cff)
                     ),
                     textStyle = LocalTextStyle.current.copy(
@@ -526,7 +550,8 @@ fun MedicalGuidance(
                     ),
                     selectedOptions = selectedMedication,
                     onOptionsChanged = { selectedMedication = it },
-                    columns = 7
+                    columns = 7,
+                    enabled = !isReadOnly
                 )
             }
         }
@@ -540,6 +565,7 @@ fun MedicalGuidance(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(36.dp),
+                    enabled = !isReadOnly,
                     placeholder = {
                         Text(
                             text = "기타 약물을 입력하세요",
@@ -550,10 +576,13 @@ fun MedicalGuidance(
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
+                        disabledTextColor = Color(0xFF666666),
                         focusedIndicatorColor = Color(0xFF3a3a3a),
                         unfocusedIndicatorColor = Color(0xFF3a3a3a),
+                        disabledIndicatorColor = Color(0xFF3a3a3a),
                         cursorColor = Color(0xFF3b7cff)
                     ),
                     textStyle = LocalTextStyle.current.copy(
@@ -571,7 +600,8 @@ fun MedicalGuidance(
                 options = listOf("병원선정", "환자평가", "CPR유보중단", "이송거절", "이송거부"),
                 selectedOptions = selectedHospitalSelections,
                 onOptionsChanged = { selectedHospitalSelections = it },
-                columns = 5
+                columns = 5,
+                enabled = !isReadOnly
             )
         }
     }
@@ -586,7 +616,8 @@ private fun SingleSelectButtonGroup(
     selectedOption: String,
     onOptionSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
-    columns: Int = 5
+    columns: Int = 5,
+    enabled: Boolean = true
 ) {
     Column(
         modifier = modifier,
@@ -602,7 +633,8 @@ private fun SingleSelectButtonGroup(
                         text = option,
                         isSelected = selectedOption == option,
                         onClick = { onOptionSelected(option) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = enabled
                     )
                 }
                 // 빈 공간 채우기
@@ -623,7 +655,8 @@ private fun MultiSelectButtonGroup(
     selectedOptions: Set<String>,
     onOptionsChanged: (Set<String>) -> Unit,
     modifier: Modifier = Modifier,
-    columns: Int = 5
+    columns: Int = 5,
+    enabled: Boolean = true
 ) {
     Column(
         modifier = modifier,
@@ -647,7 +680,8 @@ private fun MultiSelectButtonGroup(
                             }
                             onOptionsChanged(newSelection)
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = enabled
                     )
                 }
                 // 빈 공간 채우기
@@ -667,14 +701,18 @@ private fun SelectButton(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
         modifier = modifier.height(36.dp),
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-            contentColor = Color.White
+            contentColor = Color.White,
+            disabledContainerColor = Color(0xFF2a2a2a),
+            disabledContentColor = Color(0xFF666666)
         ),
         shape = RoundedCornerShape(4.dp),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),

@@ -13,6 +13,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import android.content.Intent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,6 +22,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -260,7 +263,8 @@ fun AppRoot(
     }
     Log.d("AppRoot", "========================================")
 
-    val isLoggedIn by viewModel.isLoggedIn.observeAsState(false)
+    // ✅ 수정: null로 초기값 변경 (로그인 상태 확인 전까지 대기)
+    val isLoggedIn by viewModel.isLoggedIn.observeAsState(initial = null)
     Log.d("AppRoot", "🔐 isLoggedIn: $isLoggedIn")
 
     val dispatchState = rememberDispatchState()
@@ -292,7 +296,8 @@ fun AppRoot(
         Log.d("AppRoot", "   - isLoggedIn: $isLoggedIn")
         Log.d("AppRoot", "   - processedDispatchId: ${processedDispatchId.value}")
 
-        if (!isLoggedIn) {
+        // ✅ 수정: null 또는 false 모두 처리
+        if (isLoggedIn != true) {
             if (pendingDispatch != null) {
                 Log.d("AppRoot", "⏳⏳⏳ Pending dispatch exists but not logged in yet")
                 Log.d("AppRoot", "⏳⏳⏳ 로그인 완료되면 자동으로 처리됩니다")
@@ -351,23 +356,40 @@ fun AppRoot(
         Log.d("AppRoot", "========================================")
     }
 
-    if (isLoggedIn) {
-        AppNavigation(
-            onLogout = {
-                viewModel.logout()
-            },
-            hospitalResponseMessage = hospitalResponseMessage,
-            onClearHospitalResponse = {
-                viewModel.clearHospitalResponseMessage()
+    // ✅ 수정: null/true/false 세 가지 상태 처리
+    when (isLoggedIn) {
+        null -> {
+            // 로딩 중 (로그인 상태 확인 중)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF1a1a1a)),
+                contentAlignment = Alignment.Center
+            ) {
+                // 로딩 화면 (검은 배경만 표시)
             }
-        )
-    } else {
-        Login(
-            onLoginSuccess = {
-                // 로그인 성공 시 자동으로 isLoggedIn이 true가 되어
-                // AppNavigation으로 전환됨
-            }
-        )
+        }
+        true -> {
+            // 로그인됨 → 메인 화면
+            AppNavigation(
+                onLogout = {
+                    viewModel.logout()
+                },
+                hospitalResponseMessage = hospitalResponseMessage,
+                onClearHospitalResponse = {
+                    viewModel.clearHospitalResponseMessage()
+                }
+            )
+        }
+        false -> {
+            // 로그인 안됨 → 로그인 화면
+            Login(
+                onLoginSuccess = {
+                    // 로그인 성공 시 자동으로 isLoggedIn이 true가 되어
+                    // AppNavigation으로 전환됨
+                }
+            )
+        }
     }
 }
 
@@ -460,10 +482,11 @@ fun AppNavigation(
         DispatchDetail(
             dispatchData = DispatchDetailData(
                 dispatchNumber = dispatch.id,
-                status = "실전/1차",
-                type = dispatch.type,
-                area = "관할구역",
-                location = dispatch.location,
+                dispatchLevel = "실전",
+                dispatchOrder = "1차",
+                disasterType = "화재",
+                disasterSubtype = "고층건물",
+                dispatchStation = "관할구역",
                 reporter = "신고자명",
                 reporterPhone = "010-0000-0000",
                 dispatchTime = dispatch.date,
@@ -547,6 +570,11 @@ fun AppNavigation(
 
         composable("activity_main") {
             ActivityMain(
+                onNavigateToReportHome = {  // ✅ 이 부분 추가!
+                    navController.navigate("report_home") {
+                        popUpTo("activity_main") { inclusive = true }
+                    }
+                },
                 onNavigateToActivityLog = {
                     val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
                     navController.navigate("activity_log/$currentReportId/0")
@@ -609,9 +637,11 @@ fun AppNavigation(
                         popUpTo("activity_log/{emergencyReportId}/{tab}?isReadOnly={isReadOnly}") { inclusive = true }
                     }
                 },
+                onNavigateToReportHome = { navController.navigate("report_Home") },
                 onNavigateToSummation = {
                     navController.navigate("summation")
-                }
+                },
+                reportViewModel = reportViewModel
             )
         }
 

@@ -26,6 +26,9 @@ import com.example.ssairen_app.data.model.request.HospitalAiRecommendationReques
 import com.example.ssairen_app.data.model.response.HospitalAiRecommendationResponse
 import com.example.ssairen_app.data.model.request.CreatePatientInfoRequest
 import com.example.ssairen_app.data.model.response.CreatePatientInfoResponse
+import com.example.ssairen_app.data.model.response.CompleteReportResponse
+import com.example.ssairen_app.data.model.response.DispatchListResponse
+import com.example.ssairen_app.data.model.response.FireStateReportResponse
 
 import retrofit2.Response
 import retrofit2.http.*
@@ -69,6 +72,26 @@ interface ApiService {
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
     ): Response<ReportListResponse>
+
+    // 출동지령 내역 목록 조회 API
+    @GET("api/dispatches/fire-state")
+    suspend fun getDispatchList(
+        @Header("Authorization") token: String,
+        @Query("limit") limit: Int = 100
+    ): Response<DispatchListResponse>
+
+    // 관내 보고서 목록 조회 API
+    @GET("api/emergency-reports/fire-state")
+    suspend fun getFireStateReports(
+        @Header("Authorization") token: String
+    ): Response<FireStateReportResponse>
+
+    // ✅ 보고서 작성 완료 API 추가
+    @PATCH("api/emergency-reports/{emergencyReportId}/complete")
+    suspend fun completeReport(
+        @Path("emergencyReportId") emergencyReportId: Int,
+        @Header("Authorization") token: String
+    ): Response<CompleteReportResponse>
 
     // ==========================================
     // 섹션 조회 API

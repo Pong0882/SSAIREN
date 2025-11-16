@@ -14,6 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ssairen_app.ui.components.SignatureArea
+import com.example.ssairen_app.ui.components.SignatureDialog
 import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.TransportApiState
 import com.example.ssairen_app.viewmodel.PatientTransportData
@@ -64,6 +66,12 @@ fun PatientTransport(
         mutableStateOf(transportData.secondBedShortageReasons) }
     var selectedSecondOtherReasons by remember { mutableStateOf(transportData.secondOtherReasons) }
     var selectedSecondPatientReceiver by remember { mutableStateOf(transportData.secondReceiver) }
+
+    var firstReceiverSignature by remember { mutableStateOf(transportData.firstReceiverSignature) }
+    var secondReceiverSignature by remember { mutableStateOf(transportData.secondReceiverSignature) }
+
+    var showSignatureDialog by remember { mutableStateOf(false) }
+    var signatureTarget by remember { mutableStateOf<TransportSignatureTarget?>(null) }
 
     // API 호출 (currentReportId가 설정되면 자동 실행)
     LaunchedEffect(currentReportId) {
@@ -150,6 +158,7 @@ fun PatientTransport(
                             firstBedShortageReasons = selectedFirstBedShortageReasons,
                             firstOtherReasons = selectedFirstOtherReasons,
                             firstReceiver = selectedFirstPatientReceiver,
+                            firstReceiverSignature = firstReceiverSignature,
                             secondHospitalName = secondHospitalName,
                             secondRegionType = selectedSecondRegion,
                             secondArrivalTime = secondArrivalTime,
@@ -157,7 +166,8 @@ fun PatientTransport(
                             secondSelectedBy = selectedSecondMedicalSelector,
                             secondBedShortageReasons = selectedSecondBedShortageReasons,
                             secondOtherReasons = selectedSecondOtherReasons,
-                            secondReceiver = selectedSecondPatientReceiver
+                            secondReceiver = selectedSecondPatientReceiver,
+                            secondReceiverSignature = secondReceiverSignature
                         )
                     )
                     Log.d("PatientTransport", "💾 LogViewModel 동기화 완료")
@@ -186,6 +196,7 @@ fun PatientTransport(
         selectedFirstBedShortageReasons = transportData.firstBedShortageReasons
         selectedFirstOtherReasons = transportData.firstOtherReasons
         selectedFirstPatientReceiver = transportData.firstReceiver
+        firstReceiverSignature = transportData.firstReceiverSignature
 
         secondHospitalName = transportData.secondHospitalName
         selectedSecondRegion = transportData.secondRegionType
@@ -196,14 +207,17 @@ fun PatientTransport(
         selectedSecondBedShortageReasons = transportData.secondBedShortageReasons
         selectedSecondOtherReasons = transportData.secondOtherReasons
         selectedSecondPatientReceiver = transportData.secondReceiver
+        secondReceiverSignature = transportData.secondReceiverSignature
     }
 
     // 값이 변경될 때마다 ViewModel 업데이트 (읽기 전용이 아닐 때만)
     LaunchedEffect(
         firstHospitalName, firstArrivalTime, firstDistance, selectedFirstMedicalSelector,
         selectedFirstBedShortageReasons, selectedFirstOtherReasons, selectedFirstPatientReceiver,
+        firstReceiverSignature,
         secondHospitalName, secondArrivalTime, secondDistance, selectedSecondMedicalSelector,
-        selectedSecondBedShortageReasons, selectedSecondOtherReasons, selectedSecondPatientReceiver
+        selectedSecondBedShortageReasons, selectedSecondOtherReasons, selectedSecondPatientReceiver,
+        secondReceiverSignature
     ) {
         if (!isReadOnly) {
             viewModel.updatePatientTransport(
@@ -216,6 +230,7 @@ fun PatientTransport(
                     firstBedShortageReasons = selectedFirstBedShortageReasons,
                     firstOtherReasons = selectedFirstOtherReasons,
                     firstReceiver = selectedFirstPatientReceiver,
+                    firstReceiverSignature = firstReceiverSignature,
                     secondHospitalName = secondHospitalName,
                     secondRegionType = selectedSecondRegion,
                     secondArrivalTime = secondArrivalTime,
@@ -223,7 +238,8 @@ fun PatientTransport(
                     secondSelectedBy = selectedSecondMedicalSelector,
                     secondBedShortageReasons = selectedSecondBedShortageReasons,
                     secondOtherReasons = selectedSecondOtherReasons,
-                    secondReceiver = selectedSecondPatientReceiver
+                    secondReceiver = selectedSecondPatientReceiver,
+                    secondReceiverSignature = secondReceiverSignature
                 )
             )
         }
@@ -741,6 +757,61 @@ fun PatientTransport(
                 }
             }
         }
+
+        // 서명 영역 (가로 배치)
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // 1차 인수자 서명
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SignatureArea(
+                        signature = firstReceiverSignature,
+                        onSignatureClick = {
+                            signatureTarget = TransportSignatureTarget.FirstReceiver
+                            showSignatureDialog = true
+                        },
+                        enabled = !isReadOnly,
+                        widthFraction = 0.5f
+                    )
+                }
+
+                // 2차 인수자 서명
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SignatureArea(
+                        signature = secondReceiverSignature,
+                        onSignatureClick = {
+                            signatureTarget = TransportSignatureTarget.SecondReceiver
+                            showSignatureDialog = true
+                        },
+                        enabled = !isReadOnly,
+                        widthFraction = 0.5f
+                    )
+                }
+            }
+        }
+    }
+
+    // 서명 다이얼로그
+    if (showSignatureDialog) {
+        SignatureDialog(
+            onDismiss = { showSignatureDialog = false },
+            onConfirm = { signature ->
+                when (signatureTarget) {
+                    is TransportSignatureTarget.FirstReceiver -> firstReceiverSignature = signature
+                    is TransportSignatureTarget.SecondReceiver -> secondReceiverSignature = signature
+                    else -> {}
+                }
+                showSignatureDialog = false
+            }
+        )
     }
 }
 
@@ -855,3 +926,10 @@ private fun CompactSelectButton(
         )
     }
 }
+
+// 서명 Target sealed class
+sealed class TransportSignatureTarget {
+    object FirstReceiver : TransportSignatureTarget()
+    object SecondReceiver : TransportSignatureTarget()
+}
+

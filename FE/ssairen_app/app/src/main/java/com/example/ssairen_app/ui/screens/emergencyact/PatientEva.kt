@@ -2,10 +2,12 @@
 package com.example.ssairen_app.ui.screens.emergencyact
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,12 +15,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.ssairen_app.ui.components.MainButton
 import com.example.ssairen_app.viewmodel.ActivityLogData
 import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.LogViewModel
@@ -34,22 +36,23 @@ fun PatientEva(
     isReadOnly: Boolean = false,
     activityViewModel: ActivityViewModel = viewModel()
 ) {
-    // ✅ API 상태 관찰
     val patientEvaState by activityViewModel.patientEvaState.observeAsState(PatientEvaApiState.Idle)
     val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState()
 
-    // ✅ API 호출 (currentReportId가 설정되면 자동 실행)
+    var isInitialLoad by remember { mutableStateOf(true) }
+
     LaunchedEffect(currentReportId) {
         currentReportId?.let { reportId ->
-            Log.d(TAG, "📞 API 호출: getPatientEva($reportId)")
-            activityViewModel.getPatientEva(reportId)
+            while (true) {
+                Log.d(TAG, "📞 자동 API 호출: getPatientEva($reportId)")
+                activityViewModel.getPatientEva(reportId)
+                kotlinx.coroutines.delay(5000)
+            }
         }
     }
 
-    // ✅ data.patientEva로 초기화
     var selectedLevel by remember { mutableStateOf(data.patientEva.patientLevel) }
 
-    // 의식 상태 (1차, 2차) - 시간 추가
     var consciousness1stTime by remember { mutableStateOf("") }
     var consciousness1stAlert by remember { mutableStateOf(data.patientEva.consciousness1stAlert) }
     var consciousness1stVerbal by remember { mutableStateOf(data.patientEva.consciousness1stVerbal) }
@@ -62,14 +65,13 @@ fun PatientEva(
     var consciousness2ndPainful by remember { mutableStateOf(data.patientEva.consciousness2ndPainful) }
     var consciousness2ndUnresponsive by remember { mutableStateOf(data.patientEva.consciousness2ndUnresponsive) }
 
-    // 동공반응 (좌/우) - 상태와 반응 분리
-    var leftPupilStatus by remember { mutableStateOf("") }  // 정상/축동/산동
-    var leftPupilReaction by remember { mutableStateOf("") }  // 반응/지연/무반응
-
+    var leftPupilStatus by remember { mutableStateOf("") }
+    var leftPupilReaction by remember { mutableStateOf("") }
     var rightPupilStatus by remember { mutableStateOf("") }
     var rightPupilReaction by remember { mutableStateOf("") }
 
-    // 활력 징후 (좌/우)
+    var vitalSignsStatus by remember { mutableStateOf("") }
+
     var leftTime by remember { mutableStateOf(data.patientEva.leftTime) }
     var leftPulse by remember { mutableStateOf(data.patientEva.leftPulse) }
     var leftBloodPressure by remember { mutableStateOf(data.patientEva.leftBloodPressure) }
@@ -86,7 +88,6 @@ fun PatientEva(
     var rightRespiratoryRate by remember { mutableStateOf(data.patientEva.rightRespiratoryRate) }
     var rightBloodSugar by remember { mutableStateOf(data.patientEva.rightBloodSugar) }
 
-    // ✅ 자동 저장 함수
     fun saveData() {
         val evaData = PatientEvaData(
             patientLevel = selectedLevel,
@@ -98,7 +99,7 @@ fun PatientEva(
             consciousness2ndVerbal = consciousness2ndVerbal,
             consciousness2ndPainful = consciousness2ndPainful,
             consciousness2ndUnresponsive = consciousness2ndUnresponsive,
-            leftPupilNormal = false,  // 추후 업데이트 필요
+            leftPupilNormal = false,
             leftPupilSlow = false,
             leftPupilReactive = false,
             leftPupilNonReactive = false,
@@ -124,14 +125,13 @@ fun PatientEva(
         viewModel.updatePatientEva(evaData)
     }
 
-    // ✅ API 응답 처리
     LaunchedEffect(patientEvaState) {
         when (val state = patientEvaState) {
             is PatientEvaApiState.Success -> {
                 Log.d(TAG, "✅ API 응답 성공")
+                isInitialLoad = false
                 val apiData = state.patientEvaResponse.data.data.assessment
 
-                // 환자 레벨 매핑
                 selectedLevel = when (apiData.patientLevel) {
                     "LEVEL1" -> "LEVEL 1"
                     "LEVEL2" -> "LEVEL 2"
@@ -140,9 +140,7 @@ fun PatientEva(
                     "LEVEL5" -> "LEVEL 5"
                     else -> apiData.patientLevel ?: ""
                 }
-                Log.d(TAG, "   - 환자 레벨: $selectedLevel")
 
-                // 의식 상태 매핑 (1차) - 시간 포함
                 apiData.consciousness?.first?.let { first ->
                     consciousness1stTime = first.time ?: ""
                     when (first.state) {
@@ -171,10 +169,8 @@ fun PatientEva(
                             consciousness1stUnresponsive = true
                         }
                     }
-                    Log.d(TAG, "   - 의식 1차: ${first.state} at ${first.time}")
                 }
 
-                // 의식 상태 매핑 (2차) - 시간 포함
                 apiData.consciousness?.second?.let { second ->
                     consciousness2ndTime = second.time ?: ""
                     when (second.state) {
@@ -203,24 +199,18 @@ fun PatientEva(
                             consciousness2ndUnresponsive = true
                         }
                     }
-                    Log.d(TAG, "   - 의식 2차: ${second.state} at ${second.time}")
                 }
 
-                // 동공반응 매핑 (좌) - 상태와 반응 분리
                 apiData.pupilReaction?.left?.let { left ->
                     leftPupilStatus = left.status ?: ""
                     leftPupilReaction = left.reaction ?: ""
-                    Log.d(TAG, "   - 좌측 동공: ${left.status} / ${left.reaction}")
                 }
 
-                // 동공반응 매핑 (우) - 상태와 반응 분리
                 apiData.pupilReaction?.right?.let { right ->
                     rightPupilStatus = right.status ?: ""
                     rightPupilReaction = right.reaction ?: ""
-                    Log.d(TAG, "   - 우측 동공: ${right.status} / ${right.reaction}")
                 }
 
-                // 활력징후 매핑 (1차 - 좌)
                 apiData.vitalSigns?.first?.let { first ->
                     leftTime = first.time ?: ""
                     leftBloodPressure = first.bloodPressure ?: ""
@@ -229,10 +219,8 @@ fun PatientEva(
                     leftTemperature = first.temperature?.toString() ?: ""
                     leftOxygenSaturation = first.spo2?.toString() ?: ""
                     leftBloodSugar = first.bloodSugar?.toString() ?: ""
-                    Log.d(TAG, "   - 활력징후 1차: BP=${first.bloodPressure}, Pulse=${first.pulse}")
                 }
 
-                // 활력징후 매핑 (2차 - 우)
                 apiData.vitalSigns?.second?.let { second ->
                     rightTime = second.time ?: ""
                     rightBloodPressure = second.bloodPressure ?: ""
@@ -241,10 +229,8 @@ fun PatientEva(
                     rightTemperature = second.temperature?.toString() ?: ""
                     rightOxygenSaturation = second.spo2?.toString() ?: ""
                     rightBloodSugar = second.bloodSugar?.toString() ?: ""
-                    Log.d(TAG, "   - 활력징후 2차: BP=${second.bloodPressure}, Pulse=${second.pulse}")
                 }
 
-                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
                 saveData()
                 Log.d(TAG, "💾 LogViewModel 동기화 완료")
             }
@@ -258,8 +244,7 @@ fun PatientEva(
         }
     }
 
-    // ✅ 로딩 중일 때 표시
-    if (patientEvaState is PatientEvaApiState.Loading) {
+    if (isInitialLoad && patientEvaState is PatientEvaApiState.Loading) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -277,62 +262,40 @@ fun PatientEva(
                 .fillMaxSize()
                 .background(Color(0xFF1a1a1a))
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 40.dp)
                 .padding(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // 헤더
-            Text(
-                text = "세부항목-환자평가",
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-
             // ==========================================
             // 환자 분류 (Level 1-5)
             // ==========================================
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                color = Color(0xFF2a2a2a)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "환자 분류",
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                Text(
+                    text = "환자 분류",
+                    color = Color.White,
+                    fontSize = 14.sp
+                )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        listOf("LEVEL 1", "LEVEL 2", "LEVEL 3", "LEVEL 4", "LEVEL 5").forEach { level ->
-                            MainButton(
-                                onClick = {
-                                    selectedLevel = level
-                                    saveData()
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(40.dp),
-                                backgroundColor = if (selectedLevel == level)
-                                    Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-                                cornerRadius = 6.dp
-                            ) {
-                                Text(
-                                    text = level.replace("LEVEL ", ""),
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("LEVEL 1", "LEVEL 2", "LEVEL 3", "LEVEL 4", "LEVEL 5").forEach { level ->
+                        SelectButton(
+                            text = level,
+                            isSelected = selectedLevel == level,
+                            onClick = {
+                                selectedLevel = level
+                                saveData()
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
+                        )
                     }
                 }
             }
@@ -340,393 +303,620 @@ fun PatientEva(
             // ==========================================
             // 의식 상태
             // ==========================================
-            Surface(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                color = Color(0xFF2a2a2a)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "의식 상태",
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                Text(
+                    text = "의식 상태",
+                    color = Color.White,
+                    fontSize = 14.sp
+                )
 
-                    // 1차
+                // 1차
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.width(120.dp),
+                        verticalAlignment = Alignment.Bottom,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
                             text = "1차",
-                            color = Color(0xFF999999),
+                            color = Color.White,
                             fontSize = 14.sp,
-                            modifier = Modifier.width(40.dp)
+                            modifier = Modifier.padding(bottom = 4.dp)
                         )
 
-                        TimeInputField(
-                            value = consciousness1stTime,
-                            onValueChange = {
-                                consciousness1stTime = it
-                                saveData()
-                            },
-                            modifier = Modifier.width(100.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            ToggleButton("Alert", consciousness1stAlert) {
-                                consciousness1stAlert = it
-                                if (it) {
-                                    consciousness1stVerbal = false
-                                    consciousness1stPainful = false
-                                    consciousness1stUnresponsive = false
-                                }
-                                saveData()
-                            }
-                            ToggleButton("Verbal", consciousness1stVerbal) {
-                                consciousness1stVerbal = it
-                                if (it) {
-                                    consciousness1stAlert = false
-                                    consciousness1stPainful = false
-                                    consciousness1stUnresponsive = false
-                                }
-                                saveData()
-                            }
-                            ToggleButton("Painful", consciousness1stPainful) {
-                                consciousness1stPainful = it
-                                if (it) {
-                                    consciousness1stAlert = false
-                                    consciousness1stVerbal = false
-                                    consciousness1stUnresponsive = false
-                                }
-                                saveData()
-                            }
-                            ToggleButton("Unresponsive", consciousness1stUnresponsive) {
-                                consciousness1stUnresponsive = it
-                                if (it) {
-                                    consciousness1stAlert = false
-                                    consciousness1stVerbal = false
-                                    consciousness1stPainful = false
-                                }
-                                saveData()
-                            }
+                        Column(modifier = Modifier.weight(1f)) {
+                            BasicTextField(
+                                value = consciousness1stTime,
+                                onValueChange = {
+                                    consciousness1stTime = it
+                                    saveData()
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp),
+                                textStyle = TextStyle(
+                                    color = if (isReadOnly) Color(0xFF666666) else Color.White,
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Start
+                                ),
+                                singleLine = true,
+                                readOnly = isReadOnly,
+                                enabled = !isReadOnly
+                            )
+                            HorizontalDivider(
+                                color = Color(0xFF4a4a4a),
+                                thickness = 1.dp
+                            )
                         }
                     }
 
-                    HorizontalDivider(color = Color(0xFF4a4a4a), thickness = 1.dp)
-
-                    // 2차
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        SelectButton(
+                            text = "Alert",
+                            isSelected = consciousness1stAlert,
+                            onClick = {
+                                consciousness1stAlert = true
+                                consciousness1stVerbal = false
+                                consciousness1stPainful = false
+                                consciousness1stUnresponsive = false
+                                saveData()
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
+                        )
+                        SelectButton(
+                            text = "Verbal",
+                            isSelected = consciousness1stVerbal,
+                            onClick = {
+                                consciousness1stAlert = false
+                                consciousness1stVerbal = true
+                                consciousness1stPainful = false
+                                consciousness1stUnresponsive = false
+                                saveData()
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
+                        )
+                        SelectButton(
+                            text = "Painful",
+                            isSelected = consciousness1stPainful,
+                            onClick = {
+                                consciousness1stAlert = false
+                                consciousness1stVerbal = false
+                                consciousness1stPainful = true
+                                consciousness1stUnresponsive = false
+                                saveData()
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
+                        )
+                        SelectButton(
+                            text = "Unresponsive",
+                            isSelected = consciousness1stUnresponsive,
+                            onClick = {
+                                consciousness1stAlert = false
+                                consciousness1stVerbal = false
+                                consciousness1stPainful = false
+                                consciousness1stUnresponsive = true
+                                saveData()
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
+                        )
+                    }
+                }
+
+                // 2차
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.width(120.dp),
+                        verticalAlignment = Alignment.Bottom,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
                             text = "2차",
-                            color = Color(0xFF999999),
+                            color = Color.White,
                             fontSize = 14.sp,
-                            modifier = Modifier.width(40.dp)
+                            modifier = Modifier.padding(bottom = 4.dp)
                         )
 
-                        TimeInputField(
-                            value = consciousness2ndTime,
-                            onValueChange = {
-                                consciousness2ndTime = it
+                        Column(modifier = Modifier.weight(1f)) {
+                            BasicTextField(
+                                value = consciousness2ndTime,
+                                onValueChange = {
+                                    consciousness2ndTime = it
+                                    saveData()
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp),
+                                textStyle = TextStyle(
+                                    color = if (isReadOnly) Color(0xFF666666) else Color.White,
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Start
+                                ),
+                                singleLine = true,
+                                readOnly = isReadOnly,
+                                enabled = !isReadOnly
+                            )
+                            HorizontalDivider(
+                                color = Color(0xFF4a4a4a),
+                                thickness = 1.dp
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        SelectButton(
+                            text = "Alert",
+                            isSelected = consciousness2ndAlert,
+                            onClick = {
+                                consciousness2ndAlert = true
+                                consciousness2ndVerbal = false
+                                consciousness2ndPainful = false
+                                consciousness2ndUnresponsive = false
                                 saveData()
                             },
-                            modifier = Modifier.width(100.dp)
-                        )
-
-                        Row(
                             modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            ToggleButton("Alert", consciousness2ndAlert) {
-                                consciousness2ndAlert = it
-                                if (it) {
-                                    consciousness2ndVerbal = false
-                                    consciousness2ndPainful = false
-                                    consciousness2ndUnresponsive = false
-                                }
+                            enabled = !isReadOnly
+                        )
+                        SelectButton(
+                            text = "Verbal",
+                            isSelected = consciousness2ndVerbal,
+                            onClick = {
+                                consciousness2ndAlert = false
+                                consciousness2ndVerbal = true
+                                consciousness2ndPainful = false
+                                consciousness2ndUnresponsive = false
                                 saveData()
-                            }
-                            ToggleButton("Verbal", consciousness2ndVerbal) {
-                                consciousness2ndVerbal = it
-                                if (it) {
-                                    consciousness2ndAlert = false
-                                    consciousness2ndPainful = false
-                                    consciousness2ndUnresponsive = false
-                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
+                        )
+                        SelectButton(
+                            text = "Painful",
+                            isSelected = consciousness2ndPainful,
+                            onClick = {
+                                consciousness2ndAlert = false
+                                consciousness2ndVerbal = false
+                                consciousness2ndPainful = true
+                                consciousness2ndUnresponsive = false
                                 saveData()
-                            }
-                            ToggleButton("Painful", consciousness2ndPainful) {
-                                consciousness2ndPainful = it
-                                if (it) {
-                                    consciousness2ndAlert = false
-                                    consciousness2ndVerbal = false
-                                    consciousness2ndUnresponsive = false
-                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
+                        )
+                        SelectButton(
+                            text = "Unresponsive",
+                            isSelected = consciousness2ndUnresponsive,
+                            onClick = {
+                                consciousness2ndAlert = false
+                                consciousness2ndVerbal = false
+                                consciousness2ndPainful = false
+                                consciousness2ndUnresponsive = true
                                 saveData()
-                            }
-                            ToggleButton("Unresponsive", consciousness2ndUnresponsive) {
-                                consciousness2ndUnresponsive = it
-                                if (it) {
-                                    consciousness2ndAlert = false
-                                    consciousness2ndVerbal = false
-                                    consciousness2ndPainful = false
-                                }
-                                saveData()
-                            }
-                        }
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isReadOnly
+                        )
                     }
                 }
             }
 
             // ==========================================
-            // 동공반응 - 수정됨
+            // 동공반응
             // ==========================================
-            Surface(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                color = Color(0xFF2a2a2a)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                Text(
+                    text = "동공반응",
+                    color = Color.White,
+                    fontSize = 14.sp
+                )
+
+                // 좌
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = "동공반응",
+                        text = "좌",
                         color = Color.White,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontSize = 14.sp,
+                        modifier = Modifier.width(40.dp)
                     )
 
-                    // 좌 - 상태
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "좌",
-                            color = Color(0xFF999999),
-                            fontSize = 14.sp,
-                            modifier = Modifier.width(40.dp)
-                        )
+                    SelectButton(
+                        text = "정상",
+                        isSelected = leftPupilStatus == "정상",
+                        onClick = {
+                            leftPupilStatus = if (leftPupilStatus == "정상") "" else "정상"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    SelectButton(
+                        text = "축동",
+                        isSelected = leftPupilStatus == "축소",
+                        onClick = {
+                            leftPupilStatus = if (leftPupilStatus == "축소") "" else "축소"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    SelectButton(
+                        text = "산동",
+                        isSelected = leftPupilStatus == "확대",
+                        onClick = {
+                            leftPupilStatus = if (leftPupilStatus == "확대") "" else "확대"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    SelectButton(
+                        text = "측정불가",
+                        isSelected = leftPupilStatus == "측정불가",
+                        onClick = {
+                            leftPupilStatus = if (leftPupilStatus == "측정불가") "" else "측정불가"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    SelectButton(
+                        text = "반응",
+                        isSelected = leftPupilReaction == "반응",
+                        onClick = {
+                            leftPupilReaction = if (leftPupilReaction == "반응") "" else "반응"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    SelectButton(
+                        text = "무반응",
+                        isSelected = leftPupilReaction == "무반응",
+                        onClick = {
+                            leftPupilReaction = if (leftPupilReaction == "무반응") "" else "무반응"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    SelectButton(
+                        text = "측정불가",
+                        isSelected = leftPupilReaction == "측정불가",
+                        onClick = {
+                            leftPupilReaction = if (leftPupilReaction == "측정불가") "" else "측정불가"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                }
 
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            ToggleButton("정상", leftPupilStatus == "정상") {
-                                leftPupilStatus = if (it) "정상" else ""
-                                saveData()
-                            }
-                            ToggleButton("축동", leftPupilStatus == "축소") {
-                                leftPupilStatus = if (it) "축소" else ""
-                                saveData()
-                            }
-                            ToggleButton("산동", leftPupilStatus == "확대") {
-                                leftPupilStatus = if (it) "확대" else ""
-                                saveData()
-                            }
-                            ToggleButton("반응", leftPupilReaction == "반응") {
-                                leftPupilReaction = if (it) "반응" else ""
-                                saveData()
-                            }
-                            ToggleButton("지연", leftPupilReaction == "지연") {
-                                leftPupilReaction = if (it) "지연" else ""
-                                saveData()
-                            }
-                            ToggleButton("무반응", leftPupilReaction == "무반응") {
-                                leftPupilReaction = if (it) "무반응" else ""
-                                saveData()
-                            }
-                        }
-                    }
+                // 우
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = "우",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier.width(40.dp)
+                    )
 
-                    HorizontalDivider(color = Color(0xFF4a4a4a), thickness = 1.dp)
-
-                    // 우 - 상태
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "우",
-                            color = Color(0xFF999999),
-                            fontSize = 14.sp,
-                            modifier = Modifier.width(40.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            ToggleButton("정상", rightPupilStatus == "정상") {
-                                rightPupilStatus = if (it) "정상" else ""
-                                saveData()
-                            }
-                            ToggleButton("축동", rightPupilStatus == "축소") {
-                                rightPupilStatus = if (it) "축소" else ""
-                                saveData()
-                            }
-                            ToggleButton("산동", rightPupilStatus == "확대") {
-                                rightPupilStatus = if (it) "확대" else ""
-                                saveData()
-                            }
-                            ToggleButton("반응", rightPupilReaction == "반응") {
-                                rightPupilReaction = if (it) "반응" else ""
-                                saveData()
-                            }
-                            ToggleButton("지연", rightPupilReaction == "지연") {
-                                rightPupilReaction = if (it) "지연" else ""
-                                saveData()
-                            }
-                            ToggleButton("무반응", rightPupilReaction == "무반응") {
-                                rightPupilReaction = if (it) "무반응" else ""
-                                saveData()
-                            }
-                        }
-                    }
+                    SelectButton(
+                        text = "정상",
+                        isSelected = rightPupilStatus == "정상",
+                        onClick = {
+                            rightPupilStatus = if (rightPupilStatus == "정상") "" else "정상"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    SelectButton(
+                        text = "축동",
+                        isSelected = rightPupilStatus == "축소",
+                        onClick = {
+                            rightPupilStatus = if (rightPupilStatus == "축소") "" else "축소"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    SelectButton(
+                        text = "산동",
+                        isSelected = rightPupilStatus == "확대",
+                        onClick = {
+                            rightPupilStatus = if (rightPupilStatus == "확대") "" else "확대"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    SelectButton(
+                        text = "측정불가",
+                        isSelected = rightPupilStatus == "측정불가",
+                        onClick = {
+                            rightPupilStatus = if (rightPupilStatus == "측정불가") "" else "측정불가"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    SelectButton(
+                        text = "반응",
+                        isSelected = rightPupilReaction == "반응",
+                        onClick = {
+                            rightPupilReaction = if (rightPupilReaction == "반응") "" else "반응"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    SelectButton(
+                        text = "무반응",
+                        isSelected = rightPupilReaction == "무반응",
+                        onClick = {
+                            rightPupilReaction = if (rightPupilReaction == "무반응") "" else "무반응"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    SelectButton(
+                        text = "측정불가",
+                        isSelected = rightPupilReaction == "측정불가",
+                        onClick = {
+                            rightPupilReaction = if (rightPupilReaction == "측정불가") "" else "측정불가"
+                            saveData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
                 }
             }
 
             // ==========================================
             // 활력 징후
             // ==========================================
-            Surface(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                color = Color(0xFF2a2a2a)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "활력 징후",
                         color = Color.White,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontSize = 14.sp
                     )
 
-                    // 헤더 행
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text("", modifier = Modifier.width(40.dp))
-                        VitalSignHeader("시각", Modifier.weight(1f))
-                        VitalSignHeader("혈압", Modifier.weight(1f))
-                        VitalSignHeader("맥박", Modifier.weight(1f))
-                        VitalSignHeader("호흡", Modifier.weight(1f))
-                        VitalSignHeader("체온", Modifier.weight(1f))
-                        VitalSignHeader("SpO2", Modifier.weight(1f))
-                        VitalSignHeader("혈당", Modifier.weight(1f))
-                    }
+                    SelectButton(
+                        text = "불가",
+                        isSelected = vitalSignsStatus == "불가",
+                        onClick = {
+                            vitalSignsStatus = if (vitalSignsStatus == "불가") "" else "불가"
+                            saveData()
+                        },
+                        modifier = Modifier.width(80.dp),
+                        enabled = !isReadOnly
+                    )
 
-                    HorizontalDivider(color = Color(0xFF4a4a4a), thickness = 1.dp)
+                    SelectButton(
+                        text = "거부",
+                        isSelected = vitalSignsStatus == "거부",
+                        onClick = {
+                            vitalSignsStatus = if (vitalSignsStatus == "거부") "" else "거부"
+                            saveData()
+                        },
+                        modifier = Modifier.width(80.dp),
+                        enabled = !isReadOnly
+                    )
+                }
 
-                    // 1차
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "1차",
-                            color = Color(0xFF999999),
-                            fontSize = 14.sp,
-                            modifier = Modifier.width(40.dp)
-                        )
-                        VitalSignInput(leftTime, {
+                // 좌
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "좌",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier.width(40.dp)
+                    )
+
+                    VitalSignInputField(
+                        value = leftTime,
+                        onValueChange = {
                             leftTime = it
                             saveData()
-                        }, Modifier.weight(1f))
-                        VitalSignInput(leftBloodPressure, {
+                        },
+                        placeholder = "시각(p)",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    VitalSignInputField(
+                        value = leftBloodPressure,
+                        onValueChange = {
                             leftBloodPressure = it
                             saveData()
-                        }, Modifier.weight(1f))
-                        VitalSignInput(leftPulse, {
+                        },
+                        placeholder = "혈압(p)",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    VitalSignInputField(
+                        value = leftPulse,
+                        onValueChange = {
                             leftPulse = it
                             saveData()
-                        }, Modifier.weight(1f))
-                        VitalSignInput(leftRespiratoryRate, {
+                        },
+                        placeholder = "맥박(p)",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    VitalSignInputField(
+                        value = leftRespiratoryRate,
+                        onValueChange = {
                             leftRespiratoryRate = it
                             saveData()
-                        }, Modifier.weight(1f))
-                        VitalSignInput(leftTemperature, {
+                        },
+                        placeholder = "호흡(p)",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    VitalSignInputField(
+                        value = leftTemperature,
+                        onValueChange = {
                             leftTemperature = it
                             saveData()
-                        }, Modifier.weight(1f))
-                        VitalSignInput(leftOxygenSaturation, {
+                        },
+                        placeholder = "체온(p)",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    VitalSignInputField(
+                        value = leftOxygenSaturation,
+                        onValueChange = {
                             leftOxygenSaturation = it
                             saveData()
-                        }, Modifier.weight(1f))
-                        VitalSignInput(leftBloodSugar, {
+                        },
+                        placeholder = "SpO2(p)",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    VitalSignInputField(
+                        value = leftBloodSugar,
+                        onValueChange = {
                             leftBloodSugar = it
                             saveData()
-                        }, Modifier.weight(1f))
-                    }
+                        },
+                        placeholder = "혈당체크",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                }
 
-                    HorizontalDivider(color = Color(0xFF4a4a4a), thickness = 1.dp)
+                // 우
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "우",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier.width(40.dp)
+                    )
 
-                    // 2차
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "2차",
-                            color = Color(0xFF999999),
-                            fontSize = 14.sp,
-                            modifier = Modifier.width(40.dp)
-                        )
-                        VitalSignInput(rightTime, {
+                    VitalSignInputField(
+                        value = rightTime,
+                        onValueChange = {
                             rightTime = it
                             saveData()
-                        }, Modifier.weight(1f))
-                        VitalSignInput(rightBloodPressure, {
+                        },
+                        placeholder = "시각(p)",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    VitalSignInputField(
+                        value = rightBloodPressure,
+                        onValueChange = {
                             rightBloodPressure = it
                             saveData()
-                        }, Modifier.weight(1f))
-                        VitalSignInput(rightPulse, {
+                        },
+                        placeholder = "혈압(p)",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    VitalSignInputField(
+                        value = rightPulse,
+                        onValueChange = {
                             rightPulse = it
                             saveData()
-                        }, Modifier.weight(1f))
-                        VitalSignInput(rightRespiratoryRate, {
+                        },
+                        placeholder = "맥박(p)",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    VitalSignInputField(
+                        value = rightRespiratoryRate,
+                        onValueChange = {
                             rightRespiratoryRate = it
                             saveData()
-                        }, Modifier.weight(1f))
-                        VitalSignInput(rightTemperature, {
+                        },
+                        placeholder = "호흡(p)",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    VitalSignInputField(
+                        value = rightTemperature,
+                        onValueChange = {
                             rightTemperature = it
                             saveData()
-                        }, Modifier.weight(1f))
-                        VitalSignInput(rightOxygenSaturation, {
+                        },
+                        placeholder = "체온(p)",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    VitalSignInputField(
+                        value = rightOxygenSaturation,
+                        onValueChange = {
                             rightOxygenSaturation = it
                             saveData()
-                        }, Modifier.weight(1f))
-                        VitalSignInput(rightBloodSugar, {
+                        },
+                        placeholder = "SpO2(p)",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
+                    VitalSignInputField(
+                        value = rightBloodSugar,
+                        onValueChange = {
                             rightBloodSugar = it
                             saveData()
-                        }, Modifier.weight(1f))
-                    }
+                        },
+                        placeholder = "혈당체크",
+                        modifier = Modifier.weight(1f),
+                        enabled = !isReadOnly
+                    )
                 }
             }
         }
 
-        // 읽기 전용 모드일 때 터치 차단
         if (isReadOnly) {
             Box(
                 modifier = Modifier
@@ -740,96 +930,81 @@ fun PatientEva(
 // ==========================================
 // 하위 컴포넌트들
 // ==========================================
-@Composable
-private fun TimeInputField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier.height(36.dp),
-        textStyle = androidx.compose.ui.text.TextStyle(
-            color = Color.White,
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center
-        ),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFF3a3a3a),
-            unfocusedContainerColor = Color(0xFF3a3a3a),
-            focusedBorderColor = Color(0xFF4a4a4a),
-            unfocusedBorderColor = Color(0xFF4a4a4a),
-            focusedTextColor = Color.White,
-            unfocusedTextColor = Color.White,
-            cursorColor = Color.White
-        ),
-        shape = RoundedCornerShape(4.dp),
-        singleLine = true,
-        placeholder = {
-            Text("00:00", color = Color(0xFF666666), fontSize = 12.sp)
-        }
-    )
-}
 
 @Composable
-private fun RowScope.ToggleButton(
+private fun SelectButton(
     text: String,
     isSelected: Boolean,
-    onToggle: (Boolean) -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
-    MainButton(
-        onClick = { onToggle(!isSelected) },
-        modifier = Modifier
-            .weight(1f)
-            .height(32.dp),
-        backgroundColor = if (isSelected) Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-        cornerRadius = 4.dp
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(36.dp),
+        enabled = enabled,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) Color(0xFF3b7cff) else Color(0xFF3a3a3a),
+            contentColor = Color.White,
+            disabledContainerColor = Color(0xFF2a2a2a),
+            disabledContentColor = Color(0xFF666666)
+        ),
+        shape = RoundedCornerShape(4.dp),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+        border = if (isSelected) null else BorderStroke(1.dp, Color(0xFF4a4a4a))
     ) {
         Text(
             text = text,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Normal
+            fontSize = 12.sp,
+            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+            color = Color.White,
+            maxLines = 1
         )
     }
 }
 
 @Composable
-private fun VitalSignHeader(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        color = Color(0xFF999999),
-        fontSize = 11.sp,
-        modifier = modifier,
-        textAlign = TextAlign.Center
-    )
-}
-
-@Composable
-private fun VitalSignInput(
+private fun VitalSignInputField(
     value: String,
     onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier.height(36.dp),
-        textStyle = androidx.compose.ui.text.TextStyle(
-            color = Color.White,
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center
-        ),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFF3a3a3a),
-            unfocusedContainerColor = Color(0xFF3a3a3a),
-            focusedBorderColor = Color(0xFF4a4a4a),
-            unfocusedBorderColor = Color(0xFF4a4a4a),
-            focusedTextColor = Color.White,
-            unfocusedTextColor = Color.White,
-            cursorColor = Color.White
-        ),
-        shape = RoundedCornerShape(4.dp),
-        singleLine = true
-    )
+    Column(modifier = modifier) {
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp),
+            textStyle = TextStyle(
+                color = if (enabled) Color.White else Color(0xFF666666),
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center
+            ),
+            singleLine = true,
+            enabled = enabled,
+            decorationBox = { innerTextField ->
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (value.isEmpty()) {
+                        Text(
+                            text = placeholder,
+                            color = Color(0xFF666666),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    innerTextField()
+                }
+            }
+        )
+        HorizontalDivider(
+            color = Color(0xFF4a4a4a),
+            thickness = 1.dp
+        )
+    }
 }

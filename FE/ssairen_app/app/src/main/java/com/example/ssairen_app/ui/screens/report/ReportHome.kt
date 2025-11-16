@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.ui.components.ClickableDarkCard
 import com.example.ssairen_app.ui.context.rememberDispatchState
 import com.example.ssairen_app.ui.navigation.ReportNavigationBar
@@ -39,8 +38,26 @@ fun ReportHome(
     val isLoadingMore by reportViewModel.isLoadingMore.observeAsState(false)
     val hasMoreData by reportViewModel.hasMoreData.observeAsState(true)
 
+// ✅ 화면이 다시 보일 때마다 새로고침
     LaunchedEffect(Unit) {
+        Log.d("ReportHome", "🔄 화면 진입 - 보고서 목록 새로고침")
         reportViewModel.getReports()
+    }
+
+// ✅ Composition이 활성화될 때마다 새로고침 트리거
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                Log.d("ReportHome", "📱 화면 재진입 감지 - 목록 새로고침")
+                reportViewModel.getReports()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     // ✅ 임시로 주석처리 - API 대신 모달창에서 직접 이동
@@ -140,10 +157,11 @@ fun ReportHome(
                     reportListState = reportListState,
                     onRefresh = { reportViewModel.getReports() },
                     onLoadMore = { reportViewModel.loadMoreReports() },
-                    onReportClick = { emergencyReportId ->
+                    onReportClick = { emergencyReportId, isCompleted ->  // ✅ isCompleted 받기
                         // ✅ 전역 현재 활성 보고서 ID 저장
                         com.example.ssairen_app.viewmodel.ActivityViewModel.setGlobalReportId(emergencyReportId)
-                        onNavigateToActivityLog(emergencyReportId, true)  // GET으로 불러온 보고서는 읽기 전용
+                        // ✅ 작성완료된 보고서는 읽기 전용으로
+                        onNavigateToActivityLog(emergencyReportId, isCompleted)
                     },
                     isLoadingMore = isLoadingMore,
                     hasMoreData = hasMoreData,
@@ -188,7 +206,7 @@ private fun ReportListContent(
     reportListState: ReportListState,
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
-    onReportClick: (Int) -> Unit,
+    onReportClick: (Int, Boolean) -> Unit,
     isLoadingMore: Boolean,
     hasMoreData: Boolean,
     modifier: Modifier = Modifier
@@ -255,33 +273,6 @@ private fun ReportListContent(
                     )
                 }
             } else {
-                // ✅ 원래 코드: 무한 스크롤 감지
-                /*
-                LaunchedEffect(listState, reports.size) {
-                    snapshotFlow {
-                        val layoutInfo = listState.layoutInfo
-                        val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()
-                        val lastVisibleIndex = lastVisibleItem?.index ?: -1
-                        val totalItems = layoutInfo.totalItemsCount
-
-                        Log.d("ReportHome", "📊 스크롤 상태")
-                        Log.d("ReportHome", "   - 마지막 보이는 인덱스: $lastVisibleIndex")
-                        Log.d("ReportHome", "   - 전체 아이템 수: $totalItems")
-                        Log.d("ReportHome", "   - hasMoreData: $hasMoreData")
-                        Log.d("ReportHome", "   - isLoadingMore: $isLoadingMore")
-
-                        lastVisibleIndex to totalItems
-                    }.collect { (lastVisibleIndex, totalItems) ->
-                        // ✅ 마지막에서 3번째 아이템에 도달하면 로드
-                        if (lastVisibleIndex >= totalItems - 3 && hasMoreData && !isLoadingMore) {
-                            Log.d("ReportHome", "🔄 무한 스크롤 트리거!")
-                            Log.d("ReportHome", "   - 트리거 인덱스: $lastVisibleIndex")
-                            Log.d("ReportHome", "   - 전체 개수: $totalItems")
-                            onLoadMore()
-                        }
-                    }
-                }
-                */
 
                 LazyColumn(
                     state = listState,
@@ -303,15 +294,16 @@ private fun ReportListContent(
                                 reportNumber = dispatchInfo.disasterNumber,
                                 patientNumber = report.id.toString().padStart(7, '0'),
                                 status = dispatchInfo.disasterType,
-                                progress = 0,  // ✅ 사용 안 하지만 호환성 유지
+                                progress = 0,
                                 date = formattedDate,
                                 location = dispatchInfo.fireStateInfo.name,
-                                locationAddress = dispatchInfo.locationAddress
+                                locationAddress = dispatchInfo.locationAddress,
+                                isCompleted = report.isCompleted  // ✅ 수정
                             ),
                             isSelected = selectedCardIndex == index,
                             onClick = {
                                 selectedCardIndex = if (selectedCardIndex == index) null else index
-                                onReportClick(report.id)
+                                onReportClick(report.id, report.isCompleted)
                             }
                         )
                     }
@@ -328,7 +320,8 @@ data class ReportData(
     val progress: Int = 0,  // ✅ 더 이상 사용 안 하지만 호환성 유지
     val date: String,
     val location: String,
-    val locationAddress: String = ""
+    val locationAddress: String = "",
+    val isCompleted: Boolean = false
 )
 
 // ✅ 작성 상태 UI 제거된 ReportCard
@@ -359,17 +352,17 @@ private fun ReportCard(
                     fontWeight = FontWeight.Medium
                 )
 
-                // 작성완료 뱃지
+                // ✅ 작성 상태 뱃지 (조건부 렌더링)
                 Box(
                     modifier = Modifier
                         .background(
-                            color = Color(0xFF28a745),
+                            color = if (reportData.isCompleted) Color(0xFF28a745) else Color(0xFFFF8C00),
                             shape = RoundedCornerShape(4.dp)
                         )
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "작성완료",
+                        text = if (reportData.isCompleted) "작성완료" else "작성중",
                         fontSize = 12.sp,
                         color = Color.White
                     )

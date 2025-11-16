@@ -55,6 +55,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun ActivityMain(
     onNavigateToActivityLog: () -> Unit = {},
+    onNavigateToReportHome: () -> Unit = {},
     onNavigateToPatientInfo: () -> Unit = {},
     onNavigateToPatientType: () -> Unit = {},
     onNavigateToPatientEva: () -> Unit = {},
@@ -88,6 +89,7 @@ fun ActivityMain(
         ) {
             when (selectedTab) {
                 0 -> HomeContent(
+                    onNavigateToReportHome = onNavigateToReportHome,
                     onNavigateToActivityLog = onNavigateToActivityLog,
                     onNavigateToPatientInfo = onNavigateToPatientInfo,
                     onNavigateToPatientType = onNavigateToPatientType,
@@ -97,7 +99,9 @@ fun ActivityMain(
                     onNavigateToMedicalGuidance = onNavigateToMedicalGuidance,
                     onNavigateToPatientTransport = onNavigateToPatientTransport,
                     onNavigateToReportDetail = onNavigateToReportDetail,
-                    activityViewModel = activityViewModel
+                    activityViewModel = activityViewModel,
+                    selectedTab = selectedTab,  // ✅ 추가
+                    onTabChange = { selectedTab = it }  // ✅ 추가
                 )
                 1 -> Text("구급활동일지 화면", color = Color.White)
                 2 -> Text("요약 화면", color = Color.White)
@@ -122,6 +126,7 @@ fun ActivityMain(
 @Composable
 private fun HomeContent(
     onNavigateToActivityLog: () -> Unit = {},
+    onNavigateToReportHome: () -> Unit = {},
     onNavigateToPatientInfo: () -> Unit = {},
     onNavigateToPatientType: () -> Unit = {},
     onNavigateToPatientEva: () -> Unit = {},
@@ -130,7 +135,9 @@ private fun HomeContent(
     onNavigateToMedicalGuidance: () -> Unit = {},
     onNavigateToPatientTransport: () -> Unit = {},
     onNavigateToReportDetail: () -> Unit = {},
-    activityViewModel: com.example.ssairen_app.viewmodel.ActivityViewModel = viewModel()
+    activityViewModel: com.example.ssairen_app.viewmodel.ActivityViewModel = viewModel(),
+    selectedTab: Int = 0,  // ✅ 추가
+    onTabChange: (Int) -> Unit = {}  // ✅ 추가
 ) {
     // ✅ 전역 STT 상태 사용 (싱글톤)
     val isSttRecording = SttManager.isSttRecording
@@ -457,24 +464,6 @@ private fun HomeContent(
 
     // ✅ STT 자동 전송은 ActivityMain 레벨에서 처리됨
 
-    // ✅ Whisper 오디오 녹음 중일 때 20초마다 자동으로 전송 (현재 주석 처리 - 나중에 사용 가능)
-    /*
-    LaunchedEffect(isAudioRecording) {
-        if (isAudioRecording) {
-            Log.d("ActivityMain", "⏰ Whisper 자동 전송 스케줄링 시작 (20초 간격)")
-            while (isAudioRecording) {
-                kotlinx.coroutines.delay(20000L) // 20초 대기
-                if (isAudioRecording) { // 대기 중 중지되지 않았는지 확인
-                    Log.d("ActivityMain", "⏰ 20초 경과 - 자동 오디오 전송")
-                    sendCurrentAudio()
-                }
-            }
-        } else {
-            Log.d("ActivityMain", "⏰ Whisper 자동 전송 스케줄링 중지")
-        }
-    }
-    */
-
     Log.d("ActivityMain", "🎨 HomeContent Composable 렌더링")
     Log.d("ActivityMain", "📱 ViewModel 인스턴스: $wearViewModel")
 
@@ -490,13 +479,29 @@ private fun HomeContent(
         modifier = Modifier.fillMaxSize()
     ) {
         // 상단 타이틀
-        Text(
-            text = "메인화면",
-            color = Color.White,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 34.dp, bottom = 16.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = 34.dp, bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "메인화면",
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            IconButton(onClick = onNavigateToReportHome ) {  // ✅ 수정
+                Icon(
+                    imageVector = Icons.Default.Description,
+                    contentDescription = "보고서 홈",
+                    tint = Color.White
+                )
+            }
+        }
 
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -613,6 +618,7 @@ private fun HomeContent(
             }
 
             // 우측 메뉴 버튼들
+            // 우측 메뉴 버튼들
             Column(
                 modifier = Modifier
                     .width(140.dp)
@@ -623,8 +629,13 @@ private fun HomeContent(
                 MainButton(
                     onClick = {
                         val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        Log.d("ActivityMain", "🔘 환자정보 버튼 클릭 - reportId: $reportId")
                         if (reportId > 0) {
                             activityViewModel.getPatientInfo(reportId)
+                            Log.d("ActivityMain", "📞 getPatientInfo 호출 완료")
+                        } else {
+                            Log.e("ActivityMain", "❌ reportId가 0입니다!")
+                            Toast.makeText(context, "일지를 먼저 생성해주세요", Toast.LENGTH_SHORT).show()
                         }
                         onNavigateToPatientInfo()
                     },
@@ -651,8 +662,11 @@ private fun HomeContent(
                 MainButton(
                     onClick = {
                         val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        Log.d("ActivityMain", "🔘 환자평가 버튼 클릭 - reportId: $reportId")
                         if (reportId > 0) {
                             activityViewModel.getPatientEva(reportId)
+                        } else {
+                            Toast.makeText(context, "일지를 먼저 생성해주세요", Toast.LENGTH_SHORT).show()
                         }
                         onNavigateToPatientEva()
                     },
@@ -679,8 +693,11 @@ private fun HomeContent(
                 MainButton(
                     onClick = {
                         val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        Log.d("ActivityMain", "🔘 환자이송 버튼 클릭 - reportId: $reportId")
                         if (reportId > 0) {
                             activityViewModel.getTransport(reportId)
+                        } else {
+                            Toast.makeText(context, "일지를 먼저 생성해주세요", Toast.LENGTH_SHORT).show()
                         }
                         onNavigateToPatientTransport()
                     },
@@ -707,8 +724,11 @@ private fun HomeContent(
                 MainButton(
                     onClick = {
                         val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        Log.d("ActivityMain", "🔘 구급출동 버튼 클릭 - reportId: $reportId")
                         if (reportId > 0) {
                             activityViewModel.getDispatch(reportId)
+                        } else {
+                            Toast.makeText(context, "일지를 먼저 생성해주세요", Toast.LENGTH_SHORT).show()
                         }
                         onNavigateToDispatch()
                     },
@@ -735,8 +755,11 @@ private fun HomeContent(
                 MainButton(
                     onClick = {
                         val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        Log.d("ActivityMain", "🔘 환자 발생 유형 버튼 클릭 - reportId: $reportId")
                         if (reportId > 0) {
                             activityViewModel.getPatientType(reportId)
+                        } else {
+                            Toast.makeText(context, "일지를 먼저 생성해주세요", Toast.LENGTH_SHORT).show()
                         }
                         onNavigateToPatientType()
                     },
@@ -763,8 +786,11 @@ private fun HomeContent(
                 MainButton(
                     onClick = {
                         val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        Log.d("ActivityMain", "🔘 응급처치 버튼 클릭 - reportId: $reportId")
                         if (reportId > 0) {
                             activityViewModel.getFirstAid(reportId)
+                        } else {
+                            Toast.makeText(context, "일지를 먼저 생성해주세요", Toast.LENGTH_SHORT).show()
                         }
                         onNavigateToFirstAid()
                     },
@@ -791,8 +817,11 @@ private fun HomeContent(
                 MainButton(
                     onClick = {
                         val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        Log.d("ActivityMain", "🔘 의료지도 버튼 클릭 - reportId: $reportId")
                         if (reportId > 0) {
                             activityViewModel.getMedicalGuidance(reportId)
+                        } else {
+                            Toast.makeText(context, "일지를 먼저 생성해주세요", Toast.LENGTH_SHORT).show()
                         }
                         onNavigateToMedicalGuidance()
                     },
@@ -819,8 +848,11 @@ private fun HomeContent(
                 MainButton(
                     onClick = {
                         val reportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                        Log.d("ActivityMain", "🔘 세부 상황정보 버튼 클릭 - reportId: $reportId")
                         if (reportId > 0) {
                             activityViewModel.getDetailReport(reportId)
+                        } else {
+                            Toast.makeText(context, "일지를 먼저 생성해주세요", Toast.LENGTH_SHORT).show()
                         }
                         onNavigateToReportDetail()
                     },

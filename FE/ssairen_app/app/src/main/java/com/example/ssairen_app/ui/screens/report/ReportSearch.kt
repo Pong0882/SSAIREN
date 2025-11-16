@@ -1,6 +1,8 @@
 //ReportSearch.kt
 package com.example.ssairen_app.ui.screens.report
 
+import android.app.Application
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,66 +17,34 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.example.ssairen_app.data.local.AuthManager
+import com.example.ssairen_app.data.api.RetrofitInstance
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.*
 
 // ==========================================
 // 검색 결과 데이터 클래스
 // ==========================================
 data class ReportSearchResult(
-    val id: String,
-    val patient: String,
-    val status: Int,
-    val statusText: String,
-    val date: String,
-    val time: String,
-    val location: String,
-    val reporterName: String,
-    val teamName: String
+    val id: String,                     // disasterNumber
+    val patient: String,                // patientName
+    val status: Int,                    // isCompleted 기반 계산 (0 or 100)
+    val statusText: String,             // isCompleted 기반 ("작성 중" or "작성 완료")
+    val date: String,                   // dispatchInfo.date 파싱 (yyyy-MM-dd)
+    val time: String,                   // dispatchInfo.date 파싱 (HH:mm)
+    val location: String,               // dispatchInfo.locationAddress
+    val reporterName: String,           // dispatchInfo.reporterName
+    val teamName: String,               // fireStateInfo.name
+    val emergencyReportId: Int          // emergencyReports[].id (상세 화면 이동용)
 )
 
-// ==========================================
-// 더미 데이터
-// ==========================================
-private val SEARCH_RESULTS = listOf(
-    ReportSearchResult(
-        id = "CB00000000846",
-        patient = "구급환자 | 정보",
-        status = 100,
-        statusText = "작성완료",
-        date = "2024-04-05",
-        time = "14:30",
-        location = "강남 도로변 (구급대 11 일반)",
-        reporterName = "김구급",
-        teamName = "구급대 11"
-    ),
-    ReportSearchResult(
-        id = "CB00000000847",
-        patient = "구급환자 | 정보",
-        status = 100,
-        statusText = "작성완료",
-        date = "2024-04-04",
-        time = "10:15",
-        location = "서초구 서초동 123 (구급대 12 일반)",
-        reporterName = "이응급",
-        teamName = "구급대 12"
-    ),
-    ReportSearchResult(
-        id = "CB00000000848",
-        patient = "구급환자 | 정보",
-        status = 100,
-        statusText = "작성완료",
-        date = "2024-04-03",
-        time = "16:45",
-        location = "송파구 잠실동 456 (구급대 13 일반)",
-        reporterName = "박구조",
-        teamName = "구급대 13"
-    )
-)
 
 // ==========================================
 // 메인 화면
@@ -83,31 +53,84 @@ private val SEARCH_RESULTS = listOf(
 fun ReportSearchScreen(
     onNavigateToDetail: (ReportSearchResult) -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val authManager = remember { AuthManager(context.applicationContext as Application) }
+
     var searchQuery by remember { mutableStateOf("") }
-    var searchResults by remember { mutableStateOf(SEARCH_RESULTS) }
-    var isSearching by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
+    var searchResults by remember { mutableStateOf<List<ReportSearchResult>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    val handleSearch: () -> Unit = remember {
-        {
-            scope.launch {
-                isSearching = true
+    // 화면 진입 시 API 호출
+    LaunchedEffect(Unit) {
+        Log.d("ReportSearchScreen", "🔍 API 호출 시작")
+        isLoading = true
+        errorMessage = null
 
-                searchResults = if (searchQuery.trim().isEmpty()) {
-                    SEARCH_RESULTS
-                } else {
-                    SEARCH_RESULTS.filter { item ->
-                        item.id.lowercase().contains(searchQuery.lowercase()) ||
-                                item.reporterName.contains(searchQuery) ||
-                                item.teamName.contains(searchQuery) ||
-                                item.location.contains(searchQuery)
-                    }
-                }
-
-                delay(300)
-                isSearching = false
+        try {
+            val token = authManager.getAccessToken()
+            if (token == null) {
+                errorMessage = "로그인이 필요합니다"
+                isLoading = false
+                return@LaunchedEffect
             }
+
+            val response = withContext(Dispatchers.IO) {
+                RetrofitInstance.apiService.getFireStateReports("Bearer $token")
+            }
+
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                Log.d("ReportSearchScreen", "✅ API 응답 성공: ${body.success}")
+
+                if (body.success && body.data != null) {
+                    val allReports = mutableListOf<ReportSearchResult>()
+
+                    body.data.forEach { fireStateData ->
+                        val teamName = fireStateData.fireStateInfo.name
+
+                        fireStateData.emergencyReports.forEach { report ->
+                            val parsedDateTime = parseDateTimeForSearch(report.dispatchInfo.date)
+                            val isCompleted = report.isCompleted
+
+                            allReports.add(
+                                ReportSearchResult(
+                                    id = report.dispatchInfo.disasterNumber,
+                                    patient = report.patientName,
+                                    status = if (isCompleted) 100 else 0,
+                                    statusText = if (isCompleted) "작성 완료" else "작성 중",
+                                    date = parsedDateTime.first,
+                                    time = parsedDateTime.second,
+                                    location = report.dispatchInfo.locationAddress,
+                                    reporterName = report.dispatchInfo.reporterName,
+                                    teamName = teamName,
+                                    emergencyReportId = report.id
+                                )
+                            )
+                        }
+                    }
+
+                    searchResults = allReports
+                    Log.d("ReportSearchScreen", "📊 변환된 보고서 ${allReports.size}개")
+                } else {
+                    errorMessage = "보고서 데이터를 불러올 수 없습니다"
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e("ReportSearchScreen", "❌ API 에러: ${response.code()}, $errorBody")
+                errorMessage = "서버 오류: ${response.code()}"
+            }
+        } catch (e: Exception) {
+            Log.e("ReportSearchScreen", "❌ API 호출 실패", e)
+            errorMessage = "네트워크 오류: ${e.message}"
+        } finally {
+            isLoading = false
         }
+    }
+
+    // 검색 기능은 추후 구현 예정
+    val handleSearch: () -> Unit = {
+        // TODO: 검색 기능 구현
     }
 
     Column(
@@ -127,8 +150,11 @@ fun ReportSearchScreen(
 
         // 검색 결과
         when {
-            isSearching -> {
+            isLoading -> {
                 LoadingView()
+            }
+            errorMessage != null -> {
+                ErrorView(message = errorMessage!!)
             }
             searchResults.isNotEmpty() -> {
                 SearchResults(
@@ -137,9 +163,7 @@ fun ReportSearchScreen(
                 )
             }
             else -> {
-                EmptyView(
-                    message = if (searchQuery.isNotEmpty()) "검색 결과가 없습니다" else "검색어를 입력해주세요"
-                )
+                EmptyView(message = "관내 보고서가 없습니다")
             }
         }
     }
@@ -337,7 +361,7 @@ private fun ReportCard(
                 Box(
                     modifier = Modifier
                         .background(
-                            color = if (item.status == 100) Color(0xFF28a745) else Color(0xFF4a4a4a),
+                            color = if (item.status == 100) Color(0xFF28a745) else Color(0xFFffc107),
                             shape = RoundedCornerShape(4.dp)
                         )
                         .padding(horizontal = 10.dp, vertical = 4.dp)
@@ -391,7 +415,7 @@ private fun ReportCard(
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     Text(
-                        text = "작성자: ${item.reporterName} (${item.teamName})",
+                        text = "신고자: ${item.reporterName} (${item.teamName})",
                         fontSize = 11.sp,
                         color = Color(0xFF999999)
                     )
@@ -458,5 +482,40 @@ private fun EmptyView(message: String) {
             fontSize = 16.sp,
             color = Color(0xFF999999)
         )
+    }
+}
+
+// ==========================================
+// 에러 화면
+// ==========================================
+@Composable
+private fun ErrorView(message: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = message,
+            fontSize = 16.sp,
+            color = Color(0xFFFF6B6B)
+        )
+    }
+}
+
+// ==========================================
+// 날짜 파싱 함수 (yyyy-MM-dd, HH:mm 분리)
+// ==========================================
+private fun parseDateTimeForSearch(dateString: String): Pair<String, String> {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS", Locale.getDefault())
+        val date = inputFormat.parse(dateString)
+
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+        Pair(dateFormat.format(date!!), timeFormat.format(date))
+    } catch (e: Exception) {
+        Log.e("ReportSearchScreen", "날짜 파싱 실패: $dateString", e)
+        Pair(dateString, "")
     }
 }
