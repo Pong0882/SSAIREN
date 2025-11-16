@@ -268,11 +268,12 @@ fun DispatchSection(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    TimeFieldRow(
+                    TimeFieldRowWithButton(
                         label = "환자 접촉",
                         value = contactTime,
                         onValueChange = { contactTime = it },
-                        placeholder = "HH:mm",
+                        buttonText = "접촉",
+                        onButtonClick = { contactTime = getCurrentTime() },
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -281,7 +282,8 @@ fun DispatchSection(
                         label = "병원 도착",
                         value = arrivalHospitalTime,
                         onValueChange = { arrivalHospitalTime = it },
-                        placeholder = "HH:mm",
+                        buttonText = "도착",
+                        onButtonClick = { arrivalHospitalTime = getCurrentTime() },
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -365,13 +367,10 @@ fun DispatchSection(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFF2a2a2a),
                             unfocusedContainerColor = Color(0xFF2a2a2a),
-                            disabledContainerColor = Color(0xFF1a1a1a),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
-                            disabledTextColor = Color(0xFF666666),
                             focusedIndicatorColor = Color(0xFF3b7cff),
                             unfocusedIndicatorColor = Color(0xFF3a3a3a),
-                            disabledIndicatorColor = Color(0xFF2a2a2a),
                             cursorColor = Color(0xFF3b7cff)
                         ),
                         textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color.White),
@@ -417,13 +416,10 @@ fun DispatchSection(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFF2a2a2a),
                             unfocusedContainerColor = Color(0xFF2a2a2a),
-                            disabledContainerColor = Color(0xFF1a1a1a),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
-                            disabledTextColor = Color(0xFF666666),
                             focusedIndicatorColor = Color(0xFF3b7cff),
                             unfocusedIndicatorColor = Color(0xFF3a3a3a),
-                            disabledIndicatorColor = Color(0xFF2a2a2a),
                             cursorColor = Color(0xFF3b7cff)
                         ),
                         textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color.White),
@@ -487,13 +483,10 @@ fun DispatchSection(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFF2a2a2a),
                             unfocusedContainerColor = Color(0xFF2a2a2a),
-                            disabledContainerColor = Color(0xFF1a1a1a),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
-                            disabledTextColor = Color(0xFF666666),
                             focusedIndicatorColor = Color(0xFF3b7cff),
                             unfocusedIndicatorColor = Color(0xFF3a3a3a),
-                            disabledIndicatorColor = Color(0xFF2a2a2a),
                             cursorColor = Color(0xFF3b7cff)
                         ),
                         textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color.White),
@@ -545,7 +538,7 @@ private fun TimeFieldRow(
                 disabledContainerColor = Color.Transparent,
                 focusedTextColor = Color.White,
                 unfocusedTextColor = Color.White,
-                disabledTextColor = Color(0xFF666666),
+                disabledTextColor = Color(0xFF999999),
                 focusedIndicatorColor = Color(0xFF3a3a3a),
                 unfocusedIndicatorColor = Color(0xFF3a3a3a),
                 disabledIndicatorColor = Color(0xFF3a3a3a),
@@ -601,13 +594,10 @@ private fun TimeFieldRowWithButton(
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
-                    disabledTextColor = Color(0xFF666666),
                     focusedIndicatorColor = Color(0xFF3a3a3a),
                     unfocusedIndicatorColor = Color(0xFF3a3a3a),
-                    disabledIndicatorColor = Color(0xFF3a3a3a),
                     cursorColor = Color(0xFF3b7cff)
                 ),
                 textStyle = LocalTextStyle.current.copy(
@@ -622,9 +612,7 @@ private fun TimeFieldRowWithButton(
                 enabled = enabled,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF3b7cff),
-                    contentColor = Color.White,
-                    disabledContainerColor = Color(0xFF2a2a2a),
-                    disabledContentColor = Color(0xFF666666)
+                    contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(6.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -734,9 +722,7 @@ private fun SelectButton(
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) Color(0xFF3b7cff) else Color(0xFF3a3a3a),
-            contentColor = Color.White,
-            disabledContainerColor = Color(0xFF2a2a2a),
-            disabledContentColor = Color(0xFF666666)
+            contentColor = Color.White
         ),
         shape = RoundedCornerShape(4.dp),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),

@@ -482,10 +482,11 @@ fun AppNavigation(
         DispatchDetail(
             dispatchData = DispatchDetailData(
                 dispatchNumber = dispatch.id,
-                status = "실전/1차",
-                type = dispatch.type,
-                area = "관할구역",
-                location = dispatch.location,
+                dispatchLevel = "실전",
+                dispatchOrder = "1차",
+                disasterType = "화재",
+                disasterSubtype = "고층건물",
+                dispatchStation = "관할구역",
                 reporter = "신고자명",
                 reporterPhone = "010-0000-0000",
                 dispatchTime = dispatch.date,
