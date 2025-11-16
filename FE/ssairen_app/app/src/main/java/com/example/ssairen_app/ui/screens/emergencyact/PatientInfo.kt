@@ -21,7 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.ssairen_app.ui.components.MainButton
 import com.example.ssairen_app.viewmodel.ActivityLogData
 import com.example.ssairen_app.viewmodel.ActivityViewModel
 import com.example.ssairen_app.viewmodel.LogViewModel
@@ -47,27 +46,21 @@ fun PatientInfo(
     isReadOnly: Boolean = false,
     activityViewModel: ActivityViewModel = viewModel()
 ) {
-    // ✅ API 상태 관찰, STT 데이터 상태 관찰 추가
     val patientInfoState by activityViewModel.patientInfoState.observeAsState(PatientInfoApiState.Idle)
     val currentReportId by activityViewModel.currentEmergencyReportId.observeAsState()
 
-    // ✅ 최초 로딩 여부 추적 (깜빡임 방지)
     var isInitialLoad by remember { mutableStateOf(true) }
 
-    // ✅ 5초마다 자동으로 GET 요청 (AI 입력 내용 반영)
     LaunchedEffect(currentReportId) {
         currentReportId?.let { reportId ->
             while (true) {
                 Log.d("PatientInfo", "📞 자동 API 호출: getPatientInfo($reportId)")
                 activityViewModel.getPatientInfo(reportId)
-
-                // 5초 대기
                 kotlinx.coroutines.delay(5000)
             }
         }
     }
 
-    // ✅ State 변수들 (data.patientInfo로 초기화)
     var reporterPhone by remember { mutableStateOf(data.patientInfo.reporterPhone) }
     var selectedReportMethod by remember { mutableStateOf(data.patientInfo.reportMethod) }
     var patientName by remember { mutableStateOf(data.patientInfo.patientName) }
@@ -81,7 +74,6 @@ fun PatientInfo(
     var guardianRelation by remember { mutableStateOf(data.patientInfo.guardianRelation) }
     var guardianPhone by remember { mutableStateOf(data.patientInfo.guardianPhone) }
 
-    // ✅ 자동 저장 함수 (LogViewModel에 임시 저장)
     fun saveData() {
         val patientInfoData = PatientInfoData(
             reporterPhone = reporterPhone,
@@ -100,24 +92,21 @@ fun PatientInfo(
         viewModel.updatePatientInfo(patientInfoData)
     }
 
-    // ✅ API 응답 처리
     LaunchedEffect(patientInfoState) {
         Log.d("PatientInfo", "🟢 patientInfoState 변경: $patientInfoState")
 
         when (val state = patientInfoState) {
             is PatientInfoApiState.Success -> {
                 Log.d("PatientInfo", "✅ API 성공 - 데이터 매핑 시작")
-                isInitialLoad = false  // 최초 로딩 완료
+                isInitialLoad = false
                 val apiData = state.patientInfoResponse.data.data.patientInfo
 
-                // 신고자 정보 매핑
                 apiData.reporter?.let { reporter ->
                     reporterPhone = reporter.phone ?: ""
                     selectedReportMethod = reporter.reportMethod ?: ""
                     Log.d("PatientInfo", "신고자: phone=$reporterPhone, method=$selectedReportMethod")
                 }
 
-                // 환자 정보 매핑
                 apiData.patient?.let { patient ->
                     patientName = patient.name ?: ""
                     selectedGender = patient.gender ?: ""
@@ -127,7 +116,6 @@ fun PatientInfo(
                     Log.d("PatientInfo", "환자: name=$patientName, gender=$selectedGender, age=$patientAge")
                     Log.d("PatientInfo", "주소: $patientAddress")
 
-                    // 생년월일 파싱 (YYYY-MM-DD)
                     patient.birthDate?.let { birthDate ->
                         val parts = birthDate.split("-")
                         if (parts.size == 3) {
@@ -139,7 +127,6 @@ fun PatientInfo(
                     }
                 }
 
-                // 보호자 정보 매핑
                 apiData.guardian?.let { guardian ->
                     guardianName = guardian.name ?: ""
                     guardianRelation = guardian.relation ?: ""
@@ -148,8 +135,6 @@ fun PatientInfo(
                 }
 
                 Log.d("PatientInfo", "✅ 데이터 매핑 완료")
-
-                // ✅ LogViewModel에 동기화 (덮어쓰기 버그 방지)
                 saveData()
                 Log.d("PatientInfo", "💾 LogViewModel 동기화 완료")
             }
@@ -165,8 +150,6 @@ fun PatientInfo(
         }
     }
 
-
-    // ✅ 최초 로딩 중일 때만 로딩 화면 표시 (깜빡임 방지)
     if (isInitialLoad && patientInfoState is PatientInfoApiState.Loading) {
         Box(
             modifier = Modifier
@@ -184,42 +167,91 @@ fun PatientInfo(
             .fillMaxSize()
             .background(Color(0xFF1a1a1a))
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 40.dp)  // ✅ 16.dp → 40.dp
             .padding(bottom = 80.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // 신고자 전화번호 + 신고방법
-            Row(
+            // ✅ 신고자 전화번호 + 신고방법 (라벨 정렬)
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                UnderlineInputField(
-                    label = "신고자 전화번호",
-                    value = reporterPhone,
-                    onValueChange = {
-                        reporterPhone = it
-                        saveData()
-                    },
-                    modifier = Modifier.weight(1f),
-                    enabled = !isReadOnly
-                )
-
-                Column(modifier = Modifier.weight(1f)) {
+                // 라벨 Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "신고자 전화번호",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f)
+                    )
                     Text(
                         text = "신고방법",
-                        color = Color(0xFF999999),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f)
                     )
+                }
+
+// ✅ 신고자 전화번호 부분만 수정
+// 입력 필드 Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // 신고자 전화번호 입력
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(36.dp),  // ✅ 추가
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
+                        BasicTextField(
+                            value = reporterPhone,
+                            onValueChange = {
+                                reporterPhone = it
+                                saveData()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 4.dp),
+                            textStyle = TextStyle(
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Start
+                            ),
+                            singleLine = true,
+                            readOnly = isReadOnly,
+                            decorationBox = { innerTextField ->
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    if (reporterPhone.isEmpty()) {
+                                        Text(
+                                            text = "",
+                                            color = Color(0xFF666666),
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
+                        )
+                        HorizontalDivider(
+                            color = Color(0xFF4a4a4a),
+                            thickness = 1.dp
+                        )
+                    }
+
+                    // 신고방법 버튼
                     Row(
+                        modifier = Modifier.weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         SelectButton(
@@ -259,31 +291,80 @@ fun PatientInfo(
                 }
             }
 
-            // 환자 성명 + 성별
-            Row(
+            // ✅ 환자 성명 + 성별 (라벨 정렬)
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                UnderlineInputField(
-                    label = "환자 성명",
-                    value = patientName,
-                    onValueChange = {
-                        patientName = it
-                        saveData()
-                    },
-                    modifier = Modifier.weight(1f),
-                    enabled = !isReadOnly
-                )
-
-                Column(modifier = Modifier.weight(1f)) {
+                // 라벨 Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "환자 성명",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f)
+                    )
                     Text(
                         text = "환자 성별",
-                        color = Color(0xFF999999),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f)
                     )
+                }
+
+                // ✅ 환자 성명 부분만 수정
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // 환자 성명 입력
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(36.dp),
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
+                        BasicTextField(
+                            value = patientName,
+                            onValueChange = {
+                                patientName = it
+                                saveData()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 4.dp),
+                            textStyle = TextStyle(
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Start
+                            ),
+                            singleLine = true,
+                            readOnly = isReadOnly,
+                            decorationBox = { innerTextField ->
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    if (patientName.isEmpty()) {
+                                        Text(
+                                            text = "",
+                                            color = Color(0xFF666666),
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
+                        )
+                        HorizontalDivider(
+                            color = Color(0xFF4a4a4a),
+                            thickness = 1.dp
+                        )
+                    }
+
+                    // 성별 버튼
                     Row(
+                        modifier = Modifier.weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         SelectButton(
@@ -320,9 +401,8 @@ fun PatientInfo(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "생년월일",
-                        color = Color(0xFF999999),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
+                        color = Color.White,
+                        fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Row(
@@ -355,9 +435,8 @@ fun PatientInfo(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "나이",
-                        color = Color(0xFF999999),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
+                        color = Color.White,
+                        fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Row(
@@ -376,8 +455,7 @@ fun PatientInfo(
                                 .padding(bottom = 4.dp),
                             textStyle = TextStyle(
                                 color = Color.White,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Normal,
+                                fontSize = 14.sp,
                                 textAlign = TextAlign.Start
                             ),
                             singleLine = true,
@@ -386,7 +464,7 @@ fun PatientInfo(
                         Text(
                             text = "세",
                             color = Color.White,
-                            fontSize = 15.sp,
+                            fontSize = 14.sp,
                             modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                         )
                     }
@@ -519,7 +597,7 @@ private fun BirthDateField(
             Text(
                 text = label,
                 color = Color.White,
-                fontSize = 15.sp,
+                fontSize = 14.sp,
                 modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
             )
         }
@@ -542,9 +620,8 @@ private fun UnderlineInputField(
     Column(modifier = modifier) {
         Text(
             text = label,
-            color = Color(0xFF999999),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
+            color = Color.White,
+            fontSize = 14.sp,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
