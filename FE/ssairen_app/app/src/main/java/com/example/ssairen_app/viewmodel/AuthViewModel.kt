@@ -39,7 +39,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     val loginState: LiveData<LoginState> = _loginState
 
     // 로그인 여부
-    private val _isLoggedIn = MutableLiveData<Boolean>()
+    private val _isLoggedIn = MutableLiveData<Boolean>(repository.isLoggedIn())
     val isLoggedIn: LiveData<Boolean> = _isLoggedIn
 
     // ✅ 로그아웃 상태 추가
