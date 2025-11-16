@@ -47,37 +47,45 @@ fun HospitalSearch(
 
     val aiRecommendationState by hospitalSearchViewModel.aiRecommendationState.collectAsState()
     val hospitals by hospitalSearchViewModel.hospitals.collectAsState()
-    val emergencyReportId = activityViewModel.currentEmergencyReportId.observeAsState()
+    // 전역 상태 사용 (ActivityLogHome에서 설정한 값 유지)
+    val globalReportId by com.example.ssairen_app.viewmodel.ActivityViewModel.globalCurrentReportId.observeAsState()
 
-    // 화면 진입 시 AI 병원 추천 자동 호출
-    LaunchedEffect(Unit) {
-        val reportId = emergencyReportId.value
+    // 화면 진입 시 환자 정보 생성 후 AI 병원 추천 자동 호출
+    LaunchedEffect(globalReportId) {
+        val reportId = globalReportId
         android.util.Log.d("HospitalSearch", "========================================")
         android.util.Log.d("HospitalSearch", "LaunchedEffect 실행됨")
-        android.util.Log.d("HospitalSearch", "emergencyReportId.value: $reportId")
+        android.util.Log.d("HospitalSearch", "globalReportId: $reportId")
         android.util.Log.d("HospitalSearch", "========================================")
 
-        // ⚠️ 임시: emergencyReportId가 없으면 테스트용 ID 사용
-        val testReportId = reportId ?: 1
+        if (reportId != null && reportId > 0) {
+            // 1. 환자 정보 생성 API 호출
+            android.util.Log.d("HospitalSearch", "🏥 1단계: 환자 정보 생성 API 호출 시작")
+            val patientInfoCreated = hospitalSearchViewModel.createPatientInfoForHospital(reportId)
 
-        if (testReportId != 0) {
-            // 하드코딩된 위도/경도 (예시값)
+            if (patientInfoCreated) {
+                android.util.Log.d("HospitalSearch", "✅ 환자 정보 생성 성공! AI 병원 추천 진행")
+            } else {
+                android.util.Log.w("HospitalSearch", "⚠️ 환자 정보 생성 실패했지만 AI 병원 추천 계속 진행")
+            }
+
+            // 2. AI 병원 추천 API 호출
             val latitude = 37.5062528
             val longitude = 127.0317056
             val radius = 10
 
-            android.util.Log.d("HospitalSearch", "✅ AI 병원 추천 API 호출 시작!")
-            android.util.Log.d("HospitalSearch", "   - reportId: $testReportId")
+            android.util.Log.d("HospitalSearch", "🏥 2단계: AI 병원 추천 API 호출 시작")
+            android.util.Log.d("HospitalSearch", "   - reportId: $reportId")
             android.util.Log.d("HospitalSearch", "   - 위치: ($latitude, $longitude)")
 
             hospitalSearchViewModel.requestAiHospitalRecommendation(
-                emergencyReportId = testReportId.toLong(),
+                emergencyReportId = reportId.toLong(),
                 latitude = latitude,
                 longitude = longitude,
                 radius = radius
             )
         } else {
-            android.util.Log.e("HospitalSearch", "❌ emergencyReportId가 0입니다!")
+            android.util.Log.e("HospitalSearch", "❌ globalReportId가 null이거나 0입니다: $reportId")
         }
     }
 
@@ -145,8 +153,8 @@ fun HospitalSearch(
                         )
                         Button(
                             onClick = {
-                                val reportId = emergencyReportId.value
-                                if (reportId != null && reportId != 0) {
+                                val reportId = globalReportId
+                                if (reportId != null && reportId > 0) {
                                     hospitalSearchViewModel.requestAiHospitalRecommendation(
                                         emergencyReportId = reportId.toLong(),
                                         latitude = 37.5062528,

@@ -25,6 +25,8 @@ import com.example.ssairen_app.data.model.request.DetailReportRequest
 import com.example.ssairen_app.data.model.response.DetailReportResponse
 import com.example.ssairen_app.data.model.request.HospitalAiRecommendationRequest
 import com.example.ssairen_app.data.model.response.HospitalAiRecommendationResponse
+import com.example.ssairen_app.data.model.request.CreatePatientInfoRequest
+import com.example.ssairen_app.data.model.response.CreatePatientInfoResponse
 
 
 class ReportRepository(
@@ -1323,6 +1325,82 @@ class ReportRepository(
                     403 -> "세부사항 업데이트 권한이 없습니다"
                     404 -> "해당 보고서를 찾을 수 없습니다"
                     422 -> "입력 데이터가 올바르지 않습니다"
+                    500 -> "서버 내부 오류가 발생했습니다"
+                    else -> "서버 오류: ${response.code()}"
+                }
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "💥 예외 발생!", e)
+
+            val errorMsg = when {
+                e.message?.contains("Unable to resolve host") == true ->
+                    "인터넷 연결을 확인해주세요"
+                e.message?.contains("timeout") == true ->
+                    "서버 응답 시간이 초과되었습니다"
+                else ->
+                    "네트워크 오류: ${e.message}"
+            }
+            Result.failure(Exception(errorMsg))
+        }
+    }
+
+    /**
+     * 환자 정보 생성
+     * POST /api/patient-info
+     */
+    suspend fun createPatientInfo(
+        request: CreatePatientInfoRequest
+    ): Result<CreatePatientInfoResponse> {
+        return try {
+            Log.d(TAG, "=== 환자 정보 생성 시작 ===")
+            Log.d(TAG, "📄 구급일지 ID: ${request.emergencyReportId}")
+
+            val token = authManager.getAccessToken()
+
+            if (token == null) {
+                Log.e(TAG, "❌ Access Token이 없습니다")
+                return Result.failure(Exception("로그인이 필요합니다"))
+            }
+
+            Log.d(TAG, "🔑 Access Token (앞 20자): ${token.take(20)}...")
+            Log.d(TAG, "📝 요청 데이터:")
+            Log.d(TAG, "   - gender: ${request.gender}")
+            Log.d(TAG, "   - age: ${request.age}")
+            Log.d(TAG, "   - mentalStatus: ${request.mentalStatus}")
+            Log.d(TAG, "   - chiefComplaint: ${request.chiefComplaint}")
+            Log.d(TAG, "   - hr: ${request.hr}, bp: ${request.bp}, spo2: ${request.spo2}")
+
+            Log.d(TAG, "API 호출 중... (POST /api/patient-info)")
+
+            val response = api.createPatientInfo(request, "Bearer $token")
+
+            Log.d(TAG, "응답 코드: ${response.code()}")
+
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                Log.d(TAG, "응답 바디 success: ${body.success}")
+
+                if (body.success && body.data != null) {
+                    Log.d(TAG, "✅ 환자 정보 생성 성공!")
+                    Log.d(TAG, "   - emergencyReportId: ${body.data.emergencyReportId}")
+                    Log.d(TAG, "   - message: ${body.message}")
+
+                    Result.success(body)
+                } else {
+                    val errorMessage = body.message ?: "환자 정보 생성에 실패했습니다"
+                    Log.e(TAG, "❌ 환자 정보 생성 실패: $errorMessage")
+                    Result.failure(Exception(errorMessage))
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "❌ HTTP 오류 - 코드: ${response.code()}")
+                Log.e(TAG, "에러 바디: $errorBody")
+
+                val errorMsg = when (response.code()) {
+                    400 -> "잘못된 요청입니다. 입력값을 확인해주세요"
+                    401 -> "인증이 만료되었습니다. 다시 로그인해주세요"
+                    404 -> "구급일지를 찾을 수 없습니다"
                     500 -> "서버 내부 오류가 발생했습니다"
                     else -> "서버 오류: ${response.code()}"
                 }

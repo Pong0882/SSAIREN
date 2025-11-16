@@ -8,6 +8,7 @@ import com.example.ssairen_app.data.local.AuthManager
 import com.example.ssairen_app.data.repository.ReportRepository
 import com.example.ssairen_app.data.model.response.HospitalAiRecommendationResponse
 import com.example.ssairen_app.data.model.response.HospitalSelectionInfo
+import com.example.ssairen_app.util.PatientInfoMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,6 +35,77 @@ class HospitalSearchViewModel(application: Application) : AndroidViewModel(appli
     // 병원 리스트 (실시간 업데이트용)
     private val _hospitals = MutableStateFlow<List<HospitalSelectionInfo>>(emptyList())
     val hospitals: StateFlow<List<HospitalSelectionInfo>> = _hospitals.asStateFlow()
+
+    /**
+     * 환자 정보 생성 API 호출
+     * 병원 이송 화면 진입 시 구급일지 데이터를 기반으로 환자 정보 생성
+     *
+     * @param emergencyReportId 구급일지 ID
+     * @return 성공 여부
+     */
+    suspend fun createPatientInfoForHospital(emergencyReportId: Int): Boolean {
+        return try {
+            Log.d(TAG, "🏥 환자 정보 생성 시작 (병원 이송용)")
+            Log.d(TAG, "   - emergencyReportId: $emergencyReportId")
+
+            // 1. 구급일지의 모든 섹션 데이터 조회
+            Log.d(TAG, "📋 섹션 데이터 조회 시작...")
+            val patientInfoResult = repository.getPatientInfo(emergencyReportId)
+            val patientEvaResult = repository.getPatientEva(emergencyReportId)
+            val patientTypeResult = repository.getPatientType(emergencyReportId)
+            val dispatchResult = repository.getDispatch(emergencyReportId)
+
+            // 조회 결과 로깅
+            Log.d(TAG, "📊 섹션 데이터 조회 결과:")
+            Log.d(TAG, "   - patientInfo 성공: ${patientInfoResult.isSuccess}")
+            Log.d(TAG, "   - patientEva 성공: ${patientEvaResult.isSuccess}")
+            Log.d(TAG, "   - patientType 성공: ${patientTypeResult.isSuccess}")
+            Log.d(TAG, "   - dispatch 성공: ${dispatchResult.isSuccess}")
+
+            // 상세 데이터 로깅
+            patientInfoResult.getOrNull()?.let { info ->
+                Log.d(TAG, "   - patient.age: ${info.data.data.patientInfo.patient?.ageYears}")
+                Log.d(TAG, "   - patient.gender: ${info.data.data.patientInfo.patient?.gender}")
+            }
+            patientEvaResult.getOrNull()?.let { eva ->
+                Log.d(TAG, "   - vitalSigns.hr: ${eva.data.data.assessment.vitalSigns?.first?.pulse}")
+                Log.d(TAG, "   - vitalSigns.rr: ${eva.data.data.assessment.vitalSigns?.first?.respiration}")
+                Log.d(TAG, "   - vitalSigns.spo2: ${eva.data.data.assessment.vitalSigns?.first?.spo2}")
+            }
+
+            // 2. 조회된 데이터를 환자 정보 생성 요청으로 맵핑
+            val request = PatientInfoMapper.mapToCreatePatientInfoRequest(
+                emergencyReportId = emergencyReportId,
+                patientInfo = patientInfoResult.getOrNull(),
+                patientEva = patientEvaResult.getOrNull(),
+                patientType = patientTypeResult.getOrNull(),
+                dispatch = dispatchResult.getOrNull()
+            )
+
+            Log.d(TAG, "📝 환자 정보 생성 요청 데이터 맵핑 완료")
+            Log.d(TAG, "   - gender: ${request.gender}")
+            Log.d(TAG, "   - age: ${request.age}")
+            Log.d(TAG, "   - hr: ${request.hr}")
+            Log.d(TAG, "   - rr: ${request.rr}")
+            Log.d(TAG, "   - spo2: ${request.spo2}")
+            Log.d(TAG, "   - chiefComplaint: ${request.chiefComplaint}")
+
+            // 3. 환자 정보 생성 API 호출
+            val result = repository.createPatientInfo(request)
+
+            result.onSuccess { response ->
+                Log.d(TAG, "✅ 환자 정보 생성 성공")
+                Log.d(TAG, "   - message: ${response.message}")
+            }.onFailure { error ->
+                Log.e(TAG, "❌ 환자 정보 생성 실패: ${error.message}")
+            }
+
+            result.isSuccess
+        } catch (e: Exception) {
+            Log.e(TAG, "💥 환자 정보 생성 예외 발생", e)
+            false
+        }
+    }
 
     /**
      * AI 기반 병원 추천 요청
