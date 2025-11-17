@@ -1,0 +1,776 @@
+2025/10/27 03:53:46 [emerg] 1#1: "proxy_read_timeout" directive is duplicate in /etc/nginx/conf.d/jenkins.conf:18
+2025/10/27 03:53:46 [emerg] 1#1: "proxy_read_timeout" directive is duplicate in /etc/nginx/conf.d/jenkins.conf:18
+2025/10/27 03:53:47 [emerg] 1#1: "proxy_read_timeout" directive is duplicate in /etc/nginx/conf.d/jenkins.conf:18
+2025/10/27 03:53:48 [emerg] 1#1: "proxy_read_timeout" directive is duplicate in /etc/nginx/conf.d/jenkins.conf:18
+2025/10/27 03:53:49 [emerg] 1#1: "proxy_read_timeout" directive is duplicate in /etc/nginx/conf.d/jenkins.conf:18
+2025/10/27 03:53:50 [emerg] 1#1: "proxy_read_timeout" directive is duplicate in /etc/nginx/conf.d/jenkins.conf:18
+2025/10/27 03:53:54 [emerg] 1#1: "proxy_read_timeout" directive is duplicate in /etc/nginx/conf.d/jenkins.conf:18
+2025/10/27 03:54:01 [emerg] 1#1: "proxy_read_timeout" directive is duplicate in /etc/nginx/conf.d/jenkins.conf:18
+2025/10/27 03:54:14 [emerg] 1#1: "proxy_read_timeout" directive is duplicate in /etc/nginx/conf.d/jenkins.conf:18
+2025/10/27 03:54:39 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 03:54:48 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 03:54:48 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 03:54:49 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 03:54:49 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 03:54:50 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 03:54:52 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 03:54:56 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 03:55:02 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 03:55:15 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 03:55:41 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 03:56:33 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 03:57:33 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:19
+2025/10/27 04:11:12 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 04:11:12 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 04:11:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/27 04:11:33 [warn] 24#24: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 04:11:33 [warn] 24#24: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 04:11:33 [warn] 24#24: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/27 05:10:31 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 05:10:31 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 05:10:31 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:24
+2025/10/27 05:10:31 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 05:10:31 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 05:10:31 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:24
+2025/10/27 05:10:32 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 05:10:32 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 05:10:32 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:24
+2025/10/27 05:10:33 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 05:10:33 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 05:10:33 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:24
+2025/10/27 05:10:34 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 05:10:34 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 05:10:34 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:24
+2025/10/27 05:10:35 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 05:10:35 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 05:10:35 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:24
+2025/10/27 05:10:39 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 05:10:39 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 05:10:39 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:24
+2025/10/27 05:10:46 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 05:10:46 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 05:10:46 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/27 05:11:56 [warn] 24#24: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 05:11:56 [warn] 24#24: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 05:11:56 [warn] 24#24: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/27 05:11:56 [warn] 24#24: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/27 05:12:04 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 05:12:04 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 05:12:04 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/27 05:12:04 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/27 06:07:27 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 06:07:27 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 06:07:27 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/27 06:07:27 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/27 06:10:04 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/27 06:10:04 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/27 06:10:04 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/27 06:10:04 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/27 06:10:04 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/27 08:44:37 [error] 20#20: *2232 open() "/var/www/certbot/.well-known/acme-challenge/admin.php" failed (2: No such file or directory), client: 74.176.186.150, server: ai.ssairen.site, request: "GET /.well-known/acme-challenge/admin.php HTTP/1.1", host: "ec2-15-165-17-52.ap-northeast-2.compute.amazonaws.com"
+2025/10/27 08:44:40 [error] 20#20: *2232 open() "/var/www/certbot/.well-known/acme-challenge/index.php" failed (2: No such file or directory), client: 74.176.186.150, server: ai.ssairen.site, request: "GET /.well-known/acme-challenge/index.php HTTP/1.1", host: "ec2-15-165-17-52.ap-northeast-2.compute.amazonaws.com"
+2025/10/28 00:13:23 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:13:23 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:13:23 [emerg] 1#1: host not found in upstream "cadvisor" in /etc/nginx/conf.d/cadvisor.conf:40
+2025/10/28 00:13:24 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:13:24 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:13:24 [emerg] 1#1: host not found in upstream "cadvisor" in /etc/nginx/conf.d/cadvisor.conf:40
+2025/10/28 00:13:24 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:13:24 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:13:24 [emerg] 1#1: host not found in upstream "cadvisor" in /etc/nginx/conf.d/cadvisor.conf:40
+2025/10/28 00:13:25 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:13:25 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:13:25 [emerg] 1#1: host not found in upstream "cadvisor" in /etc/nginx/conf.d/cadvisor.conf:40
+2025/10/28 00:13:26 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:13:26 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:13:26 [emerg] 1#1: host not found in upstream "cadvisor" in /etc/nginx/conf.d/cadvisor.conf:40
+2025/10/28 00:13:28 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:13:28 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:13:28 [emerg] 1#1: host not found in upstream "cadvisor" in /etc/nginx/conf.d/cadvisor.conf:40
+2025/10/28 00:13:32 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:13:32 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:13:32 [emerg] 1#1: host not found in upstream "cadvisor" in /etc/nginx/conf.d/cadvisor.conf:40
+2025/10/28 00:13:39 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:13:39 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:13:39 [emerg] 1#1: host not found in upstream "cadvisor" in /etc/nginx/conf.d/cadvisor.conf:40
+2025/10/28 00:13:52 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:13:52 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:13:52 [emerg] 1#1: host not found in upstream "cadvisor" in /etc/nginx/conf.d/cadvisor.conf:40
+2025/10/28 00:14:18 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:14:18 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:14:18 [emerg] 1#1: host not found in upstream "cadvisor" in /etc/nginx/conf.d/cadvisor.conf:40
+2025/10/28 00:15:09 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:15:09 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:15:09 [emerg] 1#1: host not found in upstream "cadvisor" in /etc/nginx/conf.d/cadvisor.conf:40
+2025/10/28 00:16:06 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:16:06 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:16:06 [emerg] 1#1: host not found in upstream "grafana" in /etc/nginx/conf.d/grafana.conf:40
+2025/10/28 00:16:06 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:16:06 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:16:06 [emerg] 1#1: host not found in upstream "grafana" in /etc/nginx/conf.d/grafana.conf:40
+2025/10/28 00:16:07 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:16:07 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:16:07 [emerg] 1#1: host not found in upstream "grafana" in /etc/nginx/conf.d/grafana.conf:40
+2025/10/28 00:16:08 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:16:08 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:16:08 [emerg] 1#1: host not found in upstream "grafana" in /etc/nginx/conf.d/grafana.conf:40
+2025/10/28 00:16:09 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:16:09 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:16:09 [emerg] 1#1: host not found in upstream "grafana" in /etc/nginx/conf.d/grafana.conf:40
+2025/10/28 00:16:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:16:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:16:11 [emerg] 1#1: host not found in upstream "grafana" in /etc/nginx/conf.d/grafana.conf:40
+2025/10/28 00:16:14 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:16:14 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:16:14 [emerg] 1#1: host not found in upstream "grafana" in /etc/nginx/conf.d/grafana.conf:40
+2025/10/28 00:16:21 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:16:21 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:16:21 [emerg] 1#1: host not found in upstream "grafana" in /etc/nginx/conf.d/grafana.conf:40
+2025/10/28 00:16:34 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:16:34 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:16:34 [emerg] 1#1: host not found in upstream "grafana" in /etc/nginx/conf.d/grafana.conf:40
+2025/10/28 00:17:00 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:17:00 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:17:00 [emerg] 1#1: host not found in upstream "grafana" in /etc/nginx/conf.d/grafana.conf:40
+2025/10/28 00:17:52 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:17:52 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:17:52 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:17:52 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:17:52 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2025/10/28 00:18:13 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:18:13 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:18:13 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:18:13 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:18:13 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2025/10/28 00:18:13 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:18:13 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:18:13 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:18:13 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:18:13 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2025/10/28 00:18:14 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:18:14 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:18:14 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:18:14 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:18:14 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2025/10/28 00:18:15 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:18:15 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:18:15 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:18:15 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:18:15 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2025/10/28 00:18:16 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:18:16 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:18:16 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:18:16 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:18:16 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2025/10/28 00:18:18 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:18:18 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:18:18 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:18:18 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:18:18 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2025/10/28 00:18:21 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:18:21 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:18:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:18:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:18:21 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2025/10/28 00:18:28 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:18:28 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:18:28 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:18:28 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:18:28 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2025/10/28 00:18:41 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:18:41 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:18:41 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:18:41 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:18:41 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2025/10/28 00:19:07 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:19:07 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:19:07 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:19:07 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:19:07 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/28 00:21:14 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:21:14 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:21:14 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:21:14 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:21:14 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/28 00:23:52 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 00:23:52 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 00:23:52 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 00:23:52 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 00:23:52 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/10/28 00:23:52 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/10/28 00:23:52 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/28 00:23:52 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/10/28 01:23:09 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 01:23:09 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 01:23:09 [emerg] 1#1: host not found in upstream "loki" in /etc/nginx/conf.d/loki.conf:40
+2025/10/28 01:23:10 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 01:23:10 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 01:23:10 [emerg] 1#1: host not found in upstream "loki" in /etc/nginx/conf.d/loki.conf:40
+2025/10/28 01:23:10 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 01:23:10 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 01:23:10 [emerg] 1#1: host not found in upstream "loki" in /etc/nginx/conf.d/loki.conf:40
+2025/10/28 01:23:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 01:23:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 01:23:11 [emerg] 1#1: host not found in upstream "loki" in /etc/nginx/conf.d/loki.conf:40
+2025/10/28 01:23:12 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 01:23:12 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 01:23:12 [emerg] 1#1: host not found in upstream "loki" in /etc/nginx/conf.d/loki.conf:40
+2025/10/28 01:23:14 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 01:23:14 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 01:23:14 [emerg] 1#1: host not found in upstream "loki" in /etc/nginx/conf.d/loki.conf:40
+2025/10/28 01:23:18 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 01:23:18 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 01:23:18 [emerg] 1#1: host not found in upstream "loki" in /etc/nginx/conf.d/loki.conf:40
+2025/10/28 01:23:24 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 01:23:24 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 01:23:24 [emerg] 1#1: host not found in upstream "loki" in /etc/nginx/conf.d/loki.conf:40
+2025/10/28 01:23:37 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 01:23:37 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 01:23:37 [emerg] 1#1: host not found in upstream "loki" in /etc/nginx/conf.d/loki.conf:40
+2025/10/28 01:24:03 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 01:24:03 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 01:24:03 [emerg] 1#1: host not found in upstream "loki" in /etc/nginx/conf.d/loki.conf:40
+2025/10/28 01:24:55 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 01:24:55 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 01:24:55 [emerg] 1#1: host not found in upstream "loki" in /etc/nginx/conf.d/loki.conf:40
+2025/10/28 01:25:55 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 01:25:55 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 01:25:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 01:25:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 01:25:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/10/28 01:25:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/10/28 01:25:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/28 01:25:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/10/28 01:25:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/10/28 02:24:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 02:24:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 02:24:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 02:24:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 02:24:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/10/28 02:24:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/10/28 02:24:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/10/28 02:24:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/28 02:24:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/10/28 02:24:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/10/28 04:00:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 04:00:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 04:00:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 04:00:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 04:00:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/10/28 04:00:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/10/28 04:00:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/10/28 04:00:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/28 04:00:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/10/28 04:00:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/10/28 04:00:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/10/28 07:20:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 07:20:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 07:20:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 07:20:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 07:20:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/10/28 07:20:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/10/28 07:20:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/10/28 07:20:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/28 07:20:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/10/28 07:20:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/10/28 07:20:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/10/28 07:20:11 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/10/28 08:30:39 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/10/28 08:30:39 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/10/28 08:30:39 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/10/28 08:30:39 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/10/28 08:30:39 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/10/28 08:30:39 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/10/28 08:30:39 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/10/28 08:30:39 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/10/28 08:30:39 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/10/28 08:30:39 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/10/28 08:30:39 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/10/28 08:30:39 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/01 01:07:37 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:07:37 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:07:37 [emerg] 1#1: "proxy_http_version" directive is duplicate in /etc/nginx/conf.d/redis.conf:39
+2025/11/01 01:07:38 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:07:38 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:07:38 [emerg] 1#1: "proxy_http_version" directive is duplicate in /etc/nginx/conf.d/redis.conf:39
+2025/11/01 01:07:38 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:07:38 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:07:38 [emerg] 1#1: "proxy_http_version" directive is duplicate in /etc/nginx/conf.d/redis.conf:39
+2025/11/01 01:07:39 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:07:39 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:07:39 [emerg] 1#1: "proxy_http_version" directive is duplicate in /etc/nginx/conf.d/redis.conf:39
+2025/11/01 01:07:40 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:07:40 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:07:40 [emerg] 1#1: "proxy_http_version" directive is duplicate in /etc/nginx/conf.d/redis.conf:39
+2025/11/01 01:07:42 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:07:42 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:07:42 [emerg] 1#1: "proxy_http_version" directive is duplicate in /etc/nginx/conf.d/redis.conf:39
+2025/11/01 01:07:46 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:07:46 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:07:46 [emerg] 1#1: "proxy_http_version" directive is duplicate in /etc/nginx/conf.d/redis.conf:39
+2025/11/01 01:07:52 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:07:52 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:07:52 [emerg] 1#1: "proxy_http_version" directive is duplicate in /etc/nginx/conf.d/redis.conf:39
+2025/11/01 01:08:03 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:08:03 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:08:03 [emerg] 1#1: host not found in upstream "ssairen-redisinsight" in /etc/nginx/conf.d/redis.conf:40
+2025/11/01 01:08:04 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:08:04 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:08:04 [emerg] 1#1: host not found in upstream "ssairen-redisinsight" in /etc/nginx/conf.d/redis.conf:40
+2025/11/01 01:08:04 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:08:04 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:08:04 [emerg] 1#1: host not found in upstream "ssairen-redisinsight" in /etc/nginx/conf.d/redis.conf:40
+2025/11/01 01:08:05 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:08:05 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:08:05 [emerg] 1#1: host not found in upstream "ssairen-redisinsight" in /etc/nginx/conf.d/redis.conf:40
+2025/11/01 01:08:06 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:08:06 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:08:06 [emerg] 1#1: host not found in upstream "ssairen-redisinsight" in /etc/nginx/conf.d/redis.conf:40
+2025/11/01 01:08:08 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:08:08 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:08:08 [emerg] 1#1: host not found in upstream "ssairen-redisinsight" in /etc/nginx/conf.d/redis.conf:40
+2025/11/01 01:08:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:08:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:08:11 [emerg] 1#1: host not found in upstream "ssairen-redisinsight" in /etc/nginx/conf.d/redis.conf:40
+2025/11/01 01:08:18 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:08:18 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:08:18 [emerg] 1#1: host not found in upstream "ssairen-redisinsight" in /etc/nginx/conf.d/redis.conf:40
+2025/11/01 01:08:31 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:08:31 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:08:31 [emerg] 1#1: host not found in upstream "ssairen-redisinsight" in /etc/nginx/conf.d/redis.conf:40
+2025/11/01 01:08:57 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:08:57 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:08:57 [emerg] 1#1: host not found in upstream "ssairen-redisinsight" in /etc/nginx/conf.d/redis.conf:40
+2025/11/01 01:09:48 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:09:48 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:09:48 [emerg] 1#1: host not found in upstream "ssairen-redisinsight" in /etc/nginx/conf.d/redis.conf:40
+2025/11/01 01:10:49 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:10:49 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:10:49 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:11:49 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:11:49 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:11:49 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:12:49 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:12:49 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:12:49 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:13:25 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:13:25 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:13:25 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:13:26 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:13:26 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:13:26 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:13:26 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:13:26 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:13:26 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:13:27 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:13:27 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:13:27 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:13:28 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:13:28 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:13:28 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:13:30 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:13:30 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:13:30 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:13:33 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:13:33 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:13:33 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:13:40 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:13:40 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:13:40 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:13:53 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:13:53 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:13:53 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:14:19 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:14:19 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:14:19 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:15:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:15:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:15:11 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:16:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:16:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:16:11 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:17:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:17:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:17:11 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/backend.conf:43
+2025/11/01 01:17:51 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/01 01:17:51 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/01 01:17:51 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/01 01:17:51 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/01 01:17:51 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/01 01:17:51 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/01 01:17:51 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/01 01:17:51 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/01 01:17:51 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/01 01:17:51 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/01 01:17:51 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/01 01:17:51 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/01 01:17:51 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/05 02:00:21 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/05 02:00:21 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/05 02:00:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/05 02:00:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/05 02:00:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/05 02:00:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/05 02:00:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/05 02:00:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/05 02:00:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/05 02:00:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/05 02:00:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/05 02:00:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/05 02:00:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/05 02:00:21 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/06 05:31:55 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/06 05:31:55 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/06 05:31:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/06 05:31:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/06 05:31:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/06 05:31:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/06 05:31:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/06 05:31:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/06 05:31:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/06 05:31:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/06 05:31:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/06 05:31:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/06 05:31:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/06 05:31:55 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/09 23:54:40 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/09 23:54:40 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/09 23:54:40 [emerg] 1#1: host not found in upstream "loki" in /etc/nginx/conf.d/loki.conf:40
+2025/11/09 23:54:42 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/09 23:54:42 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/09 23:54:42 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/09 23:54:42 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/09 23:54:42 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/09 23:54:42 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/09 23:54:42 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/09 23:54:42 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/09 23:54:42 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/09 23:54:42 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/09 23:54:42 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/09 23:54:42 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/09 23:54:42 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/09 23:54:42 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/10 00:36:32 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/10 00:36:32 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/10 00:36:32 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/10 00:36:32 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/10 00:36:32 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/10 00:36:32 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/10 00:36:32 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/10 00:36:32 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/10 00:36:32 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/10 00:36:32 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/10 00:36:32 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/10 00:36:32 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/10 00:36:32 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/10 00:36:32 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/11 01:21:12 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 01:21:12 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 01:21:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/11 01:21:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/11 01:21:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/11 01:21:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/11 01:21:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/11 01:21:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/11 01:21:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/11 01:21:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/11 01:21:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/11 01:21:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/11 01:21:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/11 01:21:12 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/11 04:18:10 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:18:10 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:18:10 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:18:10 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:18:10 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:18:10 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:18:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:18:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:18:11 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:18:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:18:11 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:18:11 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:18:12 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:18:12 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:18:12 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:18:14 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:18:14 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:18:14 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:18:18 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:18:18 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:18:18 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:18:24 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:18:24 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:18:24 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:18:37 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:18:37 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:18:37 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:19:03 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:19:03 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:19:03 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:19:55 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:19:55 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:19:55 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:20:55 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:20:55 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:20:55 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:21:56 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:21:56 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:21:56 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:22:56 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:22:56 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:22:56 [emerg] 1#1: host not found in upstream "ai-cloud" in /etc/nginx/conf.d/ai.conf:40
+2025/11/11 04:23:56 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:23:56 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:23:56 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/11 04:23:56 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/11 04:23:56 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/11 04:23:56 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/11 04:23:56 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/11 04:23:56 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/11 04:23:56 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/11 04:23:56 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/11 04:23:56 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/11 04:23:56 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/11 04:23:56 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/11 04:23:56 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/11 04:42:51 [warn] 49#49: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:42:51 [warn] 49#49: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:42:51 [warn] 49#49: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/11 04:42:51 [warn] 49#49: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/11 04:42:51 [warn] 49#49: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/11 04:42:51 [warn] 49#49: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/11 04:42:51 [warn] 49#49: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/11 04:42:51 [warn] 49#49: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/11 04:42:51 [warn] 49#49: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/11 04:42:51 [warn] 49#49: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/11 04:42:51 [warn] 49#49: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/11 04:42:51 [warn] 49#49: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/11 04:42:51 [warn] 49#49: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/11 04:42:51 [warn] 49#49: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 55#55: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:43:01 [warn] 55#55: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:43:01 [warn] 55#55: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 55#55: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 55#55: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 55#55: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 55#55: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 55#55: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 55#55: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 55#55: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 55#55: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 55#55: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 55#55: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 55#55: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [notice] 55#55: signal process started
+2025/11/11 04:43:01 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 04:43:01 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 04:43:01 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/11 04:43:01 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/11 06:37:40 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/11 06:37:40 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/11 06:37:40 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/11 06:37:40 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/11 06:37:40 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/11 06:37:40 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/11 06:37:40 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/11 06:37:40 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/11 06:37:40 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/11 06:37:40 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/11 06:37:40 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/11 06:37:40 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/11 06:37:40 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/11 06:37:40 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/12 09:02:37 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/12 09:02:37 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/12 09:02:37 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/12 09:02:37 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/12 09:02:37 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/12 09:02:37 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/12 09:02:37 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/12 09:02:37 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/12 09:02:37 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/12 09:02:37 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/12 09:02:37 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/12 09:02:37 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/12 09:02:37 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/12 09:02:37 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/17 06:26:17 [warn] 54#54: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/17 06:26:17 [warn] 54#54: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/17 06:26:17 [emerg] 54#54: host not found in upstream "backend-blue" in /etc/nginx/conf.d/backend-be.conf:46
+2025/11/17 06:26:20 [warn] 60#60: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/17 06:26:20 [warn] 60#60: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/17 06:26:20 [emerg] 60#60: host not found in upstream "backend-blue" in /etc/nginx/conf.d/backend-be.conf:46
+2025/11/17 06:43:28 [warn] 66#66: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/17 06:43:28 [warn] 66#66: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/17 06:43:28 [emerg] 66#66: host not found in upstream "backend-green" in /etc/nginx/conf.d/backend-green.conf:46
+2025/11/17 06:45:53 [warn] 73#73: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/17 06:45:53 [warn] 73#73: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 73#73: conflicting server name "be.ssairen.site" on 0.0.0.0:80, ignored
+2025/11/17 06:45:53 [warn] 73#73: conflicting server name "be.ssairen.site" on 0.0.0.0:80, ignored
+2025/11/17 06:45:53 [warn] 73#73: conflicting server name "be.ssairen.site" on [::]:80, ignored
+2025/11/17 06:45:53 [warn] 73#73: conflicting server name "be.ssairen.site" on [::]:80, ignored
+2025/11/17 06:45:53 [warn] 73#73: conflicting server name "be.ssairen.site" on 0.0.0.0:443, ignored
+2025/11/17 06:45:53 [warn] 73#73: conflicting server name "be.ssairen.site" on 0.0.0.0:443, ignored
+2025/11/17 06:45:53 [warn] 73#73: conflicting server name "be.ssairen.site" on [::]:443, ignored
+2025/11/17 06:45:53 [warn] 73#73: conflicting server name "be.ssairen.site" on [::]:443, ignored
+2025/11/17 06:45:53 [warn] 79#79: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/17 06:45:53 [warn] 79#79: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 79#79: conflicting server name "be.ssairen.site" on 0.0.0.0:80, ignored
+2025/11/17 06:45:53 [warn] 79#79: conflicting server name "be.ssairen.site" on 0.0.0.0:80, ignored
+2025/11/17 06:45:53 [warn] 79#79: conflicting server name "be.ssairen.site" on [::]:80, ignored
+2025/11/17 06:45:53 [warn] 79#79: conflicting server name "be.ssairen.site" on [::]:80, ignored
+2025/11/17 06:45:53 [warn] 79#79: conflicting server name "be.ssairen.site" on 0.0.0.0:443, ignored
+2025/11/17 06:45:53 [warn] 79#79: conflicting server name "be.ssairen.site" on 0.0.0.0:443, ignored
+2025/11/17 06:45:53 [warn] 79#79: conflicting server name "be.ssairen.site" on [::]:443, ignored
+2025/11/17 06:45:53 [warn] 79#79: conflicting server name "be.ssairen.site" on [::]:443, ignored
+2025/11/17 06:45:53 [notice] 79#79: signal process started
+2025/11/17 06:45:53 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/17 06:45:53 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/17 06:45:53 [warn] 1#1: conflicting server name "be.ssairen.site" on 0.0.0.0:80, ignored
+2025/11/17 06:45:53 [warn] 1#1: conflicting server name "be.ssairen.site" on 0.0.0.0:80, ignored
+2025/11/17 06:45:53 [warn] 1#1: conflicting server name "be.ssairen.site" on [::]:80, ignored
+2025/11/17 06:45:53 [warn] 1#1: conflicting server name "be.ssairen.site" on [::]:80, ignored
+2025/11/17 06:45:53 [warn] 1#1: conflicting server name "be.ssairen.site" on 0.0.0.0:443, ignored
+2025/11/17 06:45:53 [warn] 1#1: conflicting server name "be.ssairen.site" on 0.0.0.0:443, ignored
+2025/11/17 06:45:53 [warn] 1#1: conflicting server name "be.ssairen.site" on [::]:443, ignored
+2025/11/17 06:45:53 [warn] 1#1: conflicting server name "be.ssairen.site" on [::]:443, ignored
+2025/11/17 06:49:21 [warn] 89#89: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/17 06:49:21 [warn] 89#89: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/17 06:49:21 [warn] 89#89: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/17 06:49:21 [warn] 89#89: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 06:49:21 [warn] 89#89: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/17 06:49:21 [warn] 89#89: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/17 06:49:21 [warn] 89#89: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/17 06:49:21 [warn] 89#89: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/17 06:49:21 [warn] 89#89: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/17 06:49:21 [warn] 89#89: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/17 06:49:21 [warn] 89#89: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/17 06:49:21 [warn] 89#89: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/17 06:49:21 [warn] 89#89: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/17 06:49:21 [warn] 89#89: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 95#95: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/17 06:49:34 [warn] 95#95: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/17 06:49:34 [warn] 95#95: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 95#95: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 95#95: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 95#95: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 95#95: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 95#95: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 95#95: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 95#95: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 95#95: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 95#95: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 95#95: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 95#95: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [notice] 95#95: signal process started
+2025/11/17 06:49:34 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/17 06:49:34 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/17 06:49:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/17 06:49:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/17 07:01:54 [emerg] 111#111: open() "/etc/nginx/conf.d/backend-be.conf" failed (2: No such file or directory) in /etc/nginx/nginx.conf:39
+2025/11/17 07:06:34 [warn] 119#119: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/17 07:06:34 [warn] 119#119: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/17 07:06:34 [warn] 119#119: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 119#119: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 119#119: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 119#119: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 119#119: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 119#119: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 119#119: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 119#119: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 119#119: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 119#119: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 119#119: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 119#119: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 120#120: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/17 07:06:34 [warn] 120#120: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/17 07:06:34 [warn] 120#120: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 120#120: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 120#120: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 120#120: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 120#120: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 120#120: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 120#120: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 120#120: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 120#120: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 120#120: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 120#120: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 120#120: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [notice] 120#120: signal process started
+2025/11/17 07:06:34 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:20
+2025/11/17 07:06:34 [warn] 1#1: the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/jenkins.conf:21
+2025/11/17 07:06:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ai.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/be.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/api.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/cadvisor.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/grafana.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/jenkins.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/loki.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio-api.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/minio.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/prometheus.ssairen.site/fullchain.pem"
+2025/11/17 07:06:34 [warn] 1#1: "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/redis.ssairen.site/fullchain.pem"
