@@ -1,0 +1,274 @@
+pipeline {
+    agent any
+
+    environment {
+        BACKEND_DIR = 'BE/SSAIREN'
+        DOCKER_COMPOSE = 'docker-compose -f docker-compose.blue-green.yml'
+        ACTIVE_COLOR_FILE = '/var/jenkins_home/active_color'
+        NGINX_CONTAINER = 'nginx-server'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '======================================'
+                echo 'Git Repository Checkout'
+                echo '======================================'
+                checkout scm
+                sh 'git branch'
+                sh 'pwd'
+                sh 'ls -la'
+            }
+        }
+
+        stage('Determine Colors') {
+            steps {
+                echo '======================================'
+                echo 'Determining Active and Target Colors'
+                echo '======================================'
+                script {
+                    def activeColor = 'blue'
+
+                    // active_color 파일이 있으면 읽기
+                    if (fileExists(env.ACTIVE_COLOR_FILE)) {
+                        activeColor = readFile(env.ACTIVE_COLOR_FILE).trim()
+                        echo "기존 활성 색상 파일 발견: ${activeColor}"
+                    } else {
+                        echo "활성 색상 파일 없음. 기본값(blue) 사용"
+                    }
+
+                    // 타깃 색상 결정 (현재와 반대)
+                    def targetColor = (activeColor == 'blue') ? 'green' : 'blue'
+
+                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                    echo "현재 활성 색상: ${activeColor}"
+                    echo "이번 배포 대상 색상: ${targetColor}"
+                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+                    env.ACTIVE_COLOR = activeColor
+                    env.TARGET_COLOR = targetColor
+                }
+            }
+        }
+
+        stage('Setup Environment') {
+            steps {
+                echo '======================================'
+                echo 'Setting up Environment Variables'
+                echo '======================================'
+                dir("${BACKEND_DIR}") {
+                    withCredentials([file(credentialsId: 'backend-env-file', variable: 'ENV_FILE')]) {
+                        sh '''
+                            rm -f .env
+                            cat $ENV_FILE > .env
+                            echo ".env 파일 생성 완료"
+                            ls -la .env
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo '======================================'
+                echo "Building Docker Image for ${TARGET_COLOR}"
+                echo '======================================'
+                dir("${BACKEND_DIR}") {
+                    sh '''
+                        ${DOCKER_COMPOSE} build --no-cache backend-${TARGET_COLOR}
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy Target Container') {
+            steps {
+                echo '======================================'
+                echo "Deploying backend-${TARGET_COLOR} Container"
+                echo '======================================'
+                dir("${BACKEND_DIR}") {
+                    sh '''
+                        echo "Stopping existing backend-${TARGET_COLOR} container if running..."
+                        ${DOCKER_COMPOSE} stop backend-${TARGET_COLOR} || true
+
+                        echo "Starting backend-${TARGET_COLOR} container..."
+                        ${DOCKER_COMPOSE} up -d backend-${TARGET_COLOR}
+
+                        echo "backend-${TARGET_COLOR} 컨테이너 시작 완료"
+                    '''
+                }
+            }
+        }
+
+        stage('Wait for Startup') {
+            steps {
+                echo '======================================'
+                echo "Waiting for backend-${TARGET_COLOR} Startup"
+                echo '======================================'
+                script {
+                    echo "애플리케이션 시작 대기 중 (30초)..."
+                    sleep(time: 30, unit: 'SECONDS')
+                }
+            }
+        }
+
+        stage('Health Check Target') {
+            steps {
+                echo '======================================'
+                echo "Health Check for backend-${TARGET_COLOR}"
+                echo '======================================'
+                script {
+                    def maxRetries = 5
+                    def retryCount = 0
+                    def healthCheckPassed = false
+
+                    while (retryCount < maxRetries && !healthCheckPassed) {
+                        try {
+                            def result = sh(
+                                script: "docker exec backend-${TARGET_COLOR} wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health/liveness",
+                                returnStatus: true
+                            )
+
+                            if (result == 0) {
+                                healthCheckPassed = true
+                                echo "✓ Health Check 성공! backend-${TARGET_COLOR} 정상 작동 중"
+                            } else {
+                                retryCount++
+                                if (retryCount < maxRetries) {
+                                    echo "Health Check 실패. 재시도 ${retryCount}/${maxRetries}..."
+                                    sleep(time: 10, unit: 'SECONDS')
+                                }
+                            }
+                        } catch (Exception e) {
+                            retryCount++
+                            if (retryCount < maxRetries) {
+                                echo "Health Check 오류: ${e.message}. 재시도 ${retryCount}/${maxRetries}..."
+                                sleep(time: 10, unit: 'SECONDS')
+                            }
+                        }
+                    }
+
+                    if (!healthCheckPassed) {
+                        error "✗ Health Check 실패! backend-${TARGET_COLOR}가 정상적으로 시작되지 않았습니다."
+                    }
+                }
+            }
+        }
+
+        stage('Switch Nginx Upstream') {
+            steps {
+                echo '======================================'
+                echo "Switching Nginx to backend-${TARGET_COLOR}"
+                echo '======================================'
+                script {
+                    sh """
+                        echo "Nginx 설정을 backend-${TARGET_COLOR}로 전환 중..."
+
+                        # Nginx 컨테이너 내에서 symlink 변경
+                        docker exec ${NGINX_CONTAINER} sh -c '\\
+                            ln -sf /etc/nginx/conf.d/backend-${TARGET_COLOR}.conf.template /etc/nginx/conf.d/backend-be.conf && \\
+                            nginx -t && \\
+                            nginx -s reload \\
+                        '
+
+                        echo "✓ Nginx 전환 완료: backend-${TARGET_COLOR} 활성화"
+                    """
+                }
+            }
+        }
+
+        stage('Update Active Color') {
+            steps {
+                echo '======================================'
+                echo 'Updating Active Color File'
+                echo '======================================'
+                script {
+                    writeFile file: env.ACTIVE_COLOR_FILE, text: "${TARGET_COLOR}\n"
+                    echo "✓ 활성 색상 업데이트 완료: ${TARGET_COLOR}"
+                    echo "다음 배포 시 ${ACTIVE_COLOR} 컨테이너로 배포됩니다."
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                echo '======================================'
+                echo 'Verifying Blue-Green Deployment'
+                echo '======================================'
+                sh """
+                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                    echo "실행 중인 Backend 컨테이너:"
+                    docker ps --filter "name=backend-" --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}"
+
+                    echo ""
+                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                    echo "현재 활성 컨테이너 (${TARGET_COLOR}) 로그 (최근 20줄):"
+                    docker logs backend-${TARGET_COLOR} --tail 20
+
+                    echo ""
+                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                    echo "네트워크 확인:"
+                    docker network inspect ssairen-net | grep -A 3 "backend-"
+                """
+            }
+        }
+
+        stage('Cleanup Old Container (Optional)') {
+            steps {
+                echo '======================================'
+                echo 'Cleaning Up Previous Active Container'
+                echo '======================================'
+                script {
+                    // 이전 활성 컨테이너 정리 (선택사항)
+                    // 필요시 주석 해제하여 사용
+                    echo "이전 컨테이너(backend-${ACTIVE_COLOR}) 정리는 수동으로 진행하세요."
+                    echo "자동 정리를 원하면 아래 주석을 해제하세요:"
+                    echo "# docker-compose -f docker-compose.blue-green.yml stop backend-${ACTIVE_COLOR}"
+
+                    // 자동 정리를 원하면 아래 주석 해제
+                    // dir("${BACKEND_DIR}") {
+                    //     sh """
+                    //         echo "Stopping backend-${ACTIVE_COLOR}..."
+                    //         ${DOCKER_COMPOSE} stop backend-${ACTIVE_COLOR} || true
+                    //     """
+                    // }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '======================================'
+            echo '🎉 Blue-Green 배포 성공!'
+            echo '======================================'
+            echo "✓ 새 버전이 backend-${TARGET_COLOR} 컨테이너에 배포되었습니다."
+            echo "✓ Nginx가 backend-${TARGET_COLOR}로 트래픽을 라우팅 중입니다."
+            echo "✓ be.ssairen.site 에서 확인 가능합니다."
+            echo ""
+            echo "이전 컨테이너 backend-${ACTIVE_COLOR}는 백업용으로 실행 중입니다."
+        }
+        failure {
+            echo '======================================'
+            echo '❌ Blue-Green 배포 실패!'
+            echo '======================================'
+            sh """
+                echo "실패한 컨테이너 로그:"
+                docker logs backend-${TARGET_COLOR} --tail 100 || echo "컨테이너 로그를 가져올 수 없습니다."
+
+                echo ""
+                echo "실행 중인 Backend 컨테이너:"
+                docker ps -a --filter "name=backend-" --format "table {{.Names}}\\t{{.Status}}"
+
+                echo ""
+                echo "기존 backend-${ACTIVE_COLOR} 컨테이너는 여전히 활성 상태입니다."
+            """
+        }
+        always {
+            echo '======================================'
+            echo 'Blue-Green Pipeline 종료'
+            echo '======================================'
+        }
+    }
+}

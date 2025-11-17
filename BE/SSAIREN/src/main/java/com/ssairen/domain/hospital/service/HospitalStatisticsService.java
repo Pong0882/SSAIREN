@@ -1,0 +1,377 @@
+package com.ssairen.domain.hospital.service;
+
+import com.ssairen.domain.hospital.dto.DisasterTypeStatisticsResponse;
+import com.ssairen.domain.hospital.dto.PatientStatisticsResponse;
+import com.ssairen.domain.hospital.dto.StatisticsRequest;
+import com.ssairen.domain.hospital.dto.TimeStatisticsResponse;
+import com.ssairen.domain.hospital.repository.HospitalRepository;
+import com.ssairen.domain.hospital.repository.HospitalSelectionRepository;
+import com.ssairen.global.exception.CustomException;
+import com.ssairen.global.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 병원 통계 서비스
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class HospitalStatisticsService {
+
+    private final HospitalRepository hospitalRepository;
+    private final HospitalSelectionRepository hospitalSelectionRepository;
+
+    // 요일 매핑 (PostgreSQL DOW: 0=일요일, 1=월요일, ..., 6=토요일)
+    private static final Map<Integer, String> DAY_OF_WEEK_MAP = Map.of(
+            0, "SUNDAY",
+            1, "MONDAY",
+            2, "TUESDAY",
+            3, "WEDNESDAY",
+            4, "THURSDAY",
+            5, "FRIDAY",
+            6, "SATURDAY"
+    );
+
+    /**
+     * 시간별 통계 조회
+     *
+     * @param request 통계 조회 요청 (startDate, endDate)
+     * @param hospitalId 병원 ID
+     * @return 요일별, 시간대별 통계
+     */
+    public TimeStatisticsResponse getTimeStatistics(StatisticsRequest request, Integer hospitalId) {
+        log.info("📊 Fetching time statistics for hospital ID: {}, period: {} ~ {}",
+                hospitalId, request.startDate(), request.endDate());
+
+        // 1. 병원 존재 확인
+        if (!hospitalRepository.existsById(hospitalId)) {
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND);
+        }
+
+        // 2. LocalDate → LocalDateTime 변환
+        LocalDateTime startDateTime = request.startDate().atStartOfDay();
+        LocalDateTime endDateTime = request.endDate().plusDays(1).atStartOfDay(); // 종료일 23:59:59까지 포함
+
+        // 3. 요일별 통계 조회
+        Map<String, Long> byDayOfWeek = getDayOfWeekStatistics(hospitalId, startDateTime, endDateTime);
+
+        // 4. 시간대별 통계 조회
+        Map<String, Long> byHour = getHourStatistics(hospitalId, startDateTime, endDateTime);
+
+        // 5. 총 수용 건수
+        long totalCount = hospitalSelectionRepository.countByHospitalIdAndPeriod(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        log.info("✅ Time statistics calculated - Total: {}, DayOfWeek: {}, Hour: {}",
+                totalCount, byDayOfWeek.size(), byHour.size());
+
+        return new TimeStatisticsResponse(
+                byDayOfWeek,
+                byHour,
+                request.startDate(),
+                request.endDate(),
+                totalCount
+        );
+    }
+
+    /**
+     * 요일별 통계 계산
+     */
+    private Map<String, Long> getDayOfWeekStatistics(
+            Integer hospitalId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+        List<Object[]> results = hospitalSelectionRepository.countByDayOfWeek(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        Map<String, Long> statistics = new HashMap<>();
+
+        // 모든 요일을 0으로 초기화
+        for (String dayName : DAY_OF_WEEK_MAP.values()) {
+            statistics.put(dayName, 0L);
+        }
+
+        // 쿼리 결과를 Map으로 변환
+        for (Object[] result : results) {
+            // PostgreSQL의 EXTRACT(DOW)는 Double 타입으로 반환됨
+            int dayOfWeek = ((Number) result[0]).intValue();
+            Long count = ((Number) result[1]).longValue();
+
+            String dayName = DAY_OF_WEEK_MAP.get(dayOfWeek);
+            if (dayName != null) {
+                statistics.put(dayName, count);
+            }
+        }
+
+        return statistics;
+    }
+
+    /**
+     * 시간대별 통계 계산
+     */
+    private Map<String, Long> getHourStatistics(
+            Integer hospitalId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+        List<Object[]> results = hospitalSelectionRepository.countByHour(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        Map<String, Long> statistics = new HashMap<>();
+
+        // 모든 시간대를 0으로 초기화 (0~23시)
+        for (int hour = 0; hour < 24; hour++) {
+            statistics.put(String.valueOf(hour), 0L);
+        }
+
+        // 쿼리 결과를 Map으로 변환
+        for (Object[] result : results) {
+            int hour = ((Number) result[0]).intValue();
+            Long count = ((Number) result[1]).longValue();
+
+            statistics.put(String.valueOf(hour), count);
+        }
+
+        return statistics;
+    }
+
+    /**
+     * 환자 통계 조회
+     *
+     * @param request 통계 조회 요청 (startDate, endDate)
+     * @param hospitalId 병원 ID
+     * @return 성별, 연령대, 의식 상태별 통계
+     */
+    public PatientStatisticsResponse getPatientStatistics(StatisticsRequest request, Integer hospitalId) {
+        log.info("📊 Fetching patient statistics for hospital ID: {}, period: {} ~ {}",
+                hospitalId, request.startDate(), request.endDate());
+
+        // 1. 병원 존재 확인
+        if (!hospitalRepository.existsById(hospitalId)) {
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND);
+        }
+
+        // 2. LocalDate → LocalDateTime 변환
+        LocalDateTime startDateTime = request.startDate().atStartOfDay();
+        LocalDateTime endDateTime = request.endDate().plusDays(1).atStartOfDay();
+
+        // 3. 성별 통계 조회
+        Map<String, Long> byGender = getGenderStatistics(hospitalId, startDateTime, endDateTime);
+
+        // 4. 연령대 통계 조회
+        Map<String, Long> byAgeGroup = getAgeGroupStatistics(hospitalId, startDateTime, endDateTime);
+
+        // 5. 의식 상태 통계 조회
+        Map<String, Long> byMentalStatus = getMentalStatusStatistics(hospitalId, startDateTime, endDateTime);
+
+        // 6. 총 수용 건수
+        long totalCount = hospitalSelectionRepository.countByHospitalIdAndPeriod(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        log.info("✅ Patient statistics calculated - Total: {}, Gender: {}, AgeGroup: {}, MentalStatus: {}",
+                totalCount, byGender.size(), byAgeGroup.size(), byMentalStatus.size());
+
+        return new PatientStatisticsResponse(
+                byGender,
+                byAgeGroup,
+                byMentalStatus,
+                request.startDate(),
+                request.endDate(),
+                totalCount
+        );
+    }
+
+    /**
+     * 성별 통계 계산
+     */
+    private Map<String, Long> getGenderStatistics(
+            Integer hospitalId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+        List<Object[]> results = hospitalSelectionRepository.countByGender(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        Map<String, Long> statistics = new HashMap<>();
+
+        // M, F 초기화
+        statistics.put("M", 0L);
+        statistics.put("F", 0L);
+
+        // 쿼리 결과를 Map으로 변환
+        for (Object[] result : results) {
+            String gender = (String) result[0];
+            Long count = ((Number) result[1]).longValue();
+            statistics.put(gender, count);
+        }
+
+        return statistics;
+    }
+
+    /**
+     * 연령대 통계 계산
+     */
+    private Map<String, Long> getAgeGroupStatistics(
+            Integer hospitalId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+        List<Object[]> results = hospitalSelectionRepository.countByAgeGroup(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        Map<String, Long> statistics = new HashMap<>();
+
+        // 모든 연령대를 0으로 초기화
+        String[] ageGroups = {"0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"};
+        for (String ageGroup : ageGroups) {
+            statistics.put(ageGroup, 0L);
+        }
+
+        // 쿼리 결과를 Map으로 변환
+        for (Object[] result : results) {
+            String ageGroup = (String) result[0];
+            Long count = ((Number) result[1]).longValue();
+            statistics.put(ageGroup, count);
+        }
+
+        return statistics;
+    }
+
+    /**
+     * 의식 상태 통계 계산
+     */
+    private Map<String, Long> getMentalStatusStatistics(
+            Integer hospitalId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+        List<Object[]> results = hospitalSelectionRepository.countByMentalStatus(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        Map<String, Long> statistics = new HashMap<>();
+
+        // 모든 의식 상태를 0으로 초기화
+        statistics.put("ALERT", 0L);
+        statistics.put("VERBAL", 0L);
+        statistics.put("PAIN", 0L);
+        statistics.put("UNRESPONSIVE", 0L);
+
+        // 쿼리 결과를 Map으로 변환
+        for (Object[] result : results) {
+            String mentalStatus = (String) result[0];
+            Long count = ((Number) result[1]).longValue();
+            statistics.put(mentalStatus, count);
+        }
+
+        return statistics;
+    }
+
+    /**
+     * 재난 유형별 통계 조회
+     *
+     * @param request 통계 조회 요청 (startDate, endDate)
+     * @param hospitalId 병원 ID
+     * @return 재난 유형별, 재난 세부 유형별 통계
+     */
+    public DisasterTypeStatisticsResponse getDisasterTypeStatistics(StatisticsRequest request, Integer hospitalId) {
+        log.info("📊 Fetching disaster type statistics for hospital ID: {}, period: {} ~ {}",
+                hospitalId, request.startDate(), request.endDate());
+
+        // 1. 병원 존재 확인
+        if (!hospitalRepository.existsById(hospitalId)) {
+            throw new CustomException(ErrorCode.HOSPITAL_NOT_FOUND);
+        }
+
+        // 2. LocalDate → LocalDateTime 변환
+        LocalDateTime startDateTime = request.startDate().atStartOfDay();
+        LocalDateTime endDateTime = request.endDate().plusDays(1).atStartOfDay();
+
+        // 3. 재난 유형별 통계 조회
+        Map<String, Long> byDisasterType = getDisasterTypeMap(hospitalId, startDateTime, endDateTime);
+
+        // 4. 재난 세부 유형별 통계 조회
+        Map<String, Long> byDisasterSubtype = getDisasterSubtypeMap(hospitalId, startDateTime, endDateTime);
+
+        // 5. 총 수용 건수
+        long totalCount = hospitalSelectionRepository.countByHospitalIdAndPeriod(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        log.info("✅ Disaster type statistics calculated - Total: {}, Types: {}, Subtypes: {}",
+                totalCount, byDisasterType.size(), byDisasterSubtype.size());
+
+        return new DisasterTypeStatisticsResponse(
+                byDisasterType,
+                byDisasterSubtype,
+                request.startDate(),
+                request.endDate(),
+                totalCount
+        );
+    }
+
+    /**
+     * 재난 유형별 통계 계산
+     */
+    private Map<String, Long> getDisasterTypeMap(
+            Integer hospitalId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+        List<Object[]> results = hospitalSelectionRepository.countByDisasterType(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        Map<String, Long> statistics = new HashMap<>();
+
+        // 쿼리 결과를 Map으로 변환 (NULL 체크)
+        for (Object[] result : results) {
+            String disasterType = result[0] != null ? (String) result[0] : "미분류";
+            Long count = ((Number) result[1]).longValue();
+            statistics.put(disasterType, count);
+        }
+
+        return statistics;
+    }
+
+    /**
+     * 재난 세부 유형별 통계 계산
+     */
+    private Map<String, Long> getDisasterSubtypeMap(
+            Integer hospitalId,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+        List<Object[]> results = hospitalSelectionRepository.countByDisasterSubtype(
+                hospitalId, startDateTime, endDateTime
+        );
+
+        Map<String, Long> statistics = new HashMap<>();
+
+        // 쿼리 결과를 Map으로 변환 (NULL 체크)
+        for (Object[] result : results) {
+            String disasterSubtype = result[0] != null ? (String) result[0] : "미분류";
+            Long count = ((Number) result[1]).longValue();
+            statistics.put(disasterSubtype, count);
+        }
+
+        return statistics;
+    }
+}

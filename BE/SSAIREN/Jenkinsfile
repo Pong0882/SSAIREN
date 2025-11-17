@@ -1,0 +1,204 @@
+pipeline {
+    agent any
+
+    environment {
+        BACKEND_DIR = 'BE/SSAIREN'
+        DOCKER_COMPOSE = 'docker-compose'
+        CONTAINER_NAME = 'backend'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '======================================'
+                echo 'Git Repository Checkout'
+                echo '======================================'
+                checkout scm
+                sh 'git branch'
+                sh 'pwd'
+                sh 'ls -la'
+            }
+        }
+
+        stage('Setup Environment') {
+            steps {
+                echo '======================================'
+                echo 'Setting up Environment Variables'
+                echo '======================================'
+                dir("${BACKEND_DIR}") {
+                    withCredentials([file(credentialsId: 'backend-env-file', variable: 'ENV_FILE')]) {
+                        sh '''
+                            rm -f .env
+                            cat $ENV_FILE > .env
+                            echo ".env 파일 생성 완료"
+                            ls -la .env
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Environment Check') {
+            steps {
+                echo '======================================'
+                echo 'Checking Build Environment'
+                echo '======================================'
+                dir("${BACKEND_DIR}") {
+                    sh '''
+                        echo "현재 디렉토리: $(pwd)"
+                        echo "파일 목록:"
+                        ls -la
+                        echo "Docker 버전:"
+                        docker --version
+                        echo "Docker Compose 버전:"
+                        docker-compose --version
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo '======================================'
+                echo 'Building Docker Image'
+                echo '======================================'
+                dir("${BACKEND_DIR}") {
+                    sh '''
+                        ${DOCKER_COMPOSE} build --no-cache
+                    '''
+                }
+            }
+        }
+
+        stage('Stop Old Container') {
+            steps {
+                echo '======================================'
+                echo 'Stopping Old Containers'
+                echo '======================================'
+                dir("${BACKEND_DIR}") {
+                    sh '''
+                        ${DOCKER_COMPOSE} down || true
+                        echo "기존 컨테이너 중지 완료"
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy New Container') {
+            steps {
+                echo '======================================'
+                echo 'Deploying New Containers'
+                echo '======================================'
+                dir("${BACKEND_DIR}") {
+                    sh '''
+                        ${DOCKER_COMPOSE} up -d
+                        echo "새 컨테이너 시작 완료"
+                    '''
+                }
+            }
+        }
+
+        stage('Wait for Startup') {
+            steps {
+                echo '======================================'
+                echo 'Waiting for Application Startup'
+                echo '======================================'
+                script {
+                    echo "애플리케이션 시작 대기 중 (30초)..."
+                    sleep(time: 30, unit: 'SECONDS')
+                }
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                echo '======================================'
+                echo 'Running Health Check'
+                echo '======================================'
+                script {
+                    def maxRetries = 5
+                    def retryCount = 0
+                    def healthCheckPassed = false
+
+                    while (retryCount < maxRetries && !healthCheckPassed) {
+                        try {
+                            def result = sh(
+                                script: 'docker exec ${CONTAINER_NAME} wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health/liveness',
+                                returnStatus: true
+                            )
+
+                            if (result == 0) {
+                                healthCheckPassed = true
+                                echo "✓ Health Check 성공!"
+                            } else {
+                                retryCount++
+                                if (retryCount < maxRetries) {
+                                    echo "Health Check 실패. 재시도 ${retryCount}/${maxRetries}..."
+                                    sleep(time: 10, unit: 'SECONDS')
+                                }
+                            }
+                        } catch (Exception e) {
+                            retryCount++
+                            if (retryCount < maxRetries) {
+                                echo "Health Check 오류. 재시도 ${retryCount}/${maxRetries}..."
+                                sleep(time: 10, unit: 'SECONDS')
+                            }
+                        }
+                    }
+
+                    if (!healthCheckPassed) {
+                        error "✗ Health Check 실패! Backend가 정상적으로 시작되지 않았습니다."
+                    }
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                echo '======================================'
+                echo 'Verifying Deployment'
+                echo '======================================'
+                sh '''
+                    echo "실행 중인 컨테이너:"
+                    docker ps | grep backend
+
+                    echo ""
+                    echo "컨테이너 로그 (최근 20줄):"
+                    docker logs ${CONTAINER_NAME} --tail 20
+
+                    echo ""
+                    echo "네트워크 확인:"
+                    docker network inspect ssairen-net | grep -A 5 backend || echo "ssairen-net 네트워크에 backend 없음"
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '======================================'
+            echo '🎉 CI/CD 파이프라인 성공!'
+            echo '======================================'
+            echo 'Backend가 성공적으로 배포되었습니다.'
+            echo 'URL: https://be.ssairen.site'
+        }
+        failure {
+            echo '======================================'
+            echo '❌ CI/CD 파이프라인 실패!'
+            echo '======================================'
+            sh '''
+                echo "Backend 컨테이너 로그:"
+                docker logs ${CONTAINER_NAME} --tail 100 || echo "컨테이너 로그를 가져올 수 없습니다."
+
+                echo ""
+                echo "실행 중인 컨테이너:"
+                docker ps -a | grep backend || echo "backend 컨테이너를 찾을 수 없습니다."
+            '''
+        }
+        always {
+            echo '======================================'
+            echo 'Pipeline 종료'
+            echo '======================================'
+        }
+    }
+}

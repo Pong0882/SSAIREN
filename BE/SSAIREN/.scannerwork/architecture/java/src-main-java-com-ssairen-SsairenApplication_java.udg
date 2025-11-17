@@ -1,0 +1,93 @@
+
+1.0!ssafy-ai-codereview1_a205-ssairenJavaFrontend"1760923390720*java2.BÅ
+6
+1src/main/java/com/ssairen/SsairenApplication.java2
+	
+type3
+	
+MAIN4
+
+package6
+
+com.ssairen7
+#
+com.ssairen.SsairenApplication9
+
+class10
+
+access11
+
+public12
+
+simple-name13
+
+SsairenApplication14
+
+SpringBootApplication16
+
+unknown17
+
+annotated by18
+3
+-Recovered#typeBindingLSpringBootApplication;020
+
+
+uses21
+?
+9com.ssairen.SsairenApplication#main([Ljava/lang/String;)V23
+
+method24
+
+
+main25J
+
+1
+12
+
+
+3
+4Z
+
+5	
+576j¨
+
+15
+151617
+;
+86
+8910 *
+1 ( :5B
+
+
+11
+12
+
+
+13
+14
+
+19
+192017
+A
+22;
+222324 *
+1	 	(28:5B
+
+
+11
+12
+
+
+13
+25rN
+
+81518*
+1 (
+
+81921*
+1 (
+
+22821*
+1
+ 
+(1
