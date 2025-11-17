@@ -4,7 +4,9 @@ import com.ssairen.domain.emergency.dto.DispatchCreateRequest;
 import com.ssairen.domain.emergency.dto.DispatchCreateResponse;
 import com.ssairen.domain.emergency.repository.DispatchRepository;
 import com.ssairen.domain.firestation.entity.FireState;
+import com.ssairen.domain.firestation.entity.Paramedic;
 import com.ssairen.domain.firestation.repository.FireStateRepository;
+import com.ssairen.domain.firestation.repository.ParamedicRepository;
 import com.ssairen.global.exception.CustomException;
 import com.ssairen.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +33,9 @@ class DispatchServiceImplTest {
     @Autowired
     private FireStateRepository fireStateRepository;
 
+    @Autowired
+    private ParamedicRepository paramedicRepository;
+
     @Test
     @DisplayName("출동 배정 생성 - 성공")
     void createDispatch_success() {
@@ -38,8 +43,12 @@ class DispatchServiceImplTest {
         FireState fireState = fireStateRepository.findAll().stream().findFirst()
                 .orElseThrow(() -> new IllegalStateException("테스트용 소방서 데이터가 없습니다."));
 
+        Paramedic paramedic = paramedicRepository.findAll().stream().findFirst()
+                .orElseThrow(() -> new IllegalStateException("테스트용 구급대원 데이터가 없습니다."));
+
         DispatchCreateRequest request = new DispatchCreateRequest(
                 fireState.getId(),
+                paramedic.getId(),
                 "TEST-2025-001",
                 "화재",
                 "건물화재",
@@ -67,8 +76,12 @@ class DispatchServiceImplTest {
     @DisplayName("출동 배정 생성 - 소방서 없음 실패")
     void createDispatch_fireStateNotFound() {
         // given
+        Paramedic paramedic = paramedicRepository.findAll().stream().findFirst()
+                .orElseThrow(() -> new IllegalStateException("테스트용 구급대원 데이터가 없습니다."));
+
         DispatchCreateRequest request = new DispatchCreateRequest(
                 99999,  // 존재하지 않는 ID
+                paramedic.getId(),
                 "TEST-2025-002",
                 "화재",
                 "건물화재",
