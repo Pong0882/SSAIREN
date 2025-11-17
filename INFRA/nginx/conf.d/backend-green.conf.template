@@ -1,0 +1,54 @@
+# Blue-Green 배포 - Green 컨테이너 설정
+# be.ssairen.site 전용 (블루-그린 배포 적용)
+
+# HTTP (80 → 443 리다이렉트)
+server {
+    listen 80;
+    listen [::]:80;
+    server_name be.ssairen.site;
+
+    # Let's Encrypt 인증 경로
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # 나머지 모든 요청은 HTTPS로 리다이렉트
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# HTTPS (443) - Green 컨테이너로 프록시
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name be.ssairen.site;
+
+    # SSL 인증서 설정
+    ssl_certificate /etc/letsencrypt/live/be.ssairen.site/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/be.ssairen.site/privkey.pem;
+
+    # SSL 공통 설정 포함
+    include /etc/nginx/includes/ssl-params.conf;
+
+    # 로그 설정
+    access_log /var/log/nginx/backend-green-access.log main;
+    error_log /var/log/nginx/backend-green-error.log warn;
+
+    # 프록시 설정 포함
+    include /etc/nginx/includes/proxy-params.conf;
+
+    # API 요청 크기 제한
+    client_max_body_size 500M;
+
+    # Green 컨테이너로 프록시
+    location / {
+        proxy_pass http://backend-green:8080;
+    }
+
+    # 헬스체크 엔드포인트
+    location /health {
+        proxy_pass http://backend-green:8080/health;
+        access_log off;
+    }
+}
