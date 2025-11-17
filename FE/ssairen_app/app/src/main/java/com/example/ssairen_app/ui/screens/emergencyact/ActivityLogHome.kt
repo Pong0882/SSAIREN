@@ -140,23 +140,13 @@ fun ActivityLogHome(
         Log.d("ActivityLogHome", "✅ 백엔드 저장 요청 완료")
     }
 
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState) { data ->
-                Snackbar(
-                    snackbarData = data,
-                    containerColor = Color(0xFF2a2a2a),
-                    contentColor = Color.White
-                )
-            }
-        }
-    ) { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize()) {  // ⭐ Scaffold → Box
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF1a1a1a))
                 .statusBarsPadding()
-                .padding(paddingValues)
+            // .padding(paddingValues) 삭제  // ⭐ 이 줄 삭제
         ) {
             // 1. 상단 타이틀 + 뒤로가기
             Row(
@@ -428,6 +418,18 @@ fun ActivityLogHome(
                         }
                     }
                 }
+            )
+        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 50.dp)
+        ) { data ->
+            Snackbar(
+                snackbarData = data,
+                containerColor = Color(0xFF2a2a2a),
+                contentColor = Color.White
             )
         }
     }

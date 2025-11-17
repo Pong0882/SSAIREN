@@ -764,7 +764,7 @@ fun PatientEva(
                             leftTime = it
                             saveData()
                         },
-                        placeholder = "시각(p)",
+                        placeholder = "시각",
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -774,7 +774,7 @@ fun PatientEva(
                             leftBloodPressure = it
                             saveData()
                         },
-                        placeholder = "혈압(p)",
+                        placeholder = "혈압",
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -784,7 +784,7 @@ fun PatientEva(
                             leftPulse = it
                             saveData()
                         },
-                        placeholder = "맥박(p)",
+                        placeholder = "맥박",
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -794,7 +794,7 @@ fun PatientEva(
                             leftRespiratoryRate = it
                             saveData()
                         },
-                        placeholder = "호흡(p)",
+                        placeholder = "호흡",
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -804,7 +804,7 @@ fun PatientEva(
                             leftTemperature = it
                             saveData()
                         },
-                        placeholder = "체온(p)",
+                        placeholder = "체온",
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -814,7 +814,7 @@ fun PatientEva(
                             leftOxygenSaturation = it
                             saveData()
                         },
-                        placeholder = "SpO2(p)",
+                        placeholder = "SpO2",
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -849,7 +849,7 @@ fun PatientEva(
                             rightTime = it
                             saveData()
                         },
-                        placeholder = "시각(p)",
+                        placeholder = "시각",
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -859,7 +859,7 @@ fun PatientEva(
                             rightBloodPressure = it
                             saveData()
                         },
-                        placeholder = "혈압(p)",
+                        placeholder = "혈압",
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -869,7 +869,7 @@ fun PatientEva(
                             rightPulse = it
                             saveData()
                         },
-                        placeholder = "맥박(p)",
+                        placeholder = "맥박",
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -879,7 +879,7 @@ fun PatientEva(
                             rightRespiratoryRate = it
                             saveData()
                         },
-                        placeholder = "호흡(p)",
+                        placeholder = "호흡",
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -889,7 +889,7 @@ fun PatientEva(
                             rightTemperature = it
                             saveData()
                         },
-                        placeholder = "체온(p)",
+                        placeholder = "체온",
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
@@ -899,7 +899,7 @@ fun PatientEva(
                             rightOxygenSaturation = it
                             saveData()
                         },
-                        placeholder = "SpO2(p)",
+                        placeholder = "SpO2",
                         modifier = Modifier.weight(1f),
                         enabled = !isReadOnly
                     )
