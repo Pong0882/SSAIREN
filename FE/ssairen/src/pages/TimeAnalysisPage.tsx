@@ -52,12 +52,25 @@ export default function TimeAnalysisPage() {
   const fmt = (d: Date) => d.toISOString().split("T")[0];
 
   const calcPresetRange = (key: Exclude<RangeKey, "custom">) => {
-    const end = new Date(); // 오늘
-    const start = new Date(end);
-    if (key === "week") start.setDate(end.getDate() - 7);
-    else if (key === "month") start.setMonth(end.getMonth() - 1);
-    else start.setFullYear(end.getFullYear() - 1); // all
-    // 시간부 정규화(선택 사항)
+    const today = new Date();
+    let start: Date;
+    let end: Date;
+
+    if (key === "week") {
+      end = new Date(today);
+      start = new Date(today);
+      start.setDate(today.getDate() - 7);
+    } else if (key === "month") {
+      end = new Date(today);
+      start = new Date(today);
+      start.setMonth(today.getMonth() - 1);
+    } else {
+      // all: 1년 전 ~ 현재 달 말일
+      start = new Date(today);
+      start.setFullYear(today.getFullYear() - 1);
+      end = new Date(today.getFullYear(), today.getMonth() + 1, 0); // 현재 달 말일
+    }
+
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
     return { start, end };
