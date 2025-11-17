@@ -34,6 +34,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.NavType  // ✅ 추가 확인
 import com.example.ssairen_app.ui.context.DispatchProvider
 import com.example.ssairen_app.ui.context.rememberDispatchState
 import com.example.ssairen_app.ui.screens.report.ReportHome
@@ -555,7 +556,7 @@ fun AppNavigation(
 
         composable("activity_main") {
             ActivityMain(
-                onNavigateToReportHome = {  // ✅ 이 부분 추가!
+                onNavigateToReportHome = {
                     navController.navigate("report_home") {
                         popUpTo("activity_main") { inclusive = true }
                     }
@@ -595,6 +596,9 @@ fun AppNavigation(
                 onNavigateToReportDetail = {
                     val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
                     navController.navigate("activity_log/$currentReportId/7")
+                },
+                onNavigateToSummation = { reportId ->  // ✅ 추가!
+                    navController.navigate("summation/$reportId")
                 }
             )
         }
@@ -624,24 +628,35 @@ fun AppNavigation(
                 },
                 onNavigateToReportHome = { navController.navigate("report_Home") },
                 onNavigateToSummation = {
-                    navController.navigate("summation")
+                    navController.navigate("summation/$emergencyReportId")  // ✅ 수정 1: ID 전달
                 },
                 reportViewModel = reportViewModel
             )
         }
 
-        composable("summation") {
+        // ✅ 수정 2: summation 라우트 전체 수정
+        composable(
+            route = "summation/{emergencyReportId}",  // ✅ 파라미터 추가
+            arguments = listOf(
+                navArgument("emergencyReportId") {
+                    type = NavType.IntType
+                }
+            )
+        ) { backStackEntry ->
+            val emergencyReportId = backStackEntry.arguments?.getInt("emergencyReportId") ?: 0
+
             Summation(
+                emergencyReportId = emergencyReportId,  // ✅ ID 전달
                 onNavigateBack = {
                     navController.popBackStack()
                 },
                 onNavigateToHome = {
                     navController.navigate("activity_main") {
-                        popUpTo("summation") { inclusive = true }
+                        popUpTo("summation/{emergencyReportId}") { inclusive = true }
                     }
                 },
-                onNavigateToActivityLog = {
-                    navController.navigate("activity_log/0/0")
+                onNavigateToActivityLog = { reportId ->  // ✅ 수정 3: 파라미터 받기
+                    navController.navigate("activity_log/$reportId/0")  // ✅ 실제 ID 사용
                 }
             )
         }
