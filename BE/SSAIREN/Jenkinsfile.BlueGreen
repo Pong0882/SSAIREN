@@ -167,7 +167,7 @@ pipeline {
 
                         # Nginx 컨테이너 내에서 symlink 변경
                         docker exec ${NGINX_CONTAINER} sh -c '\\
-                            ln -sf /etc/nginx/conf.d/backend-${TARGET_COLOR}.conf /etc/nginx/conf.d/backend-be.conf && \\
+                            ln -sf /etc/nginx/conf.d/backend-${TARGET_COLOR}.conf.template /etc/nginx/conf.d/backend-be.conf && \\
                             nginx -t && \\
                             nginx -s reload \\
                         '
