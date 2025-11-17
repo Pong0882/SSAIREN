@@ -71,6 +71,54 @@ public class DispatchServiceImpl implements DispatchService {
     }
 
     /**
+     * DispatchCreateRequest를 Map<String, String>으로 변환
+     * FCM 및 WebSocket 전송에 사용되는 공통 데이터 변환 로직
+     *
+     * @param dispatch 출동 지령 엔티티
+     * @param request  출동 지령 생성 요청 DTO
+     * @return 변환된 데이터 맵
+     */
+    private Map<String, String> createDispatchDataMap(Dispatch dispatch, DispatchCreateRequest request) {
+        Map<String, String> data = new HashMap<>();
+        data.put("type", "DISPATCH");
+        data.put("dispatchId", String.valueOf(dispatch.getId()));
+        data.put("fireStateId", String.valueOf(request.fireStateId()));
+        data.put("paramedicId", String.valueOf(request.paramedicId()));
+
+        if (request.disasterNumber() != null) {
+            data.put("disasterNumber", request.disasterNumber());
+        }
+        data.put("disasterType", request.disasterType());
+        if (request.disasterSubtype() != null) {
+            data.put("disasterSubtype", request.disasterSubtype());
+        }
+        if (request.reporterName() != null) {
+            data.put("reporterName", request.reporterName());
+        }
+        if (request.reporterPhone() != null) {
+            data.put("reporterPhone", request.reporterPhone());
+        }
+        data.put("locationAddress", request.locationAddress());
+        if (request.incidentDescription() != null) {
+            data.put("incidentDescription", request.incidentDescription());
+        }
+        if (request.dispatchLevel() != null) {
+            data.put("dispatchLevel", request.dispatchLevel());
+        }
+        if (request.dispatchOrder() != null) {
+            data.put("dispatchOrder", String.valueOf(request.dispatchOrder()));
+        }
+        if (request.dispatchStation() != null) {
+            data.put("dispatchStation", request.dispatchStation());
+        }
+        if (request.date() != null) {
+            data.put("date", request.date().toString());
+        }
+
+        return data;
+    }
+
+    /**
      * 출동 지령이 생성되면 지정한 구급대원 1명에게만 푸시 알림 전송
      *
      * @param paramedicId 대상 구급대원 ID
@@ -93,41 +141,7 @@ public class DispatchServiceImpl implements DispatchService {
             }
 
             // FCM data에 출동지령의 모든 정보 포함
-            Map<String, String> data = new HashMap<>();
-            data.put("type", "DISPATCH");
-            data.put("dispatchId", String.valueOf(dispatch.getId()));
-            data.put("fireStateId", String.valueOf(request.fireStateId()));
-            data.put("paramedicId", String.valueOf(request.paramedicId()));
-
-            if (request.disasterNumber() != null) {
-                data.put("disasterNumber", request.disasterNumber());
-            }
-            data.put("disasterType", request.disasterType());
-            if (request.disasterSubtype() != null) {
-                data.put("disasterSubtype", request.disasterSubtype());
-            }
-            if (request.reporterName() != null) {
-                data.put("reporterName", request.reporterName());
-            }
-            if (request.reporterPhone() != null) {
-                data.put("reporterPhone", request.reporterPhone());
-            }
-            data.put("locationAddress", request.locationAddress());
-            if (request.incidentDescription() != null) {
-                data.put("incidentDescription", request.incidentDescription());
-            }
-            if (request.dispatchLevel() != null) {
-                data.put("dispatchLevel", request.dispatchLevel());
-            }
-            if (request.dispatchOrder() != null) {
-                data.put("dispatchOrder", String.valueOf(request.dispatchOrder()));
-            }
-            if (request.dispatchStation() != null) {
-                data.put("dispatchStation", request.dispatchStation());
-            }
-            if (request.date() != null) {
-                data.put("date", request.date().toString());
-            }
+            Map<String, String> data = createDispatchDataMap(dispatch, request);
 
             fcmService.sendNotification(
                     paramedic.getId(),
@@ -161,41 +175,7 @@ public class DispatchServiceImpl implements DispatchService {
             String destination = "/topic/paramedic." + paramedicId;
 
             // WebSocket data에 출동지령의 모든 정보 포함 (FCM과 동일한 형식)
-            Map<String, String> data = new HashMap<>();
-            data.put("type", "DISPATCH");
-            data.put("dispatchId", String.valueOf(dispatch.getId()));
-            data.put("fireStateId", String.valueOf(request.fireStateId()));
-            data.put("paramedicId", String.valueOf(request.paramedicId()));
-
-            if (request.disasterNumber() != null) {
-                data.put("disasterNumber", request.disasterNumber());
-            }
-            data.put("disasterType", request.disasterType());
-            if (request.disasterSubtype() != null) {
-                data.put("disasterSubtype", request.disasterSubtype());
-            }
-            if (request.reporterName() != null) {
-                data.put("reporterName", request.reporterName());
-            }
-            if (request.reporterPhone() != null) {
-                data.put("reporterPhone", request.reporterPhone());
-            }
-            data.put("locationAddress", request.locationAddress());
-            if (request.incidentDescription() != null) {
-                data.put("incidentDescription", request.incidentDescription());
-            }
-            if (request.dispatchLevel() != null) {
-                data.put("dispatchLevel", request.dispatchLevel());
-            }
-            if (request.dispatchOrder() != null) {
-                data.put("dispatchOrder", String.valueOf(request.dispatchOrder()));
-            }
-            if (request.dispatchStation() != null) {
-                data.put("dispatchStation", request.dispatchStation());
-            }
-            if (request.date() != null) {
-                data.put("date", request.date().toString());
-            }
+            Map<String, String> data = createDispatchDataMap(dispatch, request);
 
             messagingTemplate.convertAndSend(destination, data);
 
