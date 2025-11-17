@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ssairen-frontend
+    restart: unless-stopped
+    networks:
+      - ssairen-net
+
+networks:
+  ssairen-net:
+    external: true
