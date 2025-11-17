@@ -77,15 +77,12 @@ def get_information_extraction_prompt() -> str:
 3. 숫자는 정확한 값만 추출
 4. 환자가 호소하는 증상, 응급구조사가 관찰/질문한 내용 모두 포함
 
-**추출 카테고리** (8개):
+**추출 카테고리** (5개):
 1. **patientInfo**: 환자 기본 정보 (이름, 성별, 나이, 연락처, 보호자 등)
 2. **dispatch**: 구급 출동 정보 (시간, 장소, 증상 등)
 3. **incidentType**: 환자 발생 유형 (병력, 사고 유형 등)
 4. **patientAssessment**: 환자 평가 (의식, 동공, 활력징후 등)
 5. **emergencyTreatment**: 응급처치 (기도확보, 산소공급, CPR, AED 등)
-6. **medicalGuidance**: 의료지도 (연결 여부, 요청 방법, 지시 내용 등)
-7. **patientTransport**: 환자 이송 (이송 병원, 재이송 사유, 인수자 등)
-8. **detailReport**: 세부상황표 (의사/대원 정보, 장애 요인 등)
 
 **주요 선택지 매핑** (대화 내용을 아래 선택지로 매핑):
 
@@ -149,7 +146,7 @@ def get_information_extraction_prompt() -> str:
 [화자 C]: 네, 있습니다.
 
 출력:
-{{"dispatch": {{"schema_version": 1, "symptoms": {{"pain": [{{"name": "두통"}}]}}}}, "incidentType": {{"schema_version": 1, "medicalHistory": {{"status": "있음", "items": [{{"name": "고혈압"}}]}}}}}}
+{{"dispatch": {{"symptoms": {{"pain": [{{"name": "두통"}}]}}}}, "incidentType": {{"medicalHistory": {{"status": "있음", "items": [{{"name": "고혈압"}}]}}}}}}
 
 **추출 예시 2** (value 사용 예시):
 
@@ -160,7 +157,7 @@ def get_information_extraction_prompt() -> str:
 [화자 C]: 네, 폐암입니다.
 
 출력:
-{{"dispatch": {{"schema_version": 1, "symptoms": {{"trauma": [{{"name": "열상"}}]}}}}, "incidentType": {{"schema_version": 1, "medicalHistory": {{"status": "있음", "items": [{{"name": "암", "value": "폐암"}}]}}}}}}
+{{"dispatch": {{"symptoms": {{"trauma": [{{"name": "열상"}}]}}}}, "incidentType": {{"medicalHistory": {{"status": "있음", "items": [{{"name": "암", "value": "폐암"}}]}}}}}}
 
 **추출 예시 3** (교통사고):
 
@@ -171,7 +168,7 @@ def get_information_extraction_prompt() -> str:
 [화자 C]: 네, 있습니다.
 
 출력:
-{{"incidentType": {{"schema_version": 1, "medicalHistory": {{"status": "있음", "items": [{{"name": "고혈압"}}]}}, "category": "질병외", "subCategory_traffic": {{"type": "교통사고", "name": "운전자"}}}}}}
+{{"incidentType": {{"medicalHistory": {{"status": "있음", "items": [{{"name": "고혈압"}}]}}, "category": "질병외", "subCategory_traffic": {{"type": "교통사고", "name": "운전자"}}}}}}
 
 **추출 예시 4** (응급처치 - value 사용):
 
@@ -182,7 +179,7 @@ def get_information_extraction_prompt() -> str:
 [화자 C]: (환자 의식 회복)
 
 출력:
-{{"emergencyTreatment": {{"schema_version": 1, "airwayManagement": {{"methods": ["기도유지"]}}, "oxygenTherapy": {{"flowRateLpm": 10, "device": "비재호흡마스크"}}, "aed": {{"type": "shock"}}, "circulation": {{"type": "수액공급 확보", "value": "200"}}}}}}
+{{"emergencyTreatment": {{"airwayManagement": {{"methods": ["기도유지"]}}, "oxygenTherapy": {{"flowRateLpm": 10, "device": "비재호흡마스크"}}, "aed": {{"type": "shock"}}, "circulation": {{"type": "수액공급 확보", "value": "200"}}}}}}
 
 **추출 예시 5** (의료지도):
 
@@ -193,7 +190,7 @@ def get_information_extraction_prompt() -> str:
 [화자 B]: 활성탄 투여하고 병원 선정 진행합니다.
 
 출력:
-{{"medicalGuidance": {{"schema_version": 1, "contactStatus": "연결", "guidanceAgency": {{"type": "병원"}}, "guidanceDoctor": {{"name": "이의사"}}, "guidanceContent": {{"emergencyTreatment": [{{"name": "기관삽관"}}, {{"name": "기타", "value": "드레싱"}}], "medication": [{{"name": "기타", "value": "활성탄"}}], "hospitalRequest": true}}}}}}
+{{"medicalGuidance": {{"contactStatus": "연결", "guidanceAgency": {{"type": "병원"}}, "guidanceDoctor": {{"name": "이의사"}}, "guidanceContent": {{"emergencyTreatment": [{{"name": "기관삽관"}}, {{"name": "기타", "value": "드레싱"}}], "medication": [{{"name": "기타", "value": "활성탄"}}], "hospitalRequest": true}}}}}}
 
 **중요 규칙**:
 1. 반드시 순수 JSON만 출력 (코드 블록이나 설명 금지)
