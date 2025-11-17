@@ -40,7 +40,9 @@ import com.example.ssairen_app.ui.context.rememberDispatchState
 import com.example.ssairen_app.ui.screens.report.ReportHome
 import com.example.ssairen_app.ui.screens.emergencyact.ActivityMain
 import com.example.ssairen_app.ui.screens.emergencyact.ActivityLogHome
+import com.example.ssairen_app.ui.screens.emergencyact.HospitalSearch
 import com.example.ssairen_app.ui.screens.Summation
+import com.example.ssairen_app.ui.screens.Memo
 import com.example.ssairen_app.ui.screens.Login
 import com.example.ssairen_app.viewmodel.AuthViewModel
 import com.example.ssairen_app.viewmodel.ReportViewModel
@@ -630,23 +632,19 @@ fun AppNavigation(
                 onNavigateToSummation = {
                     navController.navigate("summation/$emergencyReportId")  // ✅ 수정 1: ID 전달
                 },
+                onNavigateToMemo = {
+                    navController.navigate("memo")
+                },
+                onNavigateToHospitalSearch = {
+                    navController.navigate("hospital_search")
+                },
                 reportViewModel = reportViewModel
             )
         }
 
-        // ✅ 수정 2: summation 라우트 전체 수정
-        composable(
-            route = "summation/{emergencyReportId}",  // ✅ 파라미터 추가
-            arguments = listOf(
-                navArgument("emergencyReportId") {
-                    type = NavType.IntType
-                }
-            )
-        ) { backStackEntry ->
-            val emergencyReportId = backStackEntry.arguments?.getInt("emergencyReportId") ?: 0
-
+        // Summation 라우트
+        composable(route = "summation/{emergencyReportId}") {
             Summation(
-                emergencyReportId = emergencyReportId,  // ✅ ID 전달
                 onNavigateBack = {
                     navController.popBackStack()
                 },
@@ -655,8 +653,65 @@ fun AppNavigation(
                         popUpTo("summation/{emergencyReportId}") { inclusive = true }
                     }
                 },
-                onNavigateToActivityLog = { reportId ->  // ✅ 수정 3: 파라미터 받기
-                    navController.navigate("activity_log/$reportId/0")  // ✅ 실제 ID 사용
+                onNavigateToActivityLog = {
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/0")
+                },
+                onNavigateToMemo = {
+                    navController.navigate("memo")
+                },
+                onNavigateToHospitalSearch = {
+                    navController.navigate("hospital_search")
+                }
+            )
+        }
+
+        // Memo 라우트
+        composable(route = "memo") {
+            Memo(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToHome = {
+                    navController.navigate("activity_main") {
+                        popUpTo("memo") { inclusive = true }
+                    }
+                },
+                onNavigateToActivityLog = {
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/0")
+                },
+                onNavigateToSummation = {
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("summation/$currentReportId")
+                },
+                onNavigateToHospitalSearch = {
+                    navController.navigate("hospital_search")
+                }
+            )
+        }
+
+        // HospitalSearch 라우트
+        composable(route = "hospital_search") {
+            HospitalSearch(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToHome = {
+                    navController.navigate("activity_main") {
+                        popUpTo("hospital_search") { inclusive = true }
+                    }
+                },
+                onNavigateToActivityLog = {
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("activity_log/$currentReportId/0")
+                },
+                onNavigateToSummation = {
+                    val currentReportId = com.example.ssairen_app.viewmodel.ActivityViewModel.getGlobalReportId()
+                    navController.navigate("summation/$currentReportId")
+                },
+                onNavigateToMemo = {
+                    navController.navigate("memo")
                 }
             )
         }

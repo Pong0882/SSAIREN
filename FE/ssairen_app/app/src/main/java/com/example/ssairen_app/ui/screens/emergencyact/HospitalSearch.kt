@@ -39,6 +39,11 @@ enum class HospitalStatus(val displayName: String, val color: Color) {
 @Composable
 fun HospitalSearch(
     modifier: Modifier = Modifier,
+    onNavigateBack: () -> Unit = {},
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToActivityLog: () -> Unit = {},
+    onNavigateToSummation: () -> Unit = {},
+    onNavigateToMemo: () -> Unit = {},
     activityViewModel: ActivityViewModel = viewModel()
 ) {
     var selectedHospitalId by remember { mutableStateOf<Int?>(null) }

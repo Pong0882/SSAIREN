@@ -30,6 +30,8 @@ fun Summation(
     onNavigateBack: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
     onNavigateToActivityLog: () -> Unit = {},
+    onNavigateToMemo: () -> Unit = {},
+    onNavigateToHospitalSearch: () -> Unit = {},
     activityViewModel: ActivityViewModel = viewModel(),
     summationViewModel: SummationViewModel = viewModel()
 ) {
@@ -118,8 +120,8 @@ fun Summation(
                     0 -> onNavigateToHome()
                     1 -> onNavigateToActivityLog()
                     2 -> { /* 현재 화면 유지 */ }
-                    3 -> { /* TODO: 메모 */ }
-                    4 -> { /* TODO: 병원이송 */ }
+                    3 -> onNavigateToMemo()
+                    4 -> onNavigateToHospitalSearch()
                 }
             }
         )
