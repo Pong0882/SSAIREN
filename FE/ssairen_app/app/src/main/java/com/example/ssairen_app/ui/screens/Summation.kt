@@ -79,7 +79,7 @@ fun Summation(
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "요약",
+                text = "요약본",
                 color = Color.White,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
@@ -136,7 +136,7 @@ private fun SummaryTable(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
-        color = Color.White
+        color = Color(0xFF1a1a1a)  // ✅ 검은 배경
     ) {
         Column {
             // 구급 출동 정보
@@ -164,7 +164,7 @@ private fun SummaryTable(
                 ) {
                     Text(
                         text = "표시할 데이터가 없습니다.",
-                        color = Color.Gray,
+                        color = Color(0xFFaaaaaa),
                         fontSize = 14.sp
                     )
                 }
@@ -389,7 +389,7 @@ private fun PatientEvaSection(data: com.example.ssairen_app.data.model.response.
                         TableCell(
                             text = "의식 상태",
                             modifier = Modifier.weight(1f),
-                            backgroundColor = Color(0xFFf0f0f0)
+                            backgroundColor = Color(0xFF2a2a2a)
                         )
                         consciousness.first?.let { first ->
                             TableCell(text = "1차", modifier = Modifier.weight(1f))
@@ -452,7 +452,7 @@ private fun PatientEvaSection(data: com.example.ssairen_app.data.model.response.
                         TableCell(
                             text = "동공 반응",
                             modifier = Modifier.weight(1f),
-                            backgroundColor = Color(0xFFf0f0f0)
+                            backgroundColor = Color(0xFF2a2a2a)
                         )
                         pupil.left?.let { left ->
                             TableCell(text = "좌", modifier = Modifier.weight(1f))
@@ -483,7 +483,7 @@ private fun PatientEvaSection(data: com.example.ssairen_app.data.model.response.
                         TableCell(
                             text = "활력 징후",
                             modifier = Modifier.weight(1f),
-                            backgroundColor = Color(0xFFf0f0f0)
+                            backgroundColor = Color(0xFF2a2a2a)
                         )
                         TableCell(text = "시각", modifier = Modifier.weight(1f))
                         TableCell(text = "혈압", modifier = Modifier.weight(1f))
@@ -538,7 +538,7 @@ private fun PatientEvaSection(data: com.example.ssairen_app.data.model.response.
                         TableCell(
                             text = "환자 분류",
                             modifier = Modifier.weight(1f),
-                            backgroundColor = Color(0xFFf0f0f0)
+                            backgroundColor = Color(0xFF2a2a2a)
                         )
                         TableCell(text = level, modifier = Modifier.weight(3f))
                     }
@@ -581,22 +581,22 @@ private fun TableRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .border(0.5.dp, Color(0xFFcccccc))
+            .border(0.5.dp, Color(0xFF3a3a3a))  // ✅ 어두운 테두리
     ) {
         // 라벨 셀
         Box(
             modifier = Modifier
-                .width(100.dp)
-                .background(Color(0xFFf5f5f5))
-                .border(0.5.dp, Color(0xFFcccccc))
+                .width(120.dp)
+                .background(Color(0xFF2a2a2a))  // ✅ 어두운 회색
+                .border(0.5.dp, Color(0xFF3a3a3a))
                 .padding(8.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
                 text = label,
-                fontSize = 12.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.White  // ✅ 흰색 글자
             )
         }
 
@@ -623,16 +623,16 @@ private fun TableSubRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = label,
-            fontSize = 11.sp,
+            text = "$label:",
+            fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = Color.Black,
-            modifier = Modifier.width(60.dp)
+            color = Color(0xFFaaaaaa),  // ✅ 밝은 회색
+            modifier = Modifier.width(80.dp)
         )
         Text(
             text = value,
-            fontSize = 11.sp,
-            color = Color.Black,
+            fontSize = 12.sp,
+            color = Color.White,  // ✅ 흰색 글자
             modifier = Modifier.weight(1f)
         )
     }
@@ -642,21 +642,21 @@ private fun TableSubRow(
 private fun TableCell(
     text: String,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Color.White,
+    backgroundColor: Color = Color(0xFF1a1a1a),  // ✅ 검은 배경
     minHeight: Dp = 32.dp
 ) {
     Box(
         modifier = modifier
             .background(backgroundColor)
-            .border(0.5.dp, Color(0xFFcccccc))
+            .border(0.5.dp, Color(0xFF3a3a3a))  // ✅ 어두운 테두리
             .defaultMinSize(minHeight = minHeight)
-            .padding(4.dp),
+            .padding(6.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = text,
-            fontSize = 10.sp,
-            color = Color.Black,
+            text = text.ifEmpty { "-" },
+            fontSize = 11.sp,
+            color = Color.White,  // ✅ 흰색 글자
             textAlign = TextAlign.Center
         )
     }
