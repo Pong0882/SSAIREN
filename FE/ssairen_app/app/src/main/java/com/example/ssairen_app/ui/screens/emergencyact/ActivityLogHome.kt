@@ -39,6 +39,8 @@ fun ActivityLogHome(
     onNavigateToHome: () -> Unit = {},
     onNavigateToReportHome: () -> Unit = {},
     onNavigateToSummation: (Int) -> Unit = {},  // ✅ 수정 1: (Int) 추가
+    onNavigateToMemo: () -> Unit = {},
+    onNavigateToHospitalSearch: () -> Unit = {},
     viewModel: LogViewModel = viewModel(),
     activityViewModel: ActivityViewModel = viewModel(),
     reportViewModel: ReportViewModel = viewModel()
@@ -410,10 +412,12 @@ fun ActivityLogHome(
                                 onNavigateToSummation(emergencyReportId)  // ✅ 수정 2: ID 전달
                             }
                             3 -> {
-                                // TODO: 메모
+                                // 메모로 이동
+                                onNavigateToMemo()
                             }
                             4 -> {
-                                // TODO: 병원이송
+                                // 병원이송으로 이동
+                                onNavigateToHospitalSearch()
                             }
                         }
                     }

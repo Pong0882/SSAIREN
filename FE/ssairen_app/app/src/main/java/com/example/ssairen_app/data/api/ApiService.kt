@@ -22,6 +22,10 @@ import com.example.ssairen_app.data.model.request.TransportRequest
 import com.example.ssairen_app.data.model.response.TransportResponse
 import com.example.ssairen_app.data.model.request.DetailReportRequest
 import com.example.ssairen_app.data.model.response.DetailReportResponse
+import com.example.ssairen_app.data.model.request.HospitalAiRecommendationRequest
+import com.example.ssairen_app.data.model.response.HospitalAiRecommendationResponse
+import com.example.ssairen_app.data.model.request.CreatePatientInfoRequest
+import com.example.ssairen_app.data.model.response.CreatePatientInfoResponse
 import com.example.ssairen_app.data.model.response.CompleteReportResponse
 import com.example.ssairen_app.data.model.response.DispatchListResponse
 import com.example.ssairen_app.data.model.response.FireStateReportResponse
@@ -204,5 +208,23 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: DetailReportRequest
     ): Response<DetailReportResponse>
+
+    // ==========================================
+    // 병원 선택 API
+    // ==========================================
+
+    // 환자 정보 생성
+    @POST("api/patient-info")
+    suspend fun createPatientInfo(
+        @Body request: CreatePatientInfoRequest,
+        @Header("Authorization") token: String
+    ): Response<CreatePatientInfoResponse>
+
+    // AI 기반 병원 추천 및 이송 요청
+    @POST("api/hospital-selection/ai-recommendation")
+    suspend fun getAiHospitalRecommendation(
+        @Body request: HospitalAiRecommendationRequest,
+        @Header("Authorization") token: String
+    ): Response<HospitalAiRecommendationResponse>
 
 }

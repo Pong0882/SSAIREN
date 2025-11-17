@@ -59,6 +59,11 @@
         android:theme="@style/Theme.Ssairen_app"
         android:usesCleartextTraffic="true">
 
+        <!-- Wearable Support for receiving data from Wear OS -->
+        <uses-library
+            android:name="com.google.android.wearable"
+            android:required="false" />
+
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"

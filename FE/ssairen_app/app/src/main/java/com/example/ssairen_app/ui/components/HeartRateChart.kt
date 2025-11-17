@@ -69,9 +69,9 @@ fun HeartRateChart(
             val width = size.width
             val height = size.height
 
-            // Y축 범위 설정 (30~150 BPM)
+            // Y축 범위 설정 (30~130 BPM) - 110 기준선을 위로 올려서 간격 확보
             val minValue = 30f
-            val maxValue = 150f
+            val maxValue = 130f
             val valueRange = maxValue - minValue
 
             // 그래프 영역 설정 (왼쪽에 숫자 공간 확보)
