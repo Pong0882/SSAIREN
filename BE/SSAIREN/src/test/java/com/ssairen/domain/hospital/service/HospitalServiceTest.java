@@ -362,7 +362,7 @@ class HospitalServiceTest {
 
         // then
         assertThat(response.getEmergencyReportId()).isEqualTo(emergencyReport.getId());
-        assertThat(response.getHospitalStatuses()).isNotEmpty();
+        assertThat(response.getHospitals()).isNotEmpty();
     }
 
     @Test
@@ -447,7 +447,7 @@ class HospitalServiceTest {
 
     private PatientInfo createTestPatientInfo(EmergencyReport emergencyReport) {
         PatientInfo patientInfo = PatientInfo.builder()
-                .emergencyReportId(emergencyReport.getId())
+                .emergencyReport(emergencyReport)
                 .gender(PatientInfo.Gender.M)
                 .age(45)
                 .recordTime(LocalDateTime.now())
