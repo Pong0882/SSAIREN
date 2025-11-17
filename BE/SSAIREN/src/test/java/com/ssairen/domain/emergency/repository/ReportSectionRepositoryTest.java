@@ -47,7 +47,7 @@ class ReportSectionRepositoryTest {
     void existsByEmergencyReportAndType_true() throws Exception {
         // given
         EmergencyReport emergencyReport = createTestEmergencyReport();
-        ReportSection section = createTestReportSection(emergencyReport, ReportSectionType.PATIENT_INFO);
+        createTestReportSection(emergencyReport, ReportSectionType.PATIENT_INFO);
 
         // when
         boolean exists = reportSectionRepository.existsByEmergencyReportAndType(
