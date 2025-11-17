@@ -22,4 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ssairen_app"
 include(":app")
-// include(":wear")  // 임시로 비활성화 - Lint 에러 때문에
+include(":wear")  // 임시로 비활성화 - Lint 에러 때문에
