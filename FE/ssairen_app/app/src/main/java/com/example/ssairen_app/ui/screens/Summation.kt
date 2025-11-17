@@ -1,7 +1,6 @@
 // Summation.kt
 package com.example.ssairen_app.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -22,33 +21,41 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ssairen_app.ui.navigation.EmergencyNav
-import com.example.ssairen_app.viewmodel.LogViewModel
 import com.example.ssairen_app.viewmodel.ActivityViewModel
+import com.example.ssairen_app.viewmodel.SummationViewModel
+import android.util.Log
 
 @Composable
 fun Summation(
-    emergencyReportId: Int,
     onNavigateBack: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
-    onNavigateToActivityLog: (Int) -> Unit = {},
-    logViewModel: LogViewModel = viewModel(),
-    activityViewModel: ActivityViewModel = viewModel()
+    onNavigateToActivityLog: () -> Unit = {},
+    onNavigateToMemo: () -> Unit = {},
+    onNavigateToHospitalSearch: () -> Unit = {},
+    activityViewModel: ActivityViewModel = viewModel(),
+    summationViewModel: SummationViewModel = viewModel()
 ) {
+    val globalReportId by ActivityViewModel.globalCurrentReportId.observeAsState()
+    val dispatchData by summationViewModel.dispatchData.collectAsState()
+    val patientTypeData by summationViewModel.patientTypeData.collectAsState()
+    val patientEvaData by summationViewModel.patientEvaData.collectAsState()
+    val isLoading by summationViewModel.isLoading.collectAsState()
+
     var selectedBottomTab by remember { mutableIntStateOf(2) }
 
-    // ✅ ViewModel에서 실제 데이터 가져오기
-    val activityLogData by logViewModel.activityLogData.collectAsState()
+    // 데이터 로드
+    LaunchedEffect(globalReportId) {
+        val reportId = globalReportId
+        Log.d("Summation", "========================================")
+        Log.d("Summation", "LaunchedEffect 실행됨")
+        Log.d("Summation", "globalReportId: $reportId")
+        Log.d("Summation", "========================================")
 
-    // ✅ emergencyReportId 설정 및 API 호출
-    LaunchedEffect(emergencyReportId) {
-        if (emergencyReportId > 0) {
-            Log.d("Summation", "📝 emergencyReportId 설정: $emergencyReportId")
-            activityViewModel.setEmergencyReportId(emergencyReportId)
-
-            // 모든 섹션의 데이터 불러오기
-            activityViewModel.getDispatch(emergencyReportId)
-            activityViewModel.getPatientType(emergencyReportId)
-            activityViewModel.getPatientEva(emergencyReportId)
+        if (reportId != null && reportId > 0) {
+            Log.d("Summation", "📋 요약 데이터 로드 시작: reportId=$reportId")
+            summationViewModel.loadSummaryData(reportId)
+        } else {
+            Log.e("Summation", "❌ globalReportId가 null이거나 0입니다: $reportId")
         }
     }
 
@@ -90,7 +97,18 @@ fun Summation(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
-            SummaryTable(data = activityLogData)
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = Color(0xFF3b7cff)
+                )
+            } else {
+                SummaryTable(
+                    dispatchData = dispatchData,
+                    patientTypeData = patientTypeData,
+                    patientEvaData = patientEvaData
+                )
+            }
         }
 
         // 3. 하단 네비게이션
@@ -100,10 +118,10 @@ fun Summation(
                 selectedBottomTab = it
                 when (it) {
                     0 -> onNavigateToHome()
-                    1 -> onNavigateToActivityLog(emergencyReportId)  // ✅ ID 전달
+                    1 -> onNavigateToActivityLog()
                     2 -> { /* 현재 화면 유지 */ }
-                    3 -> { /* TODO: 메모 */ }
-                    4 -> { /* TODO: 병원이송 */ }
+                    3 -> onNavigateToMemo()
+                    4 -> onNavigateToHospitalSearch()
                 }
             }
         )
@@ -111,7 +129,11 @@ fun Summation(
 }
 
 @Composable
-private fun SummaryTable(data: com.example.ssairen_app.viewmodel.ActivityLogData) {
+private fun SummaryTable(
+    dispatchData: com.example.ssairen_app.data.model.response.DispatchResponseInfo?,
+    patientTypeData: com.example.ssairen_app.data.model.response.IncidentTypeData?,
+    patientEvaData: com.example.ssairen_app.data.model.response.PatientAssessmentData?
+) {
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -119,247 +141,438 @@ private fun SummaryTable(data: com.example.ssairen_app.viewmodel.ActivityLogData
         color = Color(0xFF1a1a1a)  // ✅ 검은 배경
     ) {
         Column {
-            // 환자 발생 장소
-            TableRow(
-                label = "환자 발생 장소",
-                content = {
-                    TableCell(
-                        text = data.dispatch.sceneLocationName,
-                        modifier = Modifier.fillMaxWidth()
+            // 구급 출동 정보
+            if (dispatchData != null) {
+                DispatchSection(dispatchData)
+            }
+
+            // 환자 발생 유형 정보
+            if (patientTypeData != null) {
+                PatientTypeSection(patientTypeData)
+            }
+
+            // 환자 평가 정보
+            if (patientEvaData != null) {
+                PatientEvaSection(patientEvaData)
+            }
+
+            // 데이터가 없을 경우
+            if (dispatchData == null && patientTypeData == null && patientEvaData == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "표시할 데이터가 없습니다.",
+                        color = Color(0xFFaaaaaa),
+                        fontSize = 14.sp
                     )
                 }
-            )
+            }
+        }
+    }
+}
 
-            // 환자 증상
-            TableRow(
-                label = "환자 증상",
-                content = {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        // 통증
-                        if (data.dispatch.painSymptoms.isNotEmpty()) {
-                            TableSubRow(
-                                label = "통증",
-                                value = data.dispatch.painSymptoms.joinToString(", ")
-                            )
+@Composable
+private fun DispatchSection(data: com.example.ssairen_app.data.model.response.DispatchResponseInfo) {
+    // 환자 발생 장소
+    val locationText = buildString {
+        append(data.sceneLocation.name ?: "")
+        if (data.sceneLocation.name == "기타" && !data.sceneLocation.value.isNullOrBlank()) {
+            append(" (${data.sceneLocation.value})")
+        }
+    }
+
+    if (locationText.isNotBlank()) {
+        TableRow(
+            label = "환자 발생 장소",
+            content = {
+                TableCell(text = locationText, modifier = Modifier.fillMaxWidth())
+            }
+        )
+    }
+
+    // 환자 증상
+    val painList = data.symptoms.pain
+    val traumaList = data.symptoms.trauma
+    val otherList = data.symptoms.otherSymptoms
+
+    if (!painList.isNullOrEmpty() || !traumaList.isNullOrEmpty() || !otherList.isNullOrEmpty()) {
+        TableRow(
+            label = "환자 증상",
+            content = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // 통증 증상
+                    painList?.let { list ->
+                        if (list.isNotEmpty()) {
+                            val painText = list.joinToString(", ") { symptom ->
+                                if (symptom.name == "그 밖의 통증" && !symptom.value.isNullOrBlank()) {
+                                    "${symptom.name} (${symptom.value})"
+                                } else {
+                                    symptom.name
+                                }
+                            }
+                            TableSubRow(label = "통증", value = painText)
                         }
+                    }
 
-                        // 외상
-                        if (data.dispatch.traumaSymptoms.isNotEmpty()) {
-                            TableSubRow(
-                                label = "외상",
-                                value = data.dispatch.traumaSymptoms.joinToString(", ")
-                            )
+                    // 외상 증상
+                    traumaList?.let { list ->
+                        if (list.isNotEmpty()) {
+                            val traumaText = list.joinToString(", ") { it.name }
+                            TableSubRow(label = "외상", value = traumaText)
                         }
+                    }
 
-                        // 기타 증상
-                        if (data.dispatch.otherSymptoms.isNotEmpty()) {
-                            TableSubRow(
-                                label = "기타 증상",
-                                value = data.dispatch.otherSymptoms.joinToString(", ")
-                            )
+                    // 그 외 증상
+                    otherList?.let { list ->
+                        if (list.isNotEmpty()) {
+                            val otherText = list.joinToString(", ") { symptom ->
+                                if (symptom.name == "기타" && !symptom.value.isNullOrBlank()) {
+                                    "${symptom.name} (${symptom.value})"
+                                } else {
+                                    symptom.name
+                                }
+                            }
+                            TableSubRow(label = "그 외 증상", value = otherText)
                         }
                     }
                 }
-            )
+            }
+        )
+    }
+}
 
-            // 병력
+@Composable
+private fun PatientTypeSection(data: com.example.ssairen_app.data.model.response.IncidentTypeData) {
+    // 병력
+    data.medicalHistory?.let { history ->
+        if (history.status == "있음" && !history.items.isNullOrEmpty()) {
             TableRow(
                 label = "병력",
                 content = {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        TableCell(
-                            text = data.patienType.hasMedicalHistory,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        if (data.patienType.medicalHistoryList.isNotEmpty()) {
-                            TableCell(
-                                text = data.patienType.medicalHistoryList.joinToString(", "),
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                    val historyText = history.items.joinToString(", ") { item ->
+                        if (item.name == "기타" && !item.value.isNullOrBlank()) {
+                            "${item.name} (${item.value})"
+                        } else {
+                            item.name
                         }
                     }
+                    TableCell(text = historyText, modifier = Modifier.fillMaxWidth())
                 }
             )
-
-            // 범죄의심
+        } else if (history.status == "없음") {
             TableRow(
-                label = "범죄의심",
+                label = "병력",
                 content = {
-                    TableCell(
-                        text = data.patienType.crimeOption.ifEmpty { "없음" },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            )
-
-            // 질병
-            if (data.patienType.mainType == "질병") {
-                TableRow(
-                    label = "질병",
-                    content = {
-                        TableCell(
-                            text = "질병",
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                )
-            }
-
-            // 질병 외
-            if (data.patienType.mainType == "질병 외") {
-                TableRow(
-                    label = "질병 외",
-                    content = {
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            if (data.patienType.subType.isNotEmpty()) {
-                                TableSubRow(
-                                    label = "유형",
-                                    value = data.patienType.subType
-                                )
-                            }
-
-                            if (data.patienType.accidentVictimType.isNotEmpty()) {
-                                TableSubRow(
-                                    label = "세부사항",
-                                    value = data.patienType.accidentVictimType
-                                )
-                            }
-                        }
-                    }
-                )
-            }
-
-            // 기타
-            if (data.patienType.mainType == "기타") {
-                TableRow(
-                    label = "기타",
-                    content = {
-                        TableCell(
-                            text = data.patienType.etcType.ifEmpty { "기타" },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                )
-            }
-
-            // 환자 평가
-            TableRow(
-                label = "환자 평가",
-                content = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // 환자 분류
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            TableCell(
-                                text = "환자 분류",
-                                modifier = Modifier.weight(1f),
-                                backgroundColor = Color(0xFF2a2a2a)
-                            )
-                            TableCell(
-                                text = data.patientEva.patientLevel.ifEmpty { "미입력" },
-                                modifier = Modifier.weight(2f)
-                            )
-                        }
-
-                        // 의식 상태
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            TableCell(
-                                text = "의식 상태",
-                                modifier = Modifier.weight(1f),
-                                backgroundColor = Color(0xFF2a2a2a)
-                            )
-                            TableCell(text = "1차", modifier = Modifier.weight(0.5f))
-                            TableCell(
-                                text = when {
-                                    data.patientEva.consciousness1stAlert -> "A"
-                                    data.patientEva.consciousness1stVerbal -> "V"
-                                    data.patientEva.consciousness1stPainful -> "P"
-                                    data.patientEva.consciousness1stUnresponsive -> "U"
-                                    else -> "-"
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Spacer(modifier = Modifier.weight(1f))
-                            TableCell(text = "2차", modifier = Modifier.weight(0.5f))
-                            TableCell(
-                                text = when {
-                                    data.patientEva.consciousness2ndAlert -> "A"
-                                    data.patientEva.consciousness2ndVerbal -> "V"
-                                    data.patientEva.consciousness2ndPainful -> "P"
-                                    data.patientEva.consciousness2ndUnresponsive -> "U"
-                                    else -> "-"
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        // 활력징후 헤더
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            TableCell(
-                                text = "활력징후",
-                                modifier = Modifier.weight(1f),
-                                backgroundColor = Color(0xFF2a2a2a)
-                            )
-                            TableCell(text = "시각", modifier = Modifier.weight(0.8f))
-                            TableCell(text = "혈압", modifier = Modifier.weight(0.8f))
-                            TableCell(text = "맥박", modifier = Modifier.weight(0.6f))
-                            TableCell(text = "호흡", modifier = Modifier.weight(0.6f))
-                            TableCell(text = "체온", modifier = Modifier.weight(0.6f))
-                            TableCell(text = "산소", modifier = Modifier.weight(0.6f))
-                            TableCell(text = "혈당", modifier = Modifier.weight(0.6f))
-                        }
-
-                        // 활력징후 1차
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Spacer(modifier = Modifier.weight(1f))
-                            TableCell(text = "1차", modifier = Modifier.weight(0.8f), backgroundColor = Color(0xFF2a2a2a))
-                            TableCell(text = data.patientEva.leftTime, modifier = Modifier.weight(0.8f))
-                            TableCell(text = data.patientEva.leftBloodPressure, modifier = Modifier.weight(0.8f))
-                            TableCell(text = data.patientEva.leftPulse, modifier = Modifier.weight(0.6f))
-                            TableCell(text = data.patientEva.leftRespiratoryRate, modifier = Modifier.weight(0.6f))
-                            TableCell(text = data.patientEva.leftTemperature, modifier = Modifier.weight(0.6f))
-                            TableCell(text = data.patientEva.leftOxygenSaturation, modifier = Modifier.weight(0.6f))
-                            TableCell(text = data.patientEva.leftBloodSugar, modifier = Modifier.weight(0.6f))
-                        }
-
-                        // 활력징후 2차
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Spacer(modifier = Modifier.weight(1f))
-                            TableCell(text = "2차", modifier = Modifier.weight(0.8f), backgroundColor = Color(0xFF2a2a2a))
-                            TableCell(text = data.patientEva.rightTime, modifier = Modifier.weight(0.8f))
-                            TableCell(text = data.patientEva.rightBloodPressure, modifier = Modifier.weight(0.8f))
-                            TableCell(text = data.patientEva.rightPulse, modifier = Modifier.weight(0.6f))
-                            TableCell(text = data.patientEva.rightRespiratoryRate, modifier = Modifier.weight(0.6f))
-                            TableCell(text = data.patientEva.rightTemperature, modifier = Modifier.weight(0.6f))
-                            TableCell(text = data.patientEva.rightOxygenSaturation, modifier = Modifier.weight(0.6f))
-                            TableCell(text = data.patientEva.rightBloodSugar, modifier = Modifier.weight(0.6f))
-                        }
-                    }
+                    TableCell(text = "없음", modifier = Modifier.fillMaxWidth())
                 }
             )
         }
     }
+
+    // 범죄의심
+    data.legalSuspicion?.let { legal ->
+        if (!legal.name.isNullOrBlank()) {
+            TableRow(
+                label = "범죄의심",
+                content = {
+                    TableCell(text = legal.name, modifier = Modifier.fillMaxWidth())
+                }
+            )
+        }
+    }
+
+    // 환자 발생 유형 - 카테고리별 처리
+    when (data.category) {
+        "질병" -> {
+            // 질병은 subCategory_traffic, injury, nonTrauma에 없을 것으로 예상
+            // categoryOther 사용
+            if (!data.categoryOther.isNullOrBlank()) {
+                TableRow(
+                    label = "질병",
+                    content = {
+                        TableCell(text = data.categoryOther, modifier = Modifier.fillMaxWidth())
+                    }
+                )
+            }
+        }
+        "질병외" -> {
+            // 교통사고
+            data.subCategoryTraffic?.let { traffic ->
+                TableRow(
+                    label = "질병 외",
+                    content = {
+                        Column {
+                            TableSubRow(label = "구분", value = traffic.type ?: "")
+                            val victimText = buildString {
+                                append(traffic.name ?: "")
+                                if (!traffic.value.isNullOrBlank()) {
+                                    append(" (${traffic.value})")
+                                }
+                            }
+                            if (victimText.isNotBlank()) {
+                                TableSubRow(label = "피해자 유형", value = victimText)
+                            }
+                        }
+                    }
+                )
+            }
+
+            // 그 외 손상
+            data.subCategoryInjury?.let { injury ->
+                TableRow(
+                    label = "질병 외",
+                    content = {
+                        Column {
+                            TableSubRow(label = "구분", value = injury.type ?: "")
+                            if (!injury.name.isNullOrBlank()) {
+                                TableSubRow(label = "유형", value = injury.name)
+                            }
+                        }
+                    }
+                )
+            }
+
+            // 비외상성 손상
+            data.subCategoryNonTrauma?.let { nonTrauma ->
+                TableRow(
+                    label = "질병 외",
+                    content = {
+                        Column {
+                            TableSubRow(label = "구분", value = nonTrauma.type ?: "")
+                            val typeText = buildString {
+                                append(nonTrauma.name ?: "")
+                                if (nonTrauma.name == "기타" && !nonTrauma.value.isNullOrBlank()) {
+                                    append(" (${nonTrauma.value})")
+                                }
+                            }
+                            if (typeText.isNotBlank()) {
+                                TableSubRow(label = "유형", value = typeText)
+                            }
+                        }
+                    }
+                )
+            }
+        }
+        "기타" -> {
+            data.subCategoryOther?.let { other ->
+                TableRow(
+                    label = "기타",
+                    content = {
+                        val text = buildString {
+                            append(other.name ?: "")
+                            if (other.name == "기타" && !other.value.isNullOrBlank()) {
+                                append(" (${other.value})")
+                            }
+                        }
+                        TableCell(text = text, modifier = Modifier.fillMaxWidth())
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PatientEvaSection(data: com.example.ssairen_app.data.model.response.PatientAssessmentData) {
+    TableRow(
+        label = "환자 평가",
+        content = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // 의식 상태
+                data.consciousness?.let { consciousness ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        TableCell(
+                            text = "의식 상태",
+                            modifier = Modifier.weight(1f),
+                            backgroundColor = Color(0xFF2a2a2a)
+                        )
+                        consciousness.first?.let { first ->
+                            TableCell(text = "1차", modifier = Modifier.weight(1f))
+                            TableCell(text = first.time ?: "", modifier = Modifier.weight(1f))
+                            TableCell(
+                                text = if (first.state == "A") "●" else "",
+                                modifier = Modifier.weight(0.5f)
+                            )
+                            TableCell(
+                                text = if (first.state == "V") "●" else "",
+                                modifier = Modifier.weight(0.5f)
+                            )
+                            TableCell(
+                                text = if (first.state == "P") "●" else "",
+                                modifier = Modifier.weight(0.5f)
+                            )
+                            TableCell(
+                                text = if (first.state == "U") "●" else "",
+                                modifier = Modifier.weight(0.5f)
+                            )
+                        }
+                    }
+
+                    consciousness.second?.let { second ->
+                        if (!second.state.isNullOrBlank()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Spacer(modifier = Modifier.weight(1f))
+                                TableCell(text = "2차", modifier = Modifier.weight(1f))
+                                TableCell(text = second.time ?: "", modifier = Modifier.weight(1f))
+                                TableCell(
+                                    text = if (second.state == "A") "●" else "",
+                                    modifier = Modifier.weight(0.5f)
+                                )
+                                TableCell(
+                                    text = if (second.state == "V") "●" else "",
+                                    modifier = Modifier.weight(0.5f)
+                                )
+                                TableCell(
+                                    text = if (second.state == "P") "●" else "",
+                                    modifier = Modifier.weight(0.5f)
+                                )
+                                TableCell(
+                                    text = if (second.state == "U") "●" else "",
+                                    modifier = Modifier.weight(0.5f)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // 동공 반응
+                data.pupilReaction?.let { pupil ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        TableCell(
+                            text = "동공 반응",
+                            modifier = Modifier.weight(1f),
+                            backgroundColor = Color(0xFF2a2a2a)
+                        )
+                        pupil.left?.let { left ->
+                            TableCell(text = "좌", modifier = Modifier.weight(1f))
+                            TableCell(text = left.status ?: "", modifier = Modifier.weight(1f))
+                            TableCell(text = left.reaction ?: "", modifier = Modifier.weight(1f))
+                        }
+                    }
+
+                    pupil.right?.let { right ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Spacer(modifier = Modifier.weight(1f))
+                            TableCell(text = "우", modifier = Modifier.weight(1f))
+                            TableCell(text = right.status ?: "", modifier = Modifier.weight(1f))
+                            TableCell(text = right.reaction ?: "", modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+
+                // 활력 징후
+                data.vitalSigns?.let { vitalSigns ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        TableCell(
+                            text = "활력 징후",
+                            modifier = Modifier.weight(1f),
+                            backgroundColor = Color(0xFF2a2a2a)
+                        )
+                        TableCell(text = "시각", modifier = Modifier.weight(1f))
+                        TableCell(text = "혈압", modifier = Modifier.weight(1f))
+                        TableCell(text = "맥박", modifier = Modifier.weight(1f))
+                        TableCell(text = "호흡", modifier = Modifier.weight(1f))
+                        TableCell(text = "체온", modifier = Modifier.weight(1f))
+                        TableCell(text = "산소포화도", modifier = Modifier.weight(1f))
+                        TableCell(text = "혈당", modifier = Modifier.weight(1f))
+                    }
+
+                    vitalSigns.first?.let { first ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            TableCell(text = "1차", modifier = Modifier.weight(1f))
+                            TableCell(text = first.time ?: "", modifier = Modifier.weight(1f))
+                            TableCell(text = first.bloodPressure ?: "", modifier = Modifier.weight(1f))
+                            TableCell(text = first.pulse?.toString() ?: "", modifier = Modifier.weight(1f))
+                            TableCell(text = first.respiration?.toString() ?: "", modifier = Modifier.weight(1f))
+                            TableCell(text = first.temperature?.toString() ?: "", modifier = Modifier.weight(1f))
+                            TableCell(text = first.spo2?.toString() ?: "", modifier = Modifier.weight(1f))
+                            TableCell(text = first.bloodSugar?.toString() ?: "", modifier = Modifier.weight(1f))
+                        }
+                    }
+
+                    vitalSigns.second?.let { second ->
+                        if (second.pulse != null || second.bloodPressure?.isNotBlank() == true) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                TableCell(text = "2차", modifier = Modifier.weight(1f))
+                                TableCell(text = second.time ?: "", modifier = Modifier.weight(1f))
+                                TableCell(text = second.bloodPressure ?: "", modifier = Modifier.weight(1f))
+                                TableCell(text = second.pulse?.toString() ?: "", modifier = Modifier.weight(1f))
+                                TableCell(text = second.respiration?.toString() ?: "", modifier = Modifier.weight(1f))
+                                TableCell(text = second.temperature?.toString() ?: "", modifier = Modifier.weight(1f))
+                                TableCell(text = second.spo2?.toString() ?: "", modifier = Modifier.weight(1f))
+                                TableCell(text = second.bloodSugar?.toString() ?: "", modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+
+                // 환자 분류
+                data.patientLevel?.let { level ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        TableCell(
+                            text = "환자 분류",
+                            modifier = Modifier.weight(1f),
+                            backgroundColor = Color(0xFF2a2a2a)
+                        )
+                        TableCell(text = level, modifier = Modifier.weight(3f))
+                    }
+                }
+
+                // 특이사항
+                data.notes?.let { notes ->
+                    if (!notes.note.isNullOrBlank() || !notes.onset.isNullOrBlank() || !notes.cheifComplaint.isNullOrBlank()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            TableCell(
+                                text = buildString {
+                                    if (!notes.onset.isNullOrBlank()) {
+                                        append("발생 시각: ${notes.onset}\n")
+                                    }
+                                    if (!notes.cheifComplaint.isNullOrBlank()) {
+                                        append("주 호소: ${notes.cheifComplaint}\n")
+                                    }
+                                    if (!notes.note.isNullOrBlank()) {
+                                        append("메모: ${notes.note}")
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                minHeight = 60.dp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    )
 }
 
 @Composable
