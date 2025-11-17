@@ -55,6 +55,55 @@ public class FileController {
     private final LlmSummaryRepository llmSummaryRepository;
 
     /**
+     * 구급일지 존재 여부 확인 및 조회
+     *
+     * @param emergencyReportId 구급일지 ID
+     * @return 조회된 구급일지
+     */
+    private EmergencyReport validateAndGetEmergencyReport(Long emergencyReportId) {
+        return emergencyReportRepository.findById(emergencyReportId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
+    }
+
+    /**
+     * STT 결과를 DB에 저장
+     *
+     * @param emergencyReport 구급일지
+     * @param data            STT 텍스트 데이터
+     * @return 저장된 SttTranscript
+     */
+    private SttTranscript saveSttTranscript(EmergencyReport emergencyReport, String data) {
+        SttTranscript sttTranscript = SttTranscript.builder()
+                .emergencyReport(emergencyReport)
+                .data(data)
+                .build();
+        SttTranscript saved = sttTranscriptRepository.save(sttTranscript);
+        log.info("STT 결과 DB 저장 완료 - 구급일지 ID: {}, STT ID: {}", emergencyReport.getId(), saved.getId());
+        return saved;
+    }
+
+    /**
+     * LLM JSON 응답을 DB에 저장
+     *
+     * @param sttTranscript STT 트랜스크립트
+     * @param jsonResponse  JSON 응답 객체
+     */
+    private void saveLlmSummary(SttTranscript sttTranscript, Object jsonResponse) {
+        try {
+            String jsonDataString = objectMapper.writeValueAsString(jsonResponse);
+            LlmSummary llmSummary = LlmSummary.builder()
+                    .sttTranscript(sttTranscript)
+                    .data(jsonDataString)
+                    .build();
+            llmSummaryRepository.save(llmSummary);
+            log.info("LLM JSON 응답 DB 저장 완료 - STT ID: {}", sttTranscript.getId());
+        } catch (Exception e) {
+            log.error("JSON 응답 저장 실패", e);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "JSON 응답 저장에 실패했습니다.");
+        }
+    }
+
+    /**
      * 오디오 파일 업로드
      * - STT 처리용 오디오 파일 업로드
      * - 지원 형식: wav, mp3, m4a, aac, flac
@@ -248,8 +297,7 @@ public class FileController {
                 file.getOriginalFilename(), emergencyReportId, language, file.getSize());
 
         // 1. 구급일지 존재 여부 확인
-        EmergencyReport emergencyReport = emergencyReportRepository.findById(emergencyReportId)
-                .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
+        EmergencyReport emergencyReport = validateAndGetEmergencyReport(emergencyReportId);
 
         // 2. MinIO에 오디오 파일 저장
         FileUploadResponse fileUploadResponse = minioService.uploadAudioFile(file);
@@ -260,21 +308,14 @@ public class FileController {
         log.info("STT 변환 완료 - 텍스트 길이: {} 문자", sttResponse.getText().length());
 
         // 4. STT 결과를 JSON 문자열로 변환하여 DB에 저장
+        String sttDataJson;
         try {
-            String sttDataJson = objectMapper.writeValueAsString(sttResponse);
-
-            SttTranscript sttTranscript = SttTranscript.builder()
-                    .emergencyReport(emergencyReport)
-                    .data(sttDataJson)
-                    .build();
-
-            sttTranscriptRepository.save(sttTranscript);
-            log.info("STT 결과 DB 저장 완료 - 구급일지 ID: {}", emergencyReportId);
-
+            sttDataJson = objectMapper.writeValueAsString(sttResponse);
         } catch (Exception e) {
-            log.error("STT 결과 JSON 변환 또는 저장 실패", e);
+            log.error("STT 결과 JSON 변환 실패", e);
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "STT 결과 저장에 실패했습니다.");
         }
+        saveSttTranscript(emergencyReport, sttDataJson);
 
         // 5. 통합 응답 생성
         AudioUploadWithSttResponse response = AudioUploadWithSttResponse.builder()
@@ -373,20 +414,14 @@ public class FileController {
                 file.getOriginalFilename(), emergencyReportId, language, file.getSize());
 
         // 1. 구급일지 존재 여부 확인
-        EmergencyReport emergencyReport = emergencyReportRepository.findById(emergencyReportId)
-                .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
+        EmergencyReport emergencyReport = validateAndGetEmergencyReport(emergencyReportId);
 
         // 2. 로컬 Whisper STT로 음성을 텍스트로 변환
         LocalWhisperSttResponse sttResponse = localWhisperSttService.convertSpeechToText(file, language);
         log.info("STT 변환 완료 - 텍스트 길이: {} 문자", sttResponse.getText().length());
 
         // 3. STT 변환된 텍스트를 stt_transcripts 테이블에 저장
-        SttTranscript sttTranscript = SttTranscript.builder()
-                .emergencyReport(emergencyReport)
-                .data(sttResponse.getText())
-                .build();
-        sttTranscriptRepository.save(sttTranscript);
-        log.info("STT 텍스트 DB 저장 완료 - 구급일지 ID: {}", emergencyReportId);
+        SttTranscript sttTranscript = saveSttTranscript(emergencyReport, sttResponse.getText());
 
         // 4. AI 서버로 텍스트를 JSON으로 변환
         Object jsonResponse = textToJsonService.convertTextToJson(
@@ -397,18 +432,7 @@ public class FileController {
         log.info("JSON 변환 완료");
 
         // 5. JSON 응답을 llm_summaries 테이블에 저장
-        try {
-            String jsonDataString = objectMapper.writeValueAsString(jsonResponse);
-            LlmSummary llmSummary = LlmSummary.builder()
-                    .sttTranscript(sttTranscript)
-                    .data(jsonDataString)
-                    .build();
-            llmSummaryRepository.save(llmSummary);
-            log.info("LLM JSON 응답 DB 저장 완료 - STT ID: {}", sttTranscript.getId());
-        } catch (Exception e) {
-            log.error("JSON 응답 저장 실패", e);
-            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "JSON 응답 저장에 실패했습니다.");
-        }
+        saveLlmSummary(sttTranscript, jsonResponse);
 
         // 6. AI 응답을 ReportSection에 저장
         int savedCount = aiResponseToReportSectionService.saveAiResponseToReportSections(
@@ -464,16 +488,10 @@ public class FileController {
         log.info("텍스트 → JSON 변환 요청 - 구급일지 ID: {}, 텍스트 길이: {} 문자", emergencyReportId, text.length());
 
         // 1. 구급일지 존재 여부 확인
-        EmergencyReport emergencyReport = emergencyReportRepository.findById(emergencyReportId)
-                .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
+        EmergencyReport emergencyReport = validateAndGetEmergencyReport(emergencyReportId);
 
         // 2. 입력 텍스트를 stt_transcripts 테이블에 저장
-        SttTranscript sttTranscript = SttTranscript.builder()
-                .emergencyReport(emergencyReport)
-                .data(text)
-                .build();
-        sttTranscriptRepository.save(sttTranscript);
-        log.info("텍스트 DB 저장 완료 - 구급일지 ID: {}", emergencyReportId);
+        SttTranscript sttTranscript = saveSttTranscript(emergencyReport, text);
 
         // 3. 텍스트를 AI 서버로 JSON으로 변환
         Object jsonResponse = textToJsonService.convertTextToJson(
@@ -484,18 +502,7 @@ public class FileController {
         log.info("JSON 변환 완료");
 
         // 4. JSON 응답을 llm_summaries 테이블에 저장
-        try {
-            String jsonDataString = objectMapper.writeValueAsString(jsonResponse);
-            LlmSummary llmSummary = LlmSummary.builder()
-                    .sttTranscript(sttTranscript)
-                    .data(jsonDataString)
-                    .build();
-            llmSummaryRepository.save(llmSummary);
-            log.info("LLM JSON 응답 DB 저장 완료 - STT ID: {}", sttTranscript.getId());
-        } catch (Exception e) {
-            log.error("JSON 응답 저장 실패", e);
-            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "JSON 응답 저장에 실패했습니다.");
-        }
+        saveLlmSummary(sttTranscript, jsonResponse);
 
         // 5. AI 응답을 ReportSection에 저장
         int savedCount = aiResponseToReportSectionService.saveAiResponseToReportSections(

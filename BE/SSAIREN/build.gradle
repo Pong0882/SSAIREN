@@ -93,6 +93,9 @@ dependencies {
     // Spring Boot 테스트 지원 (JUnit 5, Mockito 등 포함)
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+    // Spring Security 테스트 지원
+    testImplementation 'org.springframework.security:spring-security-test'
+
     // JUnit Platform 런처
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
