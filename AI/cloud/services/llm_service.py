@@ -1,7 +1,7 @@
 """
 LLM 기반 STT 결과물 정제 서비스
 
-GPT-4.1 모델을 사용하여:
+GPT-5 모델을 사용하여:
 1. 화자별 세그먼트를 분석하여 환자/응급구조사 구분
 2. 맥락 기반으로 뭉개진 단어 복구
 3. STT 결과물을 구조화된 JSON으로 변환 (실제 정보만 포함)
@@ -236,7 +236,7 @@ def get_information_extraction_prompt() -> str:
 
 def correct_conversation_text(
     conversation: str,
-    model: str = "gpt-4.1-2025-04-14"
+    model: str = "gpt-4o"
 ) -> str:
     """
     1단계: 화자별 대화의 텍스트 교정
@@ -282,7 +282,7 @@ def correct_conversation_text(
 
 def extract_structured_information(
     corrected_conversation: str,
-    model: str = "gpt-4.1-2025-04-14"
+    model: str = "gpt-4o"
 ) -> Dict[str, Any]:
     """
     2단계: 교정된 대화에서 구조화된 정보 추출
@@ -318,7 +318,7 @@ def extract_structured_information(
                 }
             ],
             response_format={"type": "json_object"},  # JSON 모드 강제
-            temperature=0.1,  # 매우 낮은 temperature로 정확한 추출
+            temperature=0.05,  # 매우 낮은 temperature로 정확한 추출
             max_tokens=3000
         )
         
@@ -385,13 +385,59 @@ def remove_empty_fields(data: Any) -> Any:
 
 
 # ============================================================
+# 화자 분리 및 대화 포맷팅 헬퍼 함수
+# ============================================================
+
+def format_conversation_for_llm(segments: List[STTSegment]) -> str:
+    """
+    화자별 세그먼트를 대화 형식으로 변환
+    
+    Args:
+        segments: STT 세그먼트 리스트
+        
+    Returns:
+        "[화자 A]: 텍스트\n[화자 B]: 텍스트" 형식의 대화 문자열
+    """
+    conversation_lines = []
+    for seg in segments:
+        speaker = seg.speaker or "Unknown"
+        text = seg.text.strip()
+        if text:  # 빈 텍스트 제외
+            conversation_lines.append(f"[화자 {speaker}]: {text}")
+    
+    return "\n".join(conversation_lines)
+
+
+def parse_segments_by_speaker(segments: List[STTSegment]) -> Dict[str, List[str]]:
+    """
+    화자별로 발화 텍스트를 그룹화
+    
+    Args:
+        segments: STT 세그먼트 리스트
+        
+    Returns:
+        {speaker: [text1, text2, ...]} 형식의 딕셔너리
+    """
+    speaker_groups = {}
+    for seg in segments:
+        speaker = seg.speaker or "Unknown"
+        text = seg.text.strip()
+        if text:
+            if speaker not in speaker_groups:
+                speaker_groups[speaker] = []
+            speaker_groups[speaker].append(text)
+    
+    return speaker_groups
+
+
+# ============================================================
 # 통합 정제 함수 (메인 엔트리 포인트)
 # ============================================================
 
 def refine_stt_result(
     transcription: str,
     segments: List[STTSegment],
-    model: str = "gpt-4.1-2025-04-14",
+    model: str = "gpt-4o",
     context: Optional[str] = None
 ) -> Dict[str, Any]:
     """
@@ -405,7 +451,7 @@ def refine_stt_result(
     Args:
         transcription: STT 전체 텍스트 (원본)
         segments: 화자별 세그먼트 리스트
-        model: 사용할 GPT 모델명 (기본값: gpt-4.1-2025-04-14)
+        model: 사용할 GPT 모델명 (기본값: gpt-5)
         context: 추가 맥락 정보 (선택사항)
         
     Returns:
@@ -482,4 +528,405 @@ def refine_stt_result(
         }
 
 
+# ============================================================
+# 새로운 EMS 데이터 추출 함수 (통합 API용)
+# ============================================================
 
+def get_ems_extraction_prompt() -> str:
+    """
+    응급 상황 대본에서 EMS 데이터를 추출하는 프롬프트
+    
+    새로운 스키마 형식에 맞춰 정보를 추출합니다.
+    """
+    return """당신은 119 응급 의료 정보 구조화 전문가입니다.
+
+**임무**: 응급 상황 대본을 분석하여 환자 및 응급 정보를 JSON으로 추출하세요.
+
+**핵심 원칙**:
+1. **항상 전체 스키마 구조를 반환** - 값이 없으면 빈 문자열(""), null, 또는 빈 배열([]) 사용
+2. **실제로 언급된 정보만 입력** - 추측 금지
+3. 숫자는 정확한 값만 추출, 없으면 null
+4. 시간 형식: HH:MM, 날짜: ISO-8601 (YYYY-MM-DD)
+5. 화자 구분 없이 대화 전체에서 환자 정보 추출
+
+**JSON 출력 스키마**:
+{
+  "ReportSectionType": {
+    "patientInfo": {
+      "reporter": {
+        "phone": "string",
+        "reportMethod": "일반전화 | 휴대전화 | 기타",
+        "value": "기타 선택 시 상세 내용"
+      },
+      "patient": {
+        "name": "string",
+        "gender": "남성 | 여성",
+        "ageYears": number,
+        "birthDate": "YYYY-MM-DD",
+        "address": "string"
+      },
+      "guardian": {
+        "name": "string",
+        "relation": "string",
+        "phone": "string"
+      },
+      "incidentLocation": {
+        "text": "string"
+      }
+    },
+    "dispatch": {
+      "reportDatetime": "YYYY-MM-DD HH:MM",
+      "departureTime": "HH:MM",
+      "arrivalSceneTime": "HH:MM",
+      "contactTime": "HH:MM",
+      "distanceKm": number,
+      "departureSceneTime": "HH:MM",
+      "arrivalHospitalTime": "HH:MM",
+      "returnTime": "HH:MM",
+      "dispatchType": "정상 | 오인 | 거짓 | 취소 | 기타",
+      "sceneLocation": {
+        "name": "집 | 집단거주시설 | 도로 | 도로외교통지역 | 오락/문화/공시설 | 학교/교육시설 | 운동시설 | 상업시설 | 의료관련시설 | 공장/산업/건설시설 | 일차산업장 | 바다/강/산/논밭 | 기타",
+        "value": "기타 선택 시 상세 내용"
+      },
+      "symptoms": {
+        "disease": [
+          {
+            "name": "두통 | 흉통 | 복통 | 요통 | 분만진통 | 그 밖의 통증",
+            "value": "'그 밖의 통증' 선택 시 상세 내용 / (두통 | 흉통 | 복통 | 요통 | 분만진통) 이라면 null"
+          }
+        ],
+        "trauma": [
+          {
+            "name": "골절 | 탈구 | 삠 | 열상 | 찰과상 | 타박상 | 절단 | 압궤손상 | 화상"
+          }
+        ],
+        "otherSymptoms": [
+          {
+            "name": "의식장애 | 기도이물 | 기침 | 호흡곤란 | 호흡정지 | 두근거림 | 가슴불편감 | 심정지 | 경련/발작 | 실신 | 오심 | 구토 | 설사 | 변비 | 배뇨장애 | 객혈 | 토혈 | 혈변 | 비출혈 | 질출혈 | 그 밖의 출혈 | 고열 | 저체온증 | 어지러움 | 마비 | 전신쇠약 | 정신장애 | 그 밖의 이물감 | 기타",
+            "value": "'기타' 선택 시 상세 내용 / (의식장애 | 기도이물 | 기침 | 호흡곤란 | 호흡정지 | 두근거림 | 가슴불편감 | 심정지 | 경련/발작 | 실신 | 오심 | 구토 | 설사 | 변비 | 배뇨장애 | 객혈 | 토혈 | 혈변 | 비출혈 | 질출혈 | 그 밖의 출혈 | 고열 | 저체온증 | 어지러움 | 마비 | 전신쇠약 | 정신장애 | 그 밖의 이물감 |) 이라면 null"
+          }
+        ]
+      }
+    },
+    "incidentType": {
+      "medicalHistory": {
+        "status": "있음 | 없음 | 미상",
+        "items": [
+          {
+            "name": "고혈압 | 당뇨 | 뇌혈관질환 | 심장질환 | 폐질환 | 결핵 | 간염 | 간경화 | 알레르기 | 암 | 신부전 | 감염병 | 기타",
+            "value": "'암/신부전/감염병/기타' 선택 시 세부 내용 필수 / (고혈압 | 당뇨 | 뇌혈관질환 | 심장질환 | 폐질환 | 결핵 | 간염 | 간경화 | 알레르기) 이라면 null"
+          }
+        ]
+      },
+      "category": "질병 | 질병외 | 기타",
+      "subCategory": {
+        "type": "교통사고 | 그 외 손상 | 비외상성 손상 | 자연재해 | 임산부 | 신생아 | 단순주취 | 기타",
+        "name": "상세 분류명 (type에 따라 다름)",
+        "value": "추가 상세 내용"
+      },
+      "legalSuspicion": {
+        "name": "경찰통보 | 경찰인계 | 긴급이송 | 관련기관 통보"
+      }
+    },
+    "assessment": {
+      "consciousness": {
+        "first": {
+          "time": "HH:MM",
+          "state": "A | V | P | U"
+        },
+        "second": {
+          "time": "HH:MM",
+          "state": "A | V | P | U"
+        }
+      },
+      "pupilReaction": {
+        "left": {
+          "status": "정상 | 축동 | 산동 | 부동 | 측정불가",
+          "reaction": "반응 | 무반응 | 측정불가"
+        },
+        "right": {
+          "status": "정상 | 축동 | 산동 | 부동 | 측정불가",
+          "reaction": "반응 | 무반응 | 측정불가"
+        }
+      },
+      "vitalSigns": {
+        "available": "null | 불가 | 거부",
+        "first": {
+          "time": "HH:MM",
+          "bloodPressure": "수축기/이완기",
+          "pulse": number,
+          "respiration": number,
+          "temperature": number,
+          "spo2": number,
+          "bloodSugar": number
+        },
+        "second": {
+          "time": "HH:MM",
+          "bloodPressure": "수축기/이완기",
+          "pulse": number,
+          "respiration": number,
+          "temperature": number,
+          "spo2": number,
+          "bloodSugar": number
+        }
+      },
+      "patientLevel": "LEVEL1 | LEVEL2 | LEVEL3 | LEVEL4 | LEVEL5(추정)",
+      "notes": {
+        "cheifComplaint": "주호소",
+        "onset": "발병 시간/상황",
+        "note": "전체적으로 들어간 내용을 요약을 보여줌"
+      }
+    }
+  }
+}
+
+**상세 분류 규칙**:
+
+1. **incidentType.category = "질병"**: subCategory 없음
+2. **incidentType.category = "질병외"**:
+   - type = "교통사고" → name: 운전자 | 동승자 | 보행자 | 자전거 | 오토바이 | 개인형 이동장치 | 그 밖의 탈 것 | 미상
+   - type = "그 외 손상" → name: 낙상 | 추락 | 그 밖의 둔상 | 관통상 | 기계 | 농기계
+   - type = "비외상성 손상" → name: 호흡위험 | 화상 | 연기흡입 | 중독 | 화학물질 | 동물/곤충 | 온열손상 | 한랭손상 | 성폭행 | 상해 | 기타
+     * 호흡위험 value: 익수 | 외력에 의한 압박 | 아뮬잘에 의한 기도막힘
+     * 화상 value: 화염 | 고온체 | 전기 | 물
+3. **incidentType.category = "기타"**:
+   - type: 자연재해 | 임산부 | 신생아 | 단순주취 | 기타
+
+**추출 예시 1**:
+
+입력:
+"어디가 아프세요? 머리가 아파요. 고혈압 있습니다."
+
+출력:
+{
+  "ReportSectionType": {
+    "patientInfo": {
+      "reporter": {
+        "phone": "",
+        "reportMethod": "",
+        "value": null
+      },
+      "patient": {
+        "name": "",
+        "gender": "",
+        "ageYears": null,
+        "birthDate": "",
+        "address": ""
+      },
+      "guardian": {
+        "name": "",
+        "relation": "",
+        "phone": ""
+      },
+      "incidentLocation": {
+        "text": ""
+      }
+    },
+    "dispatch": {
+      "reportDatetime": "",
+      "departureTime": "",
+      "arrivalSceneTime": "",
+      "contactTime": "",
+      "distanceKm": null,
+      "departureSceneTime": "",
+      "arrivalHospitalTime": "",
+      "returnTime": "",
+      "dispatchType": "",
+      "sceneLocation": {
+        "name": "",
+        "value": null
+      },
+      "symptoms": {
+        "disease": [{"name": "두통"}],
+        "trauma": [],
+        "otherSymptoms": []
+      }
+    },
+    "incidentType": {
+      "medicalHistory": {
+        "status": "있음",
+        "items": [{"name": "고혈압"}]
+      },
+      "category": "질병",
+      "subCategory": {
+        "type": "",
+        "name": "",
+        "value": null
+      },
+      "legalSuspicion": {
+        "name": ""
+      }
+    },
+    "assessment": {
+      "consciousness": {
+        "first": {
+          "time": "",
+          "state": ""
+        },
+        "second": {
+          "time": "",
+          "state": ""
+        }
+      },
+      "pupilReaction": {
+        "left": {
+          "status": "",
+          "reaction": ""
+        },
+        "right": {
+          "status": "",
+          "reaction": ""
+        }
+      },
+      "vitalSigns": {
+        "available": null,
+        "first": {
+          "time": "",
+          "bloodPressure": "",
+          "pulse": null,
+          "respiration": null,
+          "temperature": null,
+          "spo2": null,
+          "bloodSugar": null
+        },
+        "second": {
+          "time": "",
+          "bloodPressure": "",
+          "pulse": null,
+          "respiration": null,
+          "temperature": null,
+          "spo2": null,
+          "bloodSugar": null
+        }
+      },
+      "patientLevel": "",
+      "notes": {
+        "cheifComplaint": "",
+        "onset": "",
+        "note": ""
+      }
+    }
+  }
+}
+
+**추출 예시 2**:
+
+입력:
+"무슨 일이세요? 차 운전하다가 추돌당했어요. 왼쪽 팔이 아파요. 의식은 명료합니다. 혈압 120/80입니다."
+
+출력: (전체 구조 유지, 값이 있는 필드만 채움)
+- dispatch.symptoms.disease: [{"name": "그 밖의 통증", "value": "왼쪽 팔 통증"}]
+- incidentType.category: "질병외"
+- incidentType.subCategory.type: "교통사고"
+- incidentType.subCategory.name: "운전자"
+- assessment.consciousness.first.state: "A"
+- assessment.vitalSigns.first.bloodPressure: "120/80"
+- 나머지 모든 필드: 빈 문자열("") 또는 null 또는 빈 배열([])
+
+**중요 규칙**:
+1. **항상 전체 스키마 구조를 반환** - 모든 필드 포함
+2. 반드시 순수 JSON만 출력 (코드 블록이나 설명 금지)
+3. 값이 없는 필드:
+   - 문자열 필드 → 빈 문자열 ("")
+   - 숫자 필드 → null
+   - 배열 필드 → 빈 배열 ([])
+   - 객체 필드 → 빈 문자열로 채워진 하위 필드
+4. 언급된 정보만 입력 (추측 금지)
+5. enum 값은 정확히 매칭 (오타 금지)
+
+**입력 대본**:
+{conversation}
+
+**지시사항**:
+- 위의 전체 스키마 구조를 그대로 따라서 JSON을 생성하세요
+- 반드시 순수 JSON만 출력하세요
+- 코드 블록(```) 사용 금지
+- 설명이나 주석 금지
+- 바로 {"ReportSectionType": {...}}로 시작하세요
+
+**출력**:"""
+
+
+def extract_ems_data_from_conversation(
+    conversation: str,
+    model: str = "gpt-4o",
+    temperature: float = 0.1
+) -> Dict[str, Any]:
+    """
+    대본에서 EMS 데이터 추출 (통합 API용)
+    
+    Args:
+        conversation: 응급 상황 대본 텍스트
+        model: 사용할 GPT 모델명
+        temperature: 생성 temperature (기본값: 0.1)
+        
+    Returns:
+        Dict[str, Any]: ReportSectionType 스키마 형식의 데이터
+        
+    Raises:
+        Exception: OpenAI API 호출 또는 JSON 파싱 실패 시
+    """
+    client = get_openai_client()
+    
+    # .format() 대신 .replace() 사용 (JSON 스키마의 중괄호 충돌 방지)
+    prompt = get_ems_extraction_prompt().replace("{conversation}", conversation)
+    
+    try:
+        print(f"[EMS 추출] {model} 호출 시작...")
+        
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "당신은 119 응급 의료 정보를 구조화하는 전문가입니다. 반드시 유효한 JSON만 출력하세요. 코드 블록이나 설명 없이 순수 JSON만 반환하세요."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            response_format={"type": "json_object"},
+            temperature=temperature,
+            max_tokens=4000
+        )
+        
+        content = response.choices[0].message.content.strip()
+        
+        print(f"[EMS 추출] 원본 응답 길이: {len(content)}자")
+        print(f"[EMS 추출] 응답 시작 부분: {content[:200]}...")
+        
+        # 마크다운 코드 블록 제거
+        if content.startswith("```"):
+            print(f"[EMS 추출] 코드 블록 감지 - 제거 중...")
+            lines = content.split('\n')
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            content = '\n'.join(lines).strip()
+            print(f"[EMS 추출] 정리 후: {content[:200]}...")
+        
+        # JSON 파싱
+        try:
+            result_data = json.loads(content)
+            print(f"[EMS 추출] JSON 파싱 성공")
+        except json.JSONDecodeError as e:
+            print(f"[EMS 추출] JSON 파싱 실패: {str(e)}")
+            print(f"[EMS 추출] 문제 위치: {e.pos}")
+            print(f"[EMS 추출] 응답 내용 (처음 1000자):\n{content[:1000]}")
+            print(f"[EMS 추출] 응답 내용 (마지막 200자):\n{content[-200:]}")
+            
+            raise Exception(f"LLM이 유효한 JSON을 반환하지 않았습니다: {str(e)}")
+        
+        print(f"[EMS 추출] 완료")
+        
+        # 전체 스키마 구조를 그대로 반환 (빈 필드 제거 안 함)
+        return result_data
+        
+    except json.JSONDecodeError:
+        # 이미 위에서 처리됨
+        raise
+    except Exception as e:
+        print(f"EMS 데이터 추출 중 오류 발생: {str(e)}")
+        raise

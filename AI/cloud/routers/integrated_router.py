@@ -1,193 +1,138 @@
 """
-통합 오디오 처리 API
+통합 텍스트 처리 API
 
-오디오 파일 업로드 → STT 변환 → LLM 정제를 한 번에 처리합니다.
+대본(텍스트) → LLM 정제 및 JSON 구조화를 처리합니다.
 """
 
 import os
-import tempfile
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import Optional
 
-from services.stt_service import transcribe_audio_stream
-from services.llm_service import refine_stt_result
-from schemas.llm_schemas import STTSegment
+from services.llm_service import extract_ems_data_from_conversation
 
 router = APIRouter(prefix="/integrated", tags=["integrated"])
 
 
-@router.post("/process-audio")
-async def process_audio_complete(
-    file: UploadFile = File(...),
-    language: str = "ko",
-    context: str = "119 응급 상황"
-):
+# 요청 스키마
+class ConversationRequest(BaseModel):
+    conversation: str
+    max_new_tokens: Optional[int] = 700
+    temperature: Optional[float] = 0.1
+
+
+@router.post("/process-conversation")
+async def process_conversation(request: ConversationRequest):
     """
-    오디오 파일을 업로드하면 STT → LLM 정제까지 자동으로 처리
+    대본(텍스트)을 받아서 LLM으로 정제 및 구조화된 JSON 추출
     
     전체 프로세스:
-    1. 오디오 파일 → STT (Whisper API, 화자 분리)
-    2. STT 결과 → LLM 정제 (GPT-4.1, 텍스트 교정 + 정보 추출)
-    3. 정제된 JSON 반환
+    1. 대본(텍스트) 입력
+    2. GPT-4o로 정제 및 응급 정보 추출
+    3. 구조화된 JSON 반환
     
     Args:
-        file: 오디오 파일 (wav, mp3, m4a 등)
-        language: 언어 코드 (기본값: 'ko')
-        context: 상황 맥락 (기본값: '119 응급 상황')
+        conversation: 응급 상황 대본 텍스트
+        max_new_tokens: 최대 생성 토큰 수 (기본값: 700)
+        temperature: 생성 temperature (기본값: 0.1)
     
     Returns:
-        dict: {
-            "stt_result": {
-                "text": "전체 텍스트",
-                "segments": [...],
-                "speaker_count": 4
-            },
-            "llm_result": {
-                "success": true,
-                "original_text": "...",
-                "corrected_text": "...",
-                "structured_data": {...},
-                "model_used": "gpt-4.1-2025-04-14",
-                "processing_time": 5.2
-            },
-            "total_processing_time": 8.5
+        dict: 전체 ReportSectionType 스키마 구조 (모든 필드 포함)
+        - 값이 있는 필드: 실제 값 입력
+        - 값이 없는 필드: 빈 문자열(""), null, 또는 빈 배열([])
+        {
+            "ReportSectionType": {
+                "patientInfo": {...},  // 모든 하위 필드 포함
+                "dispatch": {...},     // 모든 하위 필드 포함
+                "incidentType": {...}, // 모든 하위 필드 포함
+                "assessment": {...}    // 모든 하위 필드 포함
+            }
         }
     
     Example:
-        POST /api/integrated/process-audio
-        (form-data)
-        file: audio.wav
-        
-        Response:
+        POST /api/integrated/process-conversation
         {
-            "stt_result": {
-                "text": "안녕하세요. 어디가 불편하신가요? 머리가 아파요.",
-                "segments": [
-                    {"id": "seg_0", "speaker": "A", ...},
-                    {"id": "seg_1", "speaker": "B", ...}
-                ],
-                "speaker_count": 2
-            },
-            "llm_result": {
-                "success": true,
-                "corrected_text": "[화자 A]: 안녕하세요...",
-                "structured_data": {
-                    "patientInfo": {...}
+            "conversation": "어디가 아프세요? 머리가 아파요. 고혈압 있습니다.",
+            "max_new_tokens": 700,
+            "temperature": 0.1
+        }
+        
+        Response: (전체 스키마 구조 반환, 값이 없는 필드는 "", null, [] 사용)
+        {
+            "ReportSectionType": {
+                "patientInfo": {
+                    "reporter": {"phone": "", "reportMethod": "", "value": null},
+                    "patient": {"name": "", "gender": "", "ageYears": null, "birthDate": "", "address": ""},
+                    "guardian": {"name": "", "relation": "", "phone": ""},
+                    "incidentLocation": {"text": ""}
                 },
-                "processing_time": 3.2
-            },
-            "total_processing_time": 6.5
+                "dispatch": {
+                    "reportDatetime": "",
+                    "departureTime": "",
+                    "arrivalSceneTime": "",
+                    "contactTime": "",
+                    "distanceKm": null,
+                    "departureSceneTime": "",
+                    "arrivalHospitalTime": "",
+                    "returnTime": "",
+                    "dispatchType": "",
+                    "sceneLocation": {"name": "", "value": null},
+                    "symptoms": {
+                        "disease": [{"name": "두통"}],
+                        "trauma": [],
+                        "otherSymptoms": []
+                    }
+                },
+                "incidentType": {
+                    "medicalHistory": {
+                        "status": "있음",
+                        "items": [{"name": "고혈압"}]
+                    },
+                    "category": "질병",
+                    "subCategory": {"type": "", "name": "", "value": null},
+                    "legalSuspicion": {"name": ""}
+                },
+                "assessment": {
+                    "consciousness": {
+                        "first": {"time": "", "state": ""},
+                        "second": {"time": "", "state": ""}
+                    },
+                    "pupilReaction": {
+                        "left": {"status": "", "reaction": ""},
+                        "right": {"status": "", "reaction": ""}
+                    },
+                    "vitalSigns": {
+                        "available": null,
+                        "first": {"time": "", "bloodPressure": "", "pulse": null, "respiration": null, "temperature": null, "spo2": null, "bloodSugar": null},
+                        "second": {"time": "", "bloodPressure": "", "pulse": null, "respiration": null, "temperature": null, "spo2": null, "bloodSugar": null}
+                    },
+                    "patientLevel": "",
+                    "notes": {"cheifComplaint": "", "onset": "", "note": ""}
+                }
+            }
         }
     """
-    import time
-    start_time = time.time()
-    
-    # 임시 파일로 저장
-    suffix = os.path.splitext(file.filename or "audio.mp3")[1]
-    tmp_path = None
-    
     try:
-        # 1단계: 오디오 파일 저장
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            tmp.write(await file.read())
-            tmp_path = tmp.name
-        
-        print(f"[통합 API] 오디오 파일 저장 완료: {tmp_path}")
-        
-        # 2단계: STT 실행 (스트리밍 결과를 모두 수집)
-        print(f"[통합 API] STT 변환 시작...")
-        stt_segments = []
-        full_text_parts = []
-        
-        for event in transcribe_audio_stream(tmp_path, language):
-            # 이벤트에서 세그먼트 정보 추출
-            if hasattr(event, 'model_dump'):
-                event_data = event.model_dump()
-            elif hasattr(event, 'dict'):
-                event_data = event.dict()
-            else:
-                continue
-            
-            # 세그먼트 정보가 있으면 저장
-            if 'segments' in event_data:
-                for seg in event_data['segments']:
-                    stt_segments.append({
-                        "id": seg.get('id', f"seg_{len(stt_segments)}"),
-                        "speaker": seg.get('speaker', 'Unknown'),
-                        "start": seg.get('start', 0.0),
-                        "end": seg.get('end', 0.0),
-                        "text": seg.get('text', '')
-                    })
-            
-            # 텍스트 수집
-            if 'text' in event_data:
-                full_text_parts.append(event_data['text'])
-        
-        # 전체 텍스트 조합
-        full_text = ' '.join(full_text_parts) if full_text_parts else ''
-        
-        # 세그먼트가 없으면 전체 텍스트로 하나의 세그먼트 생성
-        if not stt_segments and full_text:
-            stt_segments = [{
-                "id": "seg_0",
-                "speaker": "A",
-                "start": 0.0,
-                "end": 0.0,
-                "text": full_text
-            }]
-        
-        print(f"[통합 API] STT 완료: {len(stt_segments)}개 세그먼트, {len(full_text)}자")
-        
-        # STT 결과가 비어있으면 에러
-        if not full_text:
+        # 대본이 비어있으면 에러
+        if not request.conversation or not request.conversation.strip():
             raise HTTPException(
                 status_code=400,
-                detail="STT 변환 결과가 비어있습니다. 오디오 파일을 확인해주세요."
+                detail="대본(conversation)이 비어있습니다."
             )
         
-        # 화자 수 계산
-        speaker_count = len(set(seg['speaker'] for seg in stt_segments))
+        print(f"[통합 API] 대본 처리 시작 (길이: {len(request.conversation)}자)")
         
-        stt_result = {
-            "text": full_text,
-            "segments": stt_segments,
-            "speaker_count": speaker_count
-        }
-        
-        # 3단계: LLM 정제 실행
-        print(f"[통합 API] LLM 정제 시작...")
-        
-        # STTSegment 객체로 변환
-        segment_objects = [
-            STTSegment(
-                id=seg['id'],
-                speaker=seg['speaker'],
-                start=seg['start'],
-                end=seg['end'],
-                text=seg['text']
-            )
-            for seg in stt_segments
-        ]
-        
-        llm_result = refine_stt_result(
-            transcription=full_text,
-            segments=segment_objects,
-            context=context
+        # GPT-4o로 응급 정보 추출
+        result = extract_ems_data_from_conversation(
+            conversation=request.conversation,
+            temperature=request.temperature
         )
         
-        print(f"[통합 API] LLM 정제 완료")
+        print(f"[통합 API] 처리 완료")
         
-        # 전체 처리 시간 계산
-        total_time = time.time() - start_time
-        
-        # 최종 응답
-        response = {
-            "stt_result": stt_result,
-            "llm_result": llm_result,
-            "total_processing_time": round(total_time, 2)
-        }
-        
-        return JSONResponse(content=response)
+        # 순수 JSON 결과만 반환
+        return JSONResponse(content=result)
         
     except HTTPException:
         raise
@@ -198,16 +143,8 @@ async def process_audio_complete(
         
         raise HTTPException(
             status_code=500,
-            detail=f"오디오 처리 중 오류 발생: {str(e)}"
+            detail=f"대본 처리 중 오류 발생: {str(e)}"
         )
-    finally:
-        # 임시 파일 삭제
-        if tmp_path and os.path.exists(tmp_path):
-            try:
-                os.remove(tmp_path)
-                print(f"[통합 API] 임시 파일 삭제 완료: {tmp_path}")
-            except Exception as e:
-                print(f"[통합 API] 임시 파일 삭제 실패: {str(e)}")
 
 
 @router.get("/health")
@@ -218,20 +155,16 @@ async def integrated_health_check():
     Returns:
         dict: 서비스 상태 정보
     """
-    import os
-    
     # OpenAI API 키 확인
     api_key_configured = bool(os.getenv("OPENAI_API_KEY"))
     
     return {
         "status": "healthy" if api_key_configured else "warning",
-        "service": "Integrated Audio Processing Service",
+        "service": "Integrated Conversation Processing Service",
         "features": [
-            "STT (Whisper API, 화자 분리)",
-            "LLM (GPT-4.1, 텍스트 정제 + 정보 추출)"
+            "LLM (GPT-4o, 텍스트 정제 + 응급 정보 구조화)"
         ],
         "api_key_configured": api_key_configured,
         "message": "통합 서비스가 정상 작동 중입니다." if api_key_configured 
                    else "OpenAI API 키가 설정되지 않았습니다."
     }
-
