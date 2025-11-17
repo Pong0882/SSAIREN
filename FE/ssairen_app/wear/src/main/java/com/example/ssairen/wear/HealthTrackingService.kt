@@ -216,13 +216,18 @@ class HealthTrackingForegroundService : Service() {
         }
         heartRate = hr
 
-        // 측정된 모든 데이터 전송 (스킵 없음)
-        Log.d(TAG, "📤 심박수 전송: $hr BPM")
-        sendHeartRate(hr)
-        lastSentHr = hr
-        lastSentAt = System.currentTimeMillis()
+        // 1초 간격 제한: 마지막 전송 후 1초 이상 경과한 경우만 전송
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastSentAt >= MIN_INTERVAL_MS) {
+            Log.d(TAG, "📤 심박수 전송: $hr BPM")
+            sendHeartRate(hr)
+            lastSentHr = hr
+            lastSentAt = currentTime
+        } else {
+            Log.d(TAG, "⏭️ 심박수 스킵 (1초 미만): $hr BPM")
+        }
 
-        // UI 업데이트 콜백
+        // UI 업데이트는 항상 수행 (전송 여부와 무관)
         onHeartRateUpdate?.invoke(hr)
     }
 

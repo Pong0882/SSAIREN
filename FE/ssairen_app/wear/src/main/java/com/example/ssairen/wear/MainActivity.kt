@@ -27,9 +27,18 @@ import androidx.wear.compose.material.Text
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import com.google.android.gms.wearable.*
+import java.nio.charset.StandardCharsets
+import kotlin.random.Random
 
 private const val TAG = "MainActivity"
 private const val ERROR_MESSAGE_TIMEOUT_MS = 5_000L // 오류 메시지 5초 자동 제거
+
+// 더미 데이터 전송용 경로
+private const val HR_MSG_PATH = "/hr_msg"
+private const val HR_DATA_PATH = "/heart_rate"
+private const val SPO2_MSG_PATH = "/spo2_msg"
+private const val SPO2_DATA_PATH = "/spo2"
 
 class MainActivity : ComponentActivity() {
 
@@ -41,6 +50,13 @@ class MainActivity : ComponentActivity() {
 
     // 메시지 타임아웃 관리
     private var messageTimeoutJob: kotlinx.coroutines.Job? = null
+
+    // 🧪 테스트 모드 관련
+    private var isDummyModeActive by mutableStateOf(false)
+    private var dummyDataJob: kotlinx.coroutines.Job? = null
+    private val dataClient by lazy { Wearable.getDataClient(this) }
+    private val messageClient by lazy { Wearable.getMessageClient(this) }
+    private val nodeClient by lazy { Wearable.getNodeClient(this) }
 
     // ========= 생명주기 =========
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,12 +83,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             HealthMeasureScreen(
                 onPermissionGranted = {
-                    startHealthTrackingService()
+                    // 🧪 테스트 모드: 실제 센서는 시작하지 않음 (더미 데이터만 사용)
+                    // startHealthTrackingService()
                 },
                 onTogglePeriodicSpo2Click = { togglePeriodicSpo2Measurement() },
+                onToggleDummyModeClick = { toggleDummyDataMode() },
                 heartRate = heartRate,
                 spo2 = spo2,
                 isPeriodicActive = isPeriodicSpo2Active,
+                isDummyActive = isDummyModeActive,
                 currentMessage = currentMessage?.content ?: ""
             )
         }
@@ -86,6 +105,9 @@ class MainActivity : ComponentActivity() {
         HealthTrackingForegroundService.onStatusUpdate = null
         HealthTrackingForegroundService.onConnectionStateUpdate = null
         messageTimeoutJob?.cancel()
+
+        // 🧪 더미 데이터 전송 중지
+        stopDummyDataTransmission()
     }
 
     /**
@@ -164,6 +186,106 @@ class MainActivity : ComponentActivity() {
         startService(intent)
     }
 
+    // 🧪 더미 데이터 전송 모드 토글
+    private fun toggleDummyDataMode() {
+        isDummyModeActive = !isDummyModeActive
+
+        if (isDummyModeActive) {
+            startDummyDataTransmission()
+        } else {
+            stopDummyDataTransmission()
+        }
+    }
+
+    // 🧪 더미 데이터 전송 시작
+    private fun startDummyDataTransmission() {
+        Log.d(TAG, "🧪 더미 데이터 전송 시작!")
+
+        dummyDataJob = lifecycleScope.launch {
+            var counter = 0
+            while (isDummyModeActive) {
+                counter++
+
+                // 심박수: 60~100 사이 랜덤값
+                val dummyHr = Random.nextInt(60, 101)
+                heartRate = dummyHr
+                sendDummyHeartRate(dummyHr)
+
+                // 10초마다 SpO2도 전송 (95~99%)
+                if (counter % 10 == 0) {
+                    val dummySpo2 = Random.nextInt(95, 100)
+                    spo2 = dummySpo2
+                    sendDummySpO2(dummySpo2)
+                }
+
+                delay(1000) // 1초마다 전송
+            }
+        }
+    }
+
+    // 🧪 더미 데이터 전송 중지
+    private fun stopDummyDataTransmission() {
+        Log.d(TAG, "🧪 더미 데이터 전송 중지!")
+        dummyDataJob?.cancel()
+        dummyDataJob = null
+        currentMessage = null
+    }
+
+    // 🧪 더미 심박수 전송
+    private fun sendDummyHeartRate(hr: Int) {
+        Log.d(TAG, "🧪 더미 심박수 전송: $hr BPM")
+
+        // 메시지 전송
+        val payload = hr.toString().toByteArray(StandardCharsets.UTF_8)
+        nodeClient.connectedNodes.addOnSuccessListener { nodes ->
+            Log.d(TAG, "📱 연결된 기기 수: ${nodes.size}")
+            nodes.forEach { node ->
+                messageClient.sendMessage(node.id, HR_MSG_PATH, payload)
+                    .addOnSuccessListener {
+                        Log.d(TAG, "✅ 더미 심박수 전송 성공 -> ${node.displayName}: $hr BPM")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "❌ 더미 심박수 전송 실패 -> ${node.displayName}", e)
+                    }
+            }
+        }.addOnFailureListener { e ->
+            Log.e(TAG, "❌ 연결된 노드 조회 실패", e)
+        }
+
+        // DataItem 전송 (백업)
+        val req = PutDataMapRequest.create(HR_DATA_PATH).apply {
+            dataMap.putFloat("heart_rate_value", hr.toFloat())
+            dataMap.putLong("timestamp", System.currentTimeMillis())
+        }.asPutDataRequest().setUrgent()
+        dataClient.putDataItem(req)
+    }
+
+    // 🧪 더미 SpO2 전송
+    private fun sendDummySpO2(spo2: Int) {
+        Log.d(TAG, "🧪 더미 SpO2 전송: $spo2%")
+
+        // 메시지 전송
+        val payload = spo2.toString().toByteArray(StandardCharsets.UTF_8)
+        nodeClient.connectedNodes.addOnSuccessListener { nodes ->
+            nodes.forEach { node ->
+                messageClient.sendMessage(node.id, SPO2_MSG_PATH, payload)
+                    .addOnSuccessListener {
+                        Log.d(TAG, "✅ 더미 SpO2 전송 성공 -> ${node.displayName}: $spo2%")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "❌ 더미 SpO2 전송 실패", e)
+                    }
+            }
+        }
+
+        // DataItem 전송 (백업)
+        val req = PutDataMapRequest.create(SPO2_DATA_PATH).apply {
+            dataMap.putFloat("spo2_value", spo2.toFloat())
+            dataMap.putLong("timestamp", System.currentTimeMillis())
+        }.asPutDataRequest().setUrgent()
+        dataClient.putDataItem(req)
+    }
+
 }
 
 // ======================= UI =======================
@@ -171,9 +293,11 @@ class MainActivity : ComponentActivity() {
 private fun HealthMeasureScreen(
     onPermissionGranted: () -> Unit,
     onTogglePeriodicSpo2Click: () -> Unit,
+    onToggleDummyModeClick: () -> Unit,
     heartRate: Int,
     spo2: Int,
     isPeriodicActive: Boolean,
+    isDummyActive: Boolean,
     currentMessage: String
 ) {
     var hasPermission by remember { mutableStateOf(false) }
@@ -245,21 +369,42 @@ private fun HealthMeasureScreen(
                     style = MaterialTheme.typography.title1
                 )
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
 
-                // 🔘 조용한 시작/중지 버튼 (하단에 작게)
+                // 🔘 SpO2 측정 버튼 (주석처리 - 테스트 모드만 사용)
+//                Button(
+//                    onClick = onTogglePeriodicSpo2Click,
+//                    enabled = hasPermission && !isDummyActive,
+//                    modifier = Modifier
+//                        .height(32.dp)
+//                        .width(80.dp),
+//                    colors = androidx.wear.compose.material.ButtonDefaults.buttonColors(
+//                        backgroundColor = MaterialTheme.colors.surface.copy(alpha = 0.3f)
+//                    )
+//                ) {
+//                    Text(
+//                        text = if (isPeriodicActive) "중지" else "시작",
+//                        style = MaterialTheme.typography.body2
+//                    )
+//                }
+//
+//                Spacer(Modifier.height(4.dp))
+
+                // 🧪 테스트 모드 버튼
                 Button(
-                    onClick = onTogglePeriodicSpo2Click,
-                    enabled = hasPermission,
+                    onClick = onToggleDummyModeClick,
                     modifier = Modifier
-                        .height(32.dp)  // 버튼 높이 작게
-                        .width(80.dp),  // 버튼 너비 작게
+                        .height(32.dp)
+                        .width(80.dp),
                     colors = androidx.wear.compose.material.ButtonDefaults.buttonColors(
-                        backgroundColor = MaterialTheme.colors.surface.copy(alpha = 0.3f)  // 반투명 배경
+                        backgroundColor = if (isDummyActive)
+                            androidx.compose.ui.graphics.Color(0xFFFF9800)  // 주황색 (활성)
+                        else
+                            MaterialTheme.colors.surface.copy(alpha = 0.3f)  // 반투명 (비활성)
                     )
                 ) {
                     Text(
-                        text = if (isPeriodicActive) "중지" else "시작",
+                        text = if (isDummyActive) "중지" else "시작",
                         style = MaterialTheme.typography.body2
                     )
                 }
