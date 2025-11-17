@@ -871,12 +871,12 @@ private fun HomeContent(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.List,
-                        contentDescription = "세부 상황정보",
+                        contentDescription = "세부상황표",
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "세부 상황정보",
+                        text = "세부상황표",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )

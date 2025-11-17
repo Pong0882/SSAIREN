@@ -314,7 +314,7 @@ fun PatientType(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        listOf("경찰통보", "경찰입회", "긴급이송", "관련기관 통보").forEach { item ->
+                        listOf("경찰통보", "경찰인계", "긴급이송", "관련기관 통보").forEach { item ->
                             SelectButton(
                                 text = item,
                                 isSelected = crimeOption == item,
