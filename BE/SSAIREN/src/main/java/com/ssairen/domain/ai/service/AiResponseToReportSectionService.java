@@ -129,11 +129,22 @@ public class AiResponseToReportSectionService {
                             // DB에서 내부 섹션 데이터 추출 (예: {schemaVersion: 1, patientInfo: {...}}에서 patientInfo 부분)
                             JsonNode existingInnerData = existingFullData.get(fieldName);
 
-                            // AI 응답과 병합 (기존 값 우선)
-                            JsonNode mergedInnerData = jsonMergeUtil.mergePreservingExisting(
-                                    existingInnerData,
-                                    aiResponseData
-                            );
+                            // AI 응답과 병합
+                            JsonNode mergedInnerData;
+                            if (sectionType == ReportSectionType.DISPATCH) {
+                                // DISPATCH 타입은 AI 데이터 우선 (AI가 빈 값이면 기존 값 유지)
+                                mergedInnerData = jsonMergeUtil.mergePreservingExisting(
+                                        aiResponseData,
+                                        existingInnerData
+                                );
+                                log.debug("DISPATCH 섹션 병합 (AI 데이터 우선)");
+                            } else {
+                                // 다른 타입은 기존 값 우선 (기존 값이 비어있으면 AI로 채움)
+                                mergedInnerData = jsonMergeUtil.mergePreservingExisting(
+                                        existingInnerData,
+                                        aiResponseData
+                                );
+                            }
 
                             // 병합 결과를 다시 전체 구조로 감싸기
                             ObjectNode newFullData = (ObjectNode) existingFullData.deepCopy();
