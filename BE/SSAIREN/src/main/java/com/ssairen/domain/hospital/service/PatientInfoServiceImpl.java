@@ -53,7 +53,7 @@ public class PatientInfoServiceImpl implements PatientInfoService {
         // 3. 환자 정보 엔티티 생성 (null일 경우 기본값 사용)
         // 기본값: 여자 28살, 체온 36.5도, 혈압 120/80, 호흡수 16, 맥박 85, 산소포화도 99
         // @MapsId 사용 시 ID는 자동 매핑되므로 emergencyReport만 설정
-        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.time.LocalDateTime now = java.time.LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
         PatientInfo patientInfo = PatientInfo.builder()
                 .emergencyReport(emergencyReport)
                 .gender(request.gender() != null ? request.gender() : PatientInfo.Gender.F)
