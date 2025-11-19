@@ -53,6 +53,9 @@ export const useAuthStore = create<AuthState>()(
 
       // 로그아웃 시 인증 정보 초기화
       clearAuth: () => {
+        // 로그아웃 시 pending 환자 요청도 삭제
+        localStorage.removeItem('pendingPatientRequests')
+
         set({
           user: null,
           accessToken: null,

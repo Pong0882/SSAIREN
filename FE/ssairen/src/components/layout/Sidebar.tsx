@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import logo from "@/assets/logo.png";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -24,18 +25,25 @@ export default function Sidebar() {
     >
       {/* 로고/타이틀 영역 + 토글 버튼 */}
       <div
-        className={`h-[88px] px-6 border-b border-neutral-700 flex items-center ${
+        className={`h-[88px] px-4 border-b border-neutral-700 flex items-center ${
           isSidebarCollapsed ? "justify-center" : "justify-between"
         }`}
       >
         {!isSidebarCollapsed && (
-          <div>
-            <h2 className="text-xl font-bold text-white whitespace-nowrap">
-              SSAIREN
-            </h2>
-            <p className="text-sm text-gray-400 mt-1 whitespace-nowrap">
-              환자 관리 시스템
-            </p>
+          <div className="flex items-center gap-3 mr-4">
+            <img
+              src={logo}
+              alt="SSAIREN Logo"
+              className="w-14 h-14 object-contain"
+            />
+            <div>
+              <h2 className="text-xl font-bold mt-1.5 text-white whitespace-nowrap">
+                SSAIREN
+              </h2>
+              <p className="text-sm text-gray-400 whitespace-nowrap">
+                환자 관리 시스템
+              </p>
+            </div>
           </div>
         )}
         <button
