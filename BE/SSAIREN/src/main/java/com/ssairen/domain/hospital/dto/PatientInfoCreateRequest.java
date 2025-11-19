@@ -65,8 +65,7 @@ public record PatientInfoCreateRequest(
         @Schema(description = "체온 (BT)", example = "36.5")
         BigDecimal bt,
 
-        @NotNull(message = "보호자 유무는 필수 입력 항목입니다.")
-        @Schema(description = "보호자 유무", example = "true")
+        @Schema(description = "보호자 유무 (null일 경우 기본값: false)", example = "true")
         Boolean hasGuardian,
 
         @Schema(description = "과거력", example = "고혈압, 당뇨")
