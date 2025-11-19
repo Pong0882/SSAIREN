@@ -39,7 +39,7 @@ export function Table({ children, className = "" }: TableProps) {
 }
 
 export function TableHeader({ children, className = "" }: TableHeaderProps) {
-  return <thead className={`bg-gray-100 ${className}`}>{children}</thead>;
+  return <thead className={`bg-gray-200 ${className}`}>{children}</thead>;
 }
 
 export function TableBody({ children, className = "" }: TableBodyProps) {
@@ -78,7 +78,7 @@ export function TableCell({
   const baseStyles =
     "px-3 py-2 text-center text-sm border-r border-gray-200 last:border-r-0";
   const headerStyles = header
-    ? "font-semibold text-gray-700"
+    ? "font-semibold text-gray-900"
     : "text-gray-800";
 
   if (header) {

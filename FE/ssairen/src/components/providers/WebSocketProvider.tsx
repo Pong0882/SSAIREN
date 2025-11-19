@@ -66,6 +66,18 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     }
   }, [isAuthenticated]);
 
+  // 로그아웃 시 모달 닫고 큐 비우기
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setRequestQueue([]);
+      setCurrentIndex(0);
+      setIsModalOpen(false);
+      setIsExpanded(false);
+      localStorage.removeItem(STORAGE_KEY);
+      console.log("🚪 로그아웃으로 인한 환자 요청 큐 초기화");
+    }
+  }, [isAuthenticated]);
+
   // ✅ 공통: id로 현재 요청 제거 (타입과 무관하게 동일 id 모두 제거)
   const removeById = useCallback(
     (hospitalSelectionId: number | string) => {
