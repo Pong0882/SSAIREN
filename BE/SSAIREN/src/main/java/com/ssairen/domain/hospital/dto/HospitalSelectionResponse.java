@@ -31,6 +31,8 @@ public class HospitalSelectionResponse {
         private String hospitalName;
         private HospitalSelectionStatus status;
         private LocalDateTime createdAt;
+        private String phoneNumber;
+        private String address;
 
         public static HospitalInfo from(HospitalSelection selection) {
             return HospitalInfo.builder()
@@ -38,6 +40,8 @@ public class HospitalSelectionResponse {
                     .hospitalName(selection.getHospital().getName())
                     .status(selection.getStatus())
                     .createdAt(selection.getCreatedAt())
+                    .phoneNumber(selection.getHospital().getPhoneNumber())
+                    .address(selection.getHospital().getAddress())
                     .build();
         }
     }
