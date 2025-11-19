@@ -48,6 +48,30 @@ public class JsonMergeUtil {
     }
 
     /**
+     * null/빈값을 무시하는 병합 (PATCH 요청용)
+     * - 새 값이 null이거나 빈 문자열이면 기존 값 유지
+     * - 새 값이 유효하면 새 값으로 업데이트
+     *
+     * @param existingData 기존 데이터
+     * @param updateData 업데이트할 데이터
+     * @return 병합된 JsonNode
+     */
+    public JsonNode mergeIgnoringNulls(JsonNode existingData, JsonNode updateData) {
+        if (existingData == null || existingData.isNull()) {
+            return updateData;
+        }
+        if (updateData == null || updateData.isNull()) {
+            return existingData;
+        }
+
+        // 복사본 생성
+        JsonNode mergedNode = existingData.deepCopy();
+
+        // 재귀적으로 병합
+        return mergeRecursiveIgnoringNulls(mergedNode, updateData);
+    }
+
+    /**
      * 두 개의 JsonNode를 깊은 병합(deep merge)하여 반환 (통합 메서드)
      *
      * @param existingData 기존 데이터
@@ -88,6 +112,61 @@ public class JsonMergeUtil {
             return text == null || text.trim().isEmpty();
         }
         return false;
+    }
+
+    /**
+     * null/빈값을 무시하며 재귀적으로 JSON을 병합
+     *
+     * @param mainNode 기존 노드
+     * @param updateNode 업데이트할 노드
+     * @return 병합된 노드
+     */
+    private JsonNode mergeRecursiveIgnoringNulls(JsonNode mainNode, JsonNode updateNode) {
+        if (updateNode == null || updateNode.isNull()) {
+            return mainNode;
+        }
+
+        // updateNode가 객체인 경우
+        if (updateNode.isObject() && mainNode.isObject()) {
+            ObjectNode mainObjectNode = (ObjectNode) mainNode;
+            ObjectNode updateObjectNode = (ObjectNode) updateNode;
+
+            Iterator<Map.Entry<String, JsonNode>> fields = updateObjectNode.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+                String fieldName = entry.getKey();
+                JsonNode updateValue = entry.getValue();
+
+                // 새 값이 null이거나 빈 값이면 무시 (기존 값 유지)
+                if (isEmpty(updateValue)) {
+                    continue;
+                }
+
+                if (mainObjectNode.has(fieldName)) {
+                    JsonNode existingValue = mainObjectNode.get(fieldName);
+
+                    // 둘 다 객체인 경우 재귀적으로 병합
+                    if (existingValue.isObject() && updateValue.isObject()) {
+                        JsonNode mergedChild = mergeRecursiveIgnoringNulls(existingValue, updateValue);
+                        mainObjectNode.set(fieldName, mergedChild);
+                    } else {
+                        // 새 값이 유효하면 새 값으로 대체
+                        mainObjectNode.set(fieldName, updateValue);
+                    }
+                } else {
+                    // 기존에 없던 필드는 새 값 추가 (null/빈값이 아닌 경우만)
+                    mainObjectNode.set(fieldName, updateValue);
+                }
+            }
+            return mainObjectNode;
+        }
+
+        // 객체가 아닌 경우: 새 값이 유효하면 대체, 아니면 기존 값 유지
+        if (isEmpty(updateNode)) {
+            return mainNode;
+        } else {
+            return updateNode;
+        }
     }
 
     /**
