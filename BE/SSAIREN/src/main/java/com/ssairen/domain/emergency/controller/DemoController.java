@@ -71,8 +71,11 @@ public class DemoController {
                 .orElseThrow(() -> new CustomException(ErrorCode.EMERGENCY_REPORT_NOT_FOUND));
 
         try {
-            // 2. PATIENT_INFO 섹션 업데이트
-            String patientInfoJson = """
+            // 2. 현재 시간 (초 단위까지)
+            java.time.LocalDateTime now = java.time.LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+
+            // 3. PATIENT_INFO 섹션 업데이트
+            String patientInfoJson = String.format("""
                     {
                         "patientInfo": {
                             "patient": {
@@ -92,23 +95,23 @@ public class DemoController {
                                 "value": null,
                                 "reportMethod": null
                             },
-                            "createdAt": null,
-                            "updatedAt": null,
+                            "createdAt": "%s",
+                            "updatedAt": "%s",
                             "incidentLocation": {
                                 "text": null
                             }
                         },
                         "schemaVersion": 1
                     }
-                    """;
+                    """, now, now);
             JsonNode patientInfoData = objectMapper.readTree(patientInfoJson);
             ReportSection patientInfoSection = reportSectionRepository
                     .findByEmergencyReportAndType(emergencyReport, ReportSectionType.PATIENT_INFO)
                     .orElseThrow(() -> new CustomException(ErrorCode.REPORT_SECTION_NOT_FOUND));
             patientInfoSection.updateData(patientInfoData);
 
-            // 3. ASSESSMENT 섹션 업데이트
-            String assessmentJson = """
+            // 4. ASSESSMENT 섹션 업데이트
+            String assessmentJson = String.format("""
                     {
                         "assessment": {
                             "notes": {
@@ -116,17 +119,17 @@ public class DemoController {
                                 "onset": null,
                                 "cheifComplaint": null
                             },
-                            "createdAt": null,
-                            "updatedAt": null,
+                            "createdAt": "%s",
+                            "updatedAt": "%s",
                             "vitalSigns": {
                                 "first": {
                                     "spo2": 99,
-                                    "time": null,
+                                    "time": "%s",
                                     "pulse": 85,
                                     "bloodSugar": null,
                                     "respiration": 16,
                                     "temperature": 36.5,
-                                    "bloodPressure": "120"
+                                    "bloodPressure": "120/80"
                                 },
                                 "second": {
                                     "spo2": null,
@@ -139,10 +142,10 @@ public class DemoController {
                                 },
                                 "available": null
                             },
-                            "patientLevel": null,
+                            "patientLevel": "LEVEL 1",
                             "consciousness": {
                                 "first": {
-                                    "time": null,
+                                    "time": "%s",
                                     "state": "A"
                                 },
                                 "second": {
@@ -163,53 +166,60 @@ public class DemoController {
                         },
                         "schemaVersion": 1
                     }
-                    """;
+                    """, now, now, now, now);
             JsonNode assessmentData = objectMapper.readTree(assessmentJson);
             ReportSection assessmentSection = reportSectionRepository
                     .findByEmergencyReportAndType(emergencyReport, ReportSectionType.ASSESSMENT)
                     .orElseThrow(() -> new CustomException(ErrorCode.REPORT_SECTION_NOT_FOUND));
             assessmentSection.updateData(assessmentData);
 
-            // 4. DISPATCH 섹션 업데이트
-            String dispatchJson = """
+            // 5. DISPATCH 섹션 업데이트
+            String dispatchJson = String.format("""
                     {
                         "dispatch": {
                             "symptoms": {
-                                "pain": [{"name": "두통"}],
-                                "trauma": [],
+                                "pain": [
+                                    {
+                                        "name": "그 밖의 통증",
+                                        "value": "다리 통증"
+                                    }
+                                ],
+                                "trauma": [
+                                    {"name": "골절"}
+                                ],
                                 "otherSymptoms": []
                             },
-                            "createdAt": "2025-11-19T10:22:31",
-                            "updatedAt": "2025-11-19T10:22:31",
+                            "createdAt": "%s",
+                            "updatedAt": "%s",
                             "distanceKm": 0.0,
                             "returnTime": "00:00",
                             "contactTime": "00:00",
                             "dispatchType": "정상",
-                            "departureTime": "2025-11-19T10:20:34",
+                            "departureTime": "%s",
                             "sceneLocation": {
                                 "name": "집",
                                 "value": null
                             },
-                            "reportDatetime": "2023-11-13T09:16:00",
+                            "reportDatetime": "%s",
                             "arrivalSceneTime": "00:00",
                             "departureSceneTime": "00:00",
                             "arrivalHospitalTime": "00:00"
                         }
                     }
-                    """;
+                    """, now, now, now, now.minusHours(1));
             JsonNode dispatchData = objectMapper.readTree(dispatchJson);
             ReportSection dispatchSection = reportSectionRepository
                     .findByEmergencyReportAndType(emergencyReport, ReportSectionType.DISPATCH)
                     .orElseThrow(() -> new CustomException(ErrorCode.REPORT_SECTION_NOT_FOUND));
             dispatchSection.updateData(dispatchData);
 
-            // 5. INCIDENT_TYPE 섹션 업데이트
-            String incidentTypeJson = """
+            // 6. INCIDENT_TYPE 섹션 업데이트
+            String incidentTypeJson = String.format("""
                     {
                         "incidentType": {
                             "category": null,
-                            "createdAt": null,
-                            "updatedAt": null,
+                            "createdAt": "%s",
+                            "updatedAt": "%s",
                             "category_other": null,
                             "legalSuspicion": {
                                 "name": null
@@ -239,7 +249,7 @@ public class DemoController {
                         },
                         "schemaVersion": 1
                     }
-                    """;
+                    """, now, now);
             JsonNode incidentTypeData = objectMapper.readTree(incidentTypeJson);
             ReportSection incidentTypeSection = reportSectionRepository
                     .findByEmergencyReportAndType(emergencyReport, ReportSectionType.INCIDENT_TYPE)
