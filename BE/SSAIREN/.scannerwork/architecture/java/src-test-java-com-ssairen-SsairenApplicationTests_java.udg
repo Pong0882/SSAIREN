@@ -1,0 +1,104 @@
+
+1.0!ssafy-ai-codereview1_a205-ssairenJavaFrontend"1760923390673*java2.Bû
+;
+6src/test/java/com/ssairen/SsairenApplicationTests.java2
+	
+type3
+	
+MAIN4
+
+package6
+
+com.ssairen7
+(
+#com.ssairen.SsairenApplicationTests9
+
+class10
+
+access11
+
+	protected12
+
+simple-name13
+
+SsairenApplicationTests14
+
+SpringBootTest16
+
+unknown17
+
+annotated by18
+,
+&Recovered#typeBindingLSpringBootTest;020
+
+
+uses21
+9
+3com.ssairen.SsairenApplicationTests#contextLoads()V23
+
+method24
+
+contextLoads25
+
+
+Test27
+"
+Recovered#typeBindingLTest;029J
+
+1
+12
+
+
+3
+4Z
+
+5	
+576jÐ
+
+15
+151617
+
+19
+192017
+
+26
+262717
+;
+86
+8910 *
+1 (:5B
+
+
+11
+12
+
+
+13
+14
+
+28
+282917
+A
+22;
+222324 *
+1	 	(28:5B
+
+
+11
+12
+
+
+13
+25rj
+
+81518*
+1 (
+
+81921*
+1 (
+
+222618*
+1	 	(
+
+222821*
+1	 	(

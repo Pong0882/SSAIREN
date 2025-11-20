@@ -1,0 +1,7 @@
+organization=ssafy-ai-codereview1
+projectKey=ssafy-ai-codereview1_a205-ssairen
+serverUrl=https://sonarcloud.io
+serverVersion=8.0.0.68867
+dashboardUrl=https://sonarcloud.io/dashboard?id=ssafy-ai-codereview1_a205-ssairen
+ceTaskId=AZn_Nqcq08rYPpW8aX-S
+ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AZn_Nqcq08rYPpW8aX-S

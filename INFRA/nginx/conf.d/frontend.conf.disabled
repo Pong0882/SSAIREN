@@ -1,0 +1,25 @@
+# 프론트엔드 서버 설정 (@, www)
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ssairen.site www.ssairen.site;
+
+    # 로그 설정
+    access_log /var/log/nginx/frontend-access.log main;
+    error_log /var/log/nginx/frontend-error.log warn;
+
+    # 프록시 설정 포함
+    include /etc/nginx/includes/proxy-params.conf;
+
+    # 프론트엔드 애플리케이션으로 프록시
+    location / {
+        proxy_pass http://frontend:3000;
+    }
+
+    # 정적 파일 캐싱 (선택사항)
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
+        proxy_pass http://frontend:3000;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}

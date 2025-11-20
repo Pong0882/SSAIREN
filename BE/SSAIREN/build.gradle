@@ -1,0 +1,131 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.6'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.sonarqube' version '6.0.1.5171'
+    id 'jacoco'
+}
+
+group = 'com.myocean'
+version = '0.0.1-SNAPSHOT'
+description = 'SSAIREN'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // JPA와 Hibernate를 사용한 데이터베이스 연동
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // PostgreSQL JDBC 드라이버
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Hypersistence Utils - JSONB 타입 지원
+    implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.9.0'
+
+    // .env 파일 지원
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // Spring Security - 비밀번호 암호화 (BCrypt)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // Spring MVC를 사용한 웹 애플리케이션 개발
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring Security - 인증 및 권한 관리
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // Validation - Bean Validation (JSR-380) 구현체
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // JWT - JSON Web Token 생성 및 검증
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+    // Redis - 리프레시 토큰 저장소
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // Spring Boot Actuator - 프로덕션 레벨 모니터링 및 헬스체크
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Micrometer - 메트릭 수집 및 모니터링
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // MinIO Client - S3 호환 객체 스토리지
+    implementation 'io.minio:minio:8.5.7'
+
+    // WebClient - 외부 API 호출용 (AI 서버 통신)
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // Firebase Admin SDK - FCM 푸시 알림
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
+
+    // Swagger/OpenAPI 문서 자동 생성 및 UI 제공
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.1'
+
+    // Lombok - 보일러플레이트 코드 자동 생성 (@Getter, @Setter 등)
+    compileOnly 'org.projectlombok:lombok'
+
+    // Spring Boot DevTools - 자동 재시작 및 라이브 리로드 지원
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // Lombok 애노테이션 프로세서
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // MapStruct
+    implementation 'org.mapstruct:mapstruct:1.5.3.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.3.Final'
+
+    // Spring Boot 테스트 지원 (JUnit 5, Mockito 등 포함)
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // Spring Security 테스트 지원
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // JUnit Platform 런처
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // WebSocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport // 테스트 후 자동으로 커버리지 리포트 생성
+}
+
+// JaCoCo 설정
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+jacocoTestReport {
+    dependsOn test // 테스트 실행 후 리포트 생성
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+// SonarQube 설정
+sonar {
+    properties {
+        property "sonar.organization", "ssafy-ai-codereview1"
+        property "sonar.projectKey", "ssafy-ai-codereview1_a205-ssairen"
+        property "sonar.host.url", "https://sonarcloud.io"
+    }
+}
