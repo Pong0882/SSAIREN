@@ -79,7 +79,7 @@ async def process_conversation(request: ConversationRequest):
                     "dispatchType": "",
                     "sceneLocation": {"name": "", "value": null},
                     "symptoms": {
-                        "disease": [{"name": "두통"}],
+                        "pain": [{"name": "두통"}],
                         "trauma": [],
                         "otherSymptoms": []
                     }

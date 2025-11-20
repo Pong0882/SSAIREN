@@ -589,7 +589,7 @@ def get_ems_extraction_prompt() -> str:
         "value": "기타 선택 시 상세 내용"
       },
       "symptoms": {
-        "disease": [
+        "pain": [
           {
             "name": "두통 | 흉통 | 복통 | 요통 | 분만진통 | 그 밖의 통증",
             "value": "'그 밖의 통증' 선택 시 상세 내용 / (두통 | 흉통 | 복통 | 요통 | 분만진통) 이라면 null"
@@ -737,7 +737,7 @@ def get_ems_extraction_prompt() -> str:
         "value": null
       },
       "symptoms": {
-        "disease": [{"name": "두통"}],
+        "pain": [{"name": "두통"}],
         "trauma": [],
         "otherSymptoms": []
       }
@@ -815,7 +815,7 @@ def get_ems_extraction_prompt() -> str:
 "무슨 일이세요? 차 운전하다가 추돌당했어요. 왼쪽 팔이 아파요. 의식은 명료합니다. 혈압 120/80입니다."
 
 출력: (전체 구조 유지, 값이 있는 필드만 채움)
-- dispatch.symptoms.disease: [{"name": "그 밖의 통증", "value": "왼쪽 팔 통증"}]
+- dispatch.symptoms.pain: [{"name": "그 밖의 통증", "value": "왼쪽 팔 통증"}]
 - incidentType.category: "질병외"
 - incidentType.subCategory.type: "교통사고"
 - incidentType.subCategory.name: "운전자"
