@@ -50,25 +50,32 @@ public class PatientInfoServiceImpl implements PatientInfoService {
             throw new CustomException(ErrorCode.PATIENT_INFO_ALREADY_EXISTS);
         }
 
-        // 3. 환자 정보 엔티티 생성
+        // 3. 환자 정보 엔티티 생성 (null일 경우 기본값 사용)
+        // 기본값: 여자 28살, 체온 36.5도, 혈압 120/80, 호흡수 16, 맥박 85, 산소포화도 99
         // @MapsId 사용 시 ID는 자동 매핑되므로 emergencyReport만 설정
+        java.time.LocalDateTime now = java.time.LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
         PatientInfo patientInfo = PatientInfo.builder()
                 .emergencyReport(emergencyReport)
-                .gender(request.gender())
-                .age(request.age())
-                .recordTime(request.recordTime())
-                .mentalStatus(request.mentalStatus())
+                .gender(request.gender() != null ? request.gender() : PatientInfo.Gender.F)
+                .age(request.age() != null ? request.age() : 28)
+                .recordTime(request.recordTime() != null ? request.recordTime() : now)
+                .mentalStatus(request.mentalStatus() != null ? request.mentalStatus() : PatientInfo.MentalStatus.ALERT)
                 .chiefComplaint(request.chiefComplaint())
-                .hr(request.hr())
-                .bp(request.bp())
-                .spo2(request.spo2())
-                .rr(request.rr())
-                .bt(request.bt())
-                .hasGuardian(request.hasGuardian())
+                .hr(request.hr() != null ? request.hr() : 85)
+                .bp(request.bp() != null ? request.bp() : "120/80")
+                .spo2(request.spo2() != null ? request.spo2() : 99)
+                .rr(request.rr() != null ? request.rr() : 16)
+                .bt(request.bt() != null ? request.bt() : new java.math.BigDecimal("36.5"))
+                .hasGuardian(request.hasGuardian() != null ? request.hasGuardian() : false)
                 .hx(request.hx())
-                .onsetTime(request.onsetTime())
-                .lnt(request.lnt())
+                .onsetTime(request.onsetTime() != null ? request.onsetTime() : now)
+                .lnt(request.lnt() != null ? request.lnt() : now)
                 .build();
+
+        log.debug("Patient info created with defaults - gender: {}, age: {}, mentalStatus: {}, hr: {}, bp: {}, spo2: {}, rr: {}, bt: {}, hasGuardian: {}, onsetTime: {}, lnt: {}",
+                patientInfo.getGender(), patientInfo.getAge(), patientInfo.getMentalStatus(),
+                patientInfo.getHr(), patientInfo.getBp(), patientInfo.getSpo2(), patientInfo.getRr(), patientInfo.getBt(),
+                patientInfo.getHasGuardian(), patientInfo.getOnsetTime(), patientInfo.getLnt());
 
         // 4. 저장
         PatientInfo savedPatientInfo = patientInfoRepository.save(patientInfo);
@@ -120,19 +127,19 @@ public class PatientInfoServiceImpl implements PatientInfoService {
             throw new CustomException(ErrorCode.ACCESS_DENIED, "본인이 작성한 구급일지의 환자 정보만 수정할 수 있습니다.");
         }
 
-        // 2. 환자 정보 수정
+        // 2. 환자 정보 수정 (null일 경우 기존 값 유지 또는 기본값 사용)
         patientInfo.updatePatientInfo(
-                request.gender(),
-                request.age(),
-                request.recordTime(),
-                request.mentalStatus(),
+                request.gender() != null ? request.gender() : patientInfo.getGender(),
+                request.age() != null ? request.age() : patientInfo.getAge(),
+                request.recordTime() != null ? request.recordTime() : patientInfo.getRecordTime(),
+                request.mentalStatus() != null ? request.mentalStatus() : patientInfo.getMentalStatus(),
                 request.chiefComplaint(),
-                request.hr(),
-                request.bp(),
-                request.spo2(),
-                request.rr(),
+                request.hr() != null ? request.hr() : patientInfo.getHr(),
+                request.bp() != null ? request.bp() : patientInfo.getBp(),
+                request.spo2() != null ? request.spo2() : patientInfo.getSpo2(),
+                request.rr() != null ? request.rr() : patientInfo.getRr(),
                 request.bt(),
-                request.hasGuardian(),
+                request.hasGuardian() != null ? request.hasGuardian() : patientInfo.getHasGuardian(),
                 request.hx(),
                 request.onsetTime(),
                 request.lnt()

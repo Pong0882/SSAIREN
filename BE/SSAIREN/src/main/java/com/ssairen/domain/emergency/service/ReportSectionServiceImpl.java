@@ -162,8 +162,8 @@ public class ReportSectionServiceImpl implements ReportSectionService {
                 .findByEmergencyReportAndType(emergencyReport, type)
                 .orElseThrow(() -> new CustomException(ErrorCode.REPORT_SECTION_NOT_FOUND));
 
-        // 4. 기존 데이터와 새로운 데이터 병합
-        JsonNode mergedData = jsonMergeUtil.merge(section.getData(), request.data());
+        // 4. 기존 데이터와 새로운 데이터 병합 (null/빈값 무시)
+        JsonNode mergedData = jsonMergeUtil.mergeIgnoringNulls(section.getData(), request.data());
 
         // 5. 엔티티 업데이트 (version도 자동으로 +1)
         section.updateData(mergedData);
