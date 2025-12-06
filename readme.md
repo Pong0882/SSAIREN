@@ -1,8 +1,11 @@
-# SSAIREN
-
 <div align="center">
 
+![img_1.png](image/img_1.png)
+
+# SSAIREN
+
 **AI로 문진부터 기록까지, 구급대원의 손을 자유롭게 하는 스마트 EMS(Emergency Medical System)**
+</div>
 
 ## 목차
 
